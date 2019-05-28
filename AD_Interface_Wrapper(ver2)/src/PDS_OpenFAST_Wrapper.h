@@ -48,7 +48,7 @@ extern "C" {
 	// genTorque (double): Torque exerted on the low speed rotor shaft by the generator.  Equal and opposite to the body reaction torque.
 
 
-// @dustin: made bladeNodeInflow pass by reference so the vector doens't need to be copied
+// @dustin: made bladeNodeInflow pass by reference so the vector doesn't need to be copied
 // Receives water kinematics at blade node points
 	int DECLDIR Turbine_setBladeInflow(double time, const vector<double>& bladeNodeInflow);
 	// time: current simulation time in s
