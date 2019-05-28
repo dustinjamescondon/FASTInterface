@@ -1,0 +1,67 @@
+// Dummy header file for the wrapper DLL (wrapper.dll) that facilitates ProteusDS interacting with the AD_Interface DLL.
+// It converts between ProtuesDS's vector data types and regular arrays, and it handles coordinate system conversions since ProteusDS uses positive-down.
+
+// Matt Hall, Patrick Connolly - 2018-07
+
+
+#pragma once
+
+// Note, this is defined in the project preprocessor section
+#ifdef AD_INTERFACE_WRAPPER_EXPORTS  
+#define DECLDIR __declspec(dllexport)   
+#else  
+#define DECLDIR __declspec(dllimport)   
+#endif  
+#include <vector> // for vector data type used by ProteusDS
+
+
+
+extern "C" {
+
+
+	using namespace std;
+
+
+	// Initialization - loads the AD_interface DLL, initializes the model, etc.
+	int DECLDIR Turbine_init(int* nBladesOut, int* nNodesOut);
+	// nBladesOut - returns number of blades
+	// nNodesOut - returns number of nodes per blade
+
+
+// Send hub kinematics and get turbine reaction forces - this is the coupling function
+	int DECLDIR Turbine_solve(double time, int RK_flag, vector<double> hubState, double shaftSpeed,
+		vector<double>& forceAndMoment, vector< vector<double> >& massMatrix,
+		vector< vector<double> >& addedMassMatrix, double* genTorque);
+	// time: current simulation time in s
+   // RK_flag (integer): stage in the RK45 integration process (i.e. which sub-step number) [work in progress]
+	// hubState (double [18]): serialized vector of the statevaria bles for the rotor hub in ProteusDS. The vector includes, in order:
+	// Position (x, y, z) (m)
+	// Orientation (roll, pitch, yaw) (rad)
+	// Velocity (Vx, Vy, Vz) (m/s)
+	// Angular Velocity (Vroll, Vpitch, Vyaw) (rad/s)
+	// Acceleration (Ax, Ay, Az) (m/s^2)
+	// Angular Acceleration (Aroll, Apitch, Ayaw) (rad/s^2)
+	// shaftSpeed (double): Rotational speed of the low speed shaft (rad/s)
+	// forceAndMoment (double [6]): Forces and moments at the turbine rotor hub.  Stored as a vector (Fx, Fy, Fz, Mx, My, Mz).
+	// massMatrix (double [36]): The sum of all inertial terms of the turbine.  Ordered as ( mxx, mxy, mxz, mx,roll, mx,pitch, mx,yaw, myx, myy etc.)
+	// addedMassMatrix (double [36]): The sum of all hydrodynamic added mass terms. Ordered as ( mxx, mxy, mxz, mx,roll, mx,pitch, mx,yaw, myx, myy etc.)
+	// genTorque (double): Torque exerted on the low speed rotor shaft by the generator.  Equal and opposite to the body reaction torque.
+
+
+// @dustin: made bladeNodeInflow pass by reference so the vector doens't need to be copied
+// Receives water kinematics at blade node points
+	int DECLDIR Turbine_setBladeInflow(double time, const vector<double>& bladeNodeInflow);
+	// time: current simulation time in s
+	// nodePos(double [3*n*b], n = number of nodes per blade, b = number of blades): Current positions of the blade nodes.  Stored as a serialized vector ordered as ( xb1,n1, yb1,n1, zb1,n1, xb1,n2, yb1,n2, zb1,n2, etc. )
+
+// Returns blade node positions 
+	int DECLDIR Turbine_getBladeNodePos(double time, vector<double>& nodePos);
+	// time: current simulation time in s
+	// nodePos(double) [3*n*b], n = number of nodes per blade, b = number of blades): Current positions of the blade nodes.  
+	//                        Stored as a serialized vector ordered as ( xb1,n1, yb1,n1, zb1,n1, xb1,n2, yb1,n2, zb1,n2, etc. )
+
+// Close things, free memory
+	int DECLDIR Turbine_close();
+
+
+}
