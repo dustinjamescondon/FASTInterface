@@ -23,7 +23,7 @@ using namespace std;
 // first make types for the functions (just need to specify the parameter types and return type, I also include parameter variable names as a reminder)
 typedef int(*Init_DLL)();
 typedef int(*Turbine_init)(int* nBlades, int* nNodes);
-typedef int(*Turbine_solve)(double time, int RK_flag, vector<double> hubState, double shaftSpeed,
+typedef int(*Turbine_solve)(double time, int RK_flag, const vector<double>& hubState, double shaftSpeed,
 	  vector<double> &forceAndMoment, vector< vector<double> > &massMatrix,
 	  vector< vector<double> > &addedMassMatrix, double* genTorque);
 typedef int(*Turbine_setBladeInflow)(double time, vector<double> &bladeNodeInflow);
@@ -127,7 +127,7 @@ int main(int argc, char *argv[])
 	vector< vector<double> > addedMassMatrix( 6, vector<double>(6,  0.0) );
 
 	double shaftSpeed = 0;
-	double genTorque = 0;
+	double genTorque = 1;
 	
 		
 	//cout << "THIS IS nodePOS as created ";
@@ -164,7 +164,7 @@ int main(int argc, char *argv[])
 		shaftSpeed = 2.0; // in rad/s
 		solve(t_i, RK_flag, hubState, shaftSpeed, forceAndMoment, massMatrix, addedMassMatrix, &genTorque);
 		
-		cout << " generator torque: " << genTorque << endl;
+		//cout << " generator torque: " << genTorque << endl;
 
 	}
 	close();

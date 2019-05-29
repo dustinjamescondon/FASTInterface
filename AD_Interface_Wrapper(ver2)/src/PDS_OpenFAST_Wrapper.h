@@ -29,7 +29,7 @@ extern "C" {
 
 
 // Send hub kinematics and get turbine reaction forces - this is the coupling function
-	int DECLDIR Turbine_solve(double time, int RK_flag, vector<double> hubState, double shaftSpeed,
+	int DECLDIR Turbine_solve(double time, int RK_flag, const vector<double>& hubState, double shaftSpeed,
 		vector<double>& forceAndMoment, vector< vector<double> >& massMatrix,
 		vector< vector<double> >& addedMassMatrix, double* genTorque);
 	// time: current simulation time in s

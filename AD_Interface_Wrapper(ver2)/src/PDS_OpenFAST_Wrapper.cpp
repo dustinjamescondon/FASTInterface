@@ -27,7 +27,7 @@ extern "C" {
 		double forceAndMoment[], double massMatrix[], double addedMassMatrix[], double* genTorque);
 
 	void INTERFACE_GETOUTPUTS(double* time, double* forceAndMoment[], double* generatorTorque, double massMatrix[], double addedMassMatrix[]);
-	void INTERFACE_SETBLADEINFLOW(double* time, double* bladNodeInflow);
+	void INTERFACE_SETBLADEINFLOW(double* time, double* bladeNodeInflow);
 	void INTERFACE_GETBLADENODEPOS(double* time, double* nodePos);
 	void INTERFACE_CLOSE();
 }
@@ -67,11 +67,11 @@ int DECLDIR Turbine_init(int* nBladesOut, int* nNodesOut)
 	INTERFACE_INIT(&nBlades, &nNodes);
 
 	// allocate some arrays based on number of blades and nodes
-	inflow = (double*)malloc(6 * nBlades * nNodes * sizeof(double));  // dynamically allocate the array to hold inflow data passed to AD_Interface
-	inflowInterp = (double*)malloc(6 * nBlades * nNodes * sizeof(double));  // dynamically allocate the array to hold inflow data passed to AD_Interface
-	inflowOld = (double*)malloc(6 * nBlades * nNodes * sizeof(double));  // dynamically allocate the array to hold inflow data passed to AD_Interface
-	nodePos2 = (double*)malloc(3 * nBlades * nNodes * sizeof(double));  // dynamically allocate the array to hold node coordinates passed from AD_Interface
-	nodePos2Old = (double*)malloc(3 * nBlades * nNodes * sizeof(double));  // dynamically allocate the array to hold node coordinates passed from AD_Interface
+	inflow = new double[6 * nBlades * nNodes];  // dynamically allocate the array to hold inflow data passed to AD_Interface
+	inflowInterp = new double[6 * nBlades * nNodes];  // dynamically allocate the array to hold inflow data passed to AD_Interface
+	inflowOld = new double[6 * nBlades * nNodes];  // dynamically allocate the array to hold inflow data passed to AD_Interface
+	nodePos2 = new double[3 * nBlades * nNodes];  // dynamically allocate the array to hold node coordinates passed from AD_Interface
+	nodePos2Old = new double[3 * nBlades * nNodes];  // dynamically allocate the array to hold node coordinates passed from AD_Interface
 	
 	cout << "There are " << nBlades << " blades with " << nNodes << " nodes each." << endl;
 
@@ -85,7 +85,7 @@ int DECLDIR Turbine_init(int* nBladesOut, int* nNodesOut)
 
 
 // Combination of set_inputs, advance, and get_outputs
-int DECLDIR Turbine_solve(double time, int RK_flag, vector<double> hubState, double shaftSpeed,
+int DECLDIR Turbine_solve(double time, int RK_flag, const vector<double>& hubState, double shaftSpeed,
 	vector<double>& forceAndMoment, vector< vector<double> >& massMatrix,
 	vector< vector<double> >& addedMassMatrix, double* genTorque)
 {
@@ -211,7 +211,7 @@ int DECLDIR Turbine_setBladeInflow(double time, const vector<double>& bladeNodeI
 
 	 //cout << "Turbine_setBladeInflow: size of bladeNodeInflow is "<< bladeNodeInflow.size() << endl;
 
-	 // create flow kinematics array from teh one passed from ProteusDS, including coordinate system conversion    
+	 // create flow kinematics array from the one passed from ProteusDS, including coordinate system conversion    
 	for (int iB = 0; iB < nBlades; iB++) // loop through blades
 	{
 		for (int iN = 0; iN < nNodes; iN++) // loop through nodes on the blade
@@ -271,12 +271,12 @@ int DECLDIR Turbine_getBladeNodePos(double time, vector<double>& nodePos)
 }
 
 
-
+// @dustin TODO: free the rest of the allocated variables
 // @mth: todo: need a close/cleanup function to delete inflow and nodePos arrays
 int DECLDIR Turbine_close()
 {
-	free(inflow);
-	free(nodePos2);
+	delete inflow;
+	delete nodePos2;
 
 	return 0;
 }
