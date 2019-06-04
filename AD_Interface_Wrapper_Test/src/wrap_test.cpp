@@ -5,8 +5,8 @@
 
 //#include "PDS_OpenFAST_Wrapper.h"
 #include <iostream>
+#include <fstream>
 #include <vector>
-#include <iostream>
 #include <sstream>
 #include <algorithm>
 #include <iterator>
@@ -14,7 +14,6 @@
 #include <stdlib.h>  
 #include <string.h>  
 #include <tchar.h>  
-#include <iostream>
 
 using namespace std;
 
@@ -115,29 +114,33 @@ int main(int argc, char *argv[])
 	
 	// TODO: this is extremely hacky
 	// create a steady flow situation in +x direction
+	
 	for (int i=0; i<nBlades; i++)
 		for (int j=0; j<nNodes; j++)
-			inflows[6*nNodes*i + 6*j + 0] = 2.0;  // 2 m/s flow rate in x direction
+			inflows[6*nNodes*i + 6*j + 0] = -4.0;  // 2 m/s flow rate in x direction
 	
 	
-	// initialize other vectors	
+	
+	// initialize toher vectors	
 	vector<double> hubState(18, 0.0);      // 6 position DOFS (x,y,z,roll,pitch,yaw) then velocities, then accelerations
 	vector<double> forceAndMoment(6, 0.0); // 6 DOF reaction forces/moments returned from rotor
 	vector< vector<double> > massMatrix( 6, vector<double>(6,  0.0) );
 	vector< vector<double> > addedMassMatrix( 6, vector<double>(6,  0.0) );
 
-	double shaftSpeed = 0;
-	double genTorque = 1;
+	double shaftSpeed = 2.0; // in rad/s 
+	double genTorque = 0;
 	
 		
 	//cout << "THIS IS nodePOS as created ";
 	//for (int i=0; i<nodePos.size(); i++) 	 cout<< nodePos[i];
 	//cout << endl;
 	
-	
+	ofstream outfile;
+	outfile.open("Forces.out");
+	outfile << "Forces(x,y,z)     Moments(Mx, My, Mz) \n";
 	
 	// Testing loop
-	for(int i=0; i<8; i++)
+	for(int i=0; i<32; i++)
 	{
 		t_i = i*dt;
 		
@@ -161,12 +164,16 @@ int main(int argc, char *argv[])
 		
 		cout << "call the time stepping function of the model" << endl;
 		int RK_flag = 0;
-		shaftSpeed = 2.0; // in rad/s
+		
 		solve(t_i, RK_flag, hubState, shaftSpeed, forceAndMoment, massMatrix, addedMassMatrix, &genTorque);
+
+		outfile << "( " << forceAndMoment[0] << ", " << forceAndMoment[1] << ", " << forceAndMoment[2] << " ); ( "
+			<< forceAndMoment[3] << ", " << forceAndMoment[4] << ", " << forceAndMoment[5] << " )" << endl;
 		
 		//cout << " generator torque: " << genTorque << endl;
-
 	}
+
+	outfile.close();
 	close();
 	
 	/* // Test method calls 

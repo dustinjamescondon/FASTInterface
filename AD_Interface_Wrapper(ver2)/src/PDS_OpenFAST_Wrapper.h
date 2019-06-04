@@ -12,6 +12,7 @@
 #else  
 #define DECLDIR __declspec(dllimport)   
 #endif  
+
 #include <vector> // for vector data type used by ProteusDS
 
 

@@ -13,7 +13,6 @@
 #include <string.h>  
 #include <tchar.h>  
 #include <iostream>
-#include <memory> // for creating and deleting variable-size arrays at runtime
 
 
 using namespace std;
@@ -63,7 +62,6 @@ int DECLDIR Turbine_init(int* nBladesOut, int* nNodesOut)
 	cout << "Finished loading DLL and functions" << endl;
 
 	// call to initialize AeroDyn driver, which includes reading in important parameters
-
 	INTERFACE_INIT(&nBlades, &nNodes);
 
 	// allocate some arrays based on number of blades and nodes
@@ -113,7 +111,6 @@ int DECLDIR Turbine_solve(double time, int RK_flag, const vector<double>& hubSta
 	//cout << "interpolating flow " <<endl;
 
    // interpolate inflow data for the current time!
-
 	for (int i = 0; i < 6 * nBlades * nNodes; i++) // loop through all inflow data
 		inflowInterp[i] = inflowOld[i] + (time - inflowTimeOld) * (inflow[i] - inflowOld[i]) / (inflowTime - inflowTimeOld);  // linear interpolation
 
@@ -121,9 +118,6 @@ int DECLDIR Turbine_solve(double time, int RK_flag, const vector<double>& hubSta
 	// create hub kinematics vector from the one passed from ProteusDS, including coordinate system conversion
 	// FAST convention: 
 	// ProteusDS convention: 
-
-
-	 //cout << "copying hub kinematics" <<endl;
 
 	double hubKinematics[18];
 
