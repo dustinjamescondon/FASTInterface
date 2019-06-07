@@ -111,8 +111,12 @@ int DECLDIR Turbine_solve(double time, int RK_flag, const vector<double>& hubSta
 	//cout << "interpolating flow " <<endl;
 
    // interpolate inflow data for the current time!
-	for (int i = 0; i < 6 * nBlades * nNodes; i++) // loop through all inflow data
-		inflowInterp[i] = inflowOld[i] + (time - inflowTimeOld) * (inflow[i] - inflowOld[i]) / (inflowTime - inflowTimeOld);  // linear interpolation
+	for (int i = 0; i < 6 * nBlades * nNodes; i++) { // loop through all inflow data
+		// @dustin: We're going to forget about interpolation until we know things are working with a constant flow
+		//inflowInterp[i] = inflowOld[i] + (time - inflowTimeOld) * (inflow[i] - inflowOld[i]) / (inflowTime - inflowTimeOld);  // linear interpolation
+	
+		inflowInterp[i] = inflow[i];
+	}
 
 
 	// create hub kinematics vector from the one passed from ProteusDS, including coordinate system conversion
@@ -121,24 +125,44 @@ int DECLDIR Turbine_solve(double time, int RK_flag, const vector<double>& hubSta
 
 	double hubKinematics[18];
 
+	// @dustin: just took out coordinate flips until later
 	hubKinematics[0] = hubState[0]; // positions (m), adjusted for coordinates change
-	hubKinematics[1] = -hubState[1];
-	hubKinematics[2] = -hubState[2];
+	hubKinematics[1] = hubState[1];
+	hubKinematics[2] = hubState[2];
 	hubKinematics[3] = hubState[3]; // rotations (rad), adjusted for coordinates change
-	hubKinematics[4] = -hubState[4];
-	hubKinematics[5] = -hubState[5];
+	hubKinematics[4] = hubState[4];
+	hubKinematics[5] = hubState[5];
 	hubKinematics[6] = hubState[6]; // velocities (m/s), adjusted for coordinates change
-	hubKinematics[7] = -hubState[7];
-	hubKinematics[8] = -hubState[8];
+	hubKinematics[7] = hubState[7];
+	hubKinematics[8] = hubState[8];
 	hubKinematics[9] = hubState[9]; // angular rates (rad/s), adjusted for coordinates change (should include rotor rotation!)
-	hubKinematics[10] = -hubState[10];
-	hubKinematics[11] = -hubState[11];
+	hubKinematics[10] = hubState[10];
+	hubKinematics[11] = hubState[11];
 	hubKinematics[12] = 0.0;  // accelerations (m/s^2) - not yet used
 	hubKinematics[13] = 0.0;
 	hubKinematics[14] = 0.0;
 	hubKinematics[15] = 0.0; // anglar accelerations (rad/s^2) - not yet used
 	hubKinematics[16] = 0.0;
 	hubKinematics[17] = 0.0;
+
+	//hubKinematics[0] = hubState[0]; // positions (m), adjusted for coordinates change
+	//hubKinematics[1] = -hubState[1];
+	//hubKinematics[2] = -hubState[2];
+	//hubKinematics[3] = hubState[3]; // rotations (rad), adjusted for coordinates change
+	//hubKinematics[4] = -hubState[4];
+	//hubKinematics[5] = -hubState[5];
+	//hubKinematics[6] = hubState[6]; // velocities (m/s), adjusted for coordinates change
+	//hubKinematics[7] = -hubState[7];
+	//hubKinematics[8] = -hubState[8];
+	//hubKinematics[9] = hubState[9]; // angular rates (rad/s), adjusted for coordinates change (should include rotor rotation!)
+	//hubKinematics[10] = -hubState[10];
+	//hubKinematics[11] = -hubState[11];
+	//hubKinematics[12] = 0.0;  // accelerations (m/s^2) - not yet used
+	//hubKinematics[13] = 0.0;
+	//hubKinematics[14] = 0.0;
+	//hubKinematics[15] = 0.0; // anglar accelerations (rad/s^2) - not yet used
+	//hubKinematics[16] = 0.0;
+	//hubKinematics[17] = 0.0;
 
 
 
@@ -153,22 +177,12 @@ int DECLDIR Turbine_solve(double time, int RK_flag, const vector<double>& hubSta
 
 	cout << "calling AD step advance states, with shaft speed " << shaftSpeed << endl;
 
-	//double time2 = 3.14;
-	//double shaftSpeed2 = 3.0; //1.0*shaftSpeed;
-
 	// now that things have been converted in terms of both data type and coordinate system, call the DLL function
 	INTERFACE_ADVANCESTATES(&time, &RKflag, hubKinematics, &shaftSpeed, inflowInterp, forceAndMoment2, massMatrix2, addedMassMatrix2, &genTorque2);
-
-
-
-	//cout << "copying results " <<endl;
 
 	// copy outputs into arrays passed in from ProteusDS (do we need to also convert coordinates?)
 	for (int i = 0; i < 6; i++)
 		forceAndMoment[i] = forceAndMoment2[i];
-
-
-	//cout << "... " <<endl;
 
 	for (int i = 0; i < 6; i++)
 	{
@@ -178,8 +192,6 @@ int DECLDIR Turbine_solve(double time, int RK_flag, const vector<double>& hubSta
 			addedMassMatrix[i][j] = addedMassMatrix2[6 * i + j];  // need to check the order of these <<<<<<
 		}
 	}
-
-	//cout << "done " <<endl;
 
 	return 1;
 }

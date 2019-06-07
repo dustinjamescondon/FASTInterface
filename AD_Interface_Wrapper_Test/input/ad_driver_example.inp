@@ -2,12 +2,12 @@
 UAE Phase 3 turbine (BEM)
 -----  Input Configuration  ----------------------------------------------------
 True          Echo            -  Echo input parameters to "<rootname>.ech"?
-"ad_primary_example.inp"    AD_InputFile    -  Name of the primary AeroDyn input file
+"WP_VSP_WTurb/WP_Baseline_AeroDyn15_Dynin.dat"    AD_InputFile    -  Name of the primary AeroDyn input file
 -----  Turbine Data  -----------------------------------------------------------
           3   NumBlades       - Number of blades (-)
-      0.432   HubRad          - Hub radius (m)
-     12.192   HubHt           - Hub height (m)
-          0   Overhang        - Overhang (m)
+      3.5   HubRad          - Hub radius (m)
+     84.0   HubHt           - Hub height (m)
+          3.3   Overhang        - Overhang (m)
           0   ShftTilt        - Shaft tilt (deg)
           0   Precone         - Blade precone (deg)
         1.0   MassAndInertia(1) - Total system mass (kg)

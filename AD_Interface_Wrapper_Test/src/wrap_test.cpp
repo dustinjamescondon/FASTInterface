@@ -114,20 +114,20 @@ int main(int argc, char *argv[])
 	
 	// TODO: this is extremely hacky
 	// create a steady flow situation in +x direction
-	
+
 	for (int i=0; i<nBlades; i++)
 		for (int j=0; j<nNodes; j++)
-			inflows[6*nNodes*i + 6*j + 0] = -4.0;  // 2 m/s flow rate in x direction
+			inflows[6*nNodes*i + 6*j + 0] = 8.7;  // 2 m/s flow rate in x direction
 	
 	
 	
-	// initialize toher vectors	
+	// initialize the vectors	
 	vector<double> hubState(18, 0.0);      // 6 position DOFS (x,y,z,roll,pitch,yaw) then velocities, then accelerations
 	vector<double> forceAndMoment(6, 0.0); // 6 DOF reaction forces/moments returned from rotor
 	vector< vector<double> > massMatrix( 6, vector<double>(6,  0.0) );
 	vector< vector<double> > addedMassMatrix( 6, vector<double>(6,  0.0) );
 
-	double shaftSpeed = 2.0; // in rad/s 
+	double shaftSpeed = 2.0944; // in rad/s should translate to around 20.0 rpm
 	double genTorque = 0;
 	
 		
@@ -159,7 +159,7 @@ int main(int argc, char *argv[])
 		
 		// prescribe the hub (coupling point) rotation for now:
 		hubState[9] = shaftSpeed;
-		hubState[3] = hubState[3] + shaftSpeed*dt;
+		hubState[3] = (hubState[3] + shaftSpeed*dt);
 		
 		
 		cout << "call the time stepping function of the model" << endl;
@@ -169,8 +169,7 @@ int main(int argc, char *argv[])
 
 		outfile << "( " << forceAndMoment[0] << ", " << forceAndMoment[1] << ", " << forceAndMoment[2] << " ); ( "
 			<< forceAndMoment[3] << ", " << forceAndMoment[4] << ", " << forceAndMoment[5] << " )" << endl;
-		
-		//cout << " generator torque: " << genTorque << endl;
+	
 	}
 
 	outfile.close();
