@@ -24,13 +24,17 @@ extern "C" {
 
 
 	// Initialization - loads the AD_interface DLL, initializes the model, etc.
-	int DECLDIR Turbine_init(int* nBladesOut, int* nNodesOut);
+	int DECLDIR Turbine_init(double hubKinematics[6][3], double shaftSpeed, int* nBladesOut, int* nNodesOut);
 	// nBladesOut - returns number of blades
 	// nNodesOut - returns number of nodes per blade
 
+	int DECLDIR Turbine_initInflows(vector<double>& inflows);
+
+	int DECLDIR Turbine_setInflows(vector<double>& inflows);
+
 
 // Send hub kinematics and get turbine reaction forces - this is the coupling function
-	int DECLDIR Turbine_solve(double time, int RK_flag, const vector<double>& hubState, double shaftSpeed,
+	int DECLDIR Turbine_solve(double time, int RK_flag, double hubKinematics[6][3], double shaftSpeed,
 		vector<double>& forceAndMoment, vector< vector<double> >& massMatrix,
 		vector< vector<double> >& addedMassMatrix, double* genTorque);
 	// time: current simulation time in s

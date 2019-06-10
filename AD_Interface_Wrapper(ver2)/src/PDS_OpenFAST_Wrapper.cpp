@@ -20,13 +20,16 @@ using namespace std;
 
 // declare the existence of the FORTRAN subroutines which are in the DLL
 extern "C" {
-	void INTERFACE_INIT(int* nBlades, int* nNodes);
-	void INTERFACE_SETSTATES(double* time, double hubState[], double* shaftSpeed);
-	void INTERFACE_ADVANCESTATES(double* time, int* rkFlag, double hubKinematics[], double* shaftSpeed, double bladeNodeInflow[],
-		double forceAndMoment[], double massMatrix[], double addedMassMatrix[], double* genTorque);
+	void INTERFACE_INIT(double hubKinematics[6][3], double *shaftSpeed, int* nBlades, int* nNodes);
+	void INTERFACE_INITINFLOWS(int* nBlades, int* nNodes, double inflows[]);
+	void INTERFACE_SETINFLOWS(int* nBlades, int* nNodes, double inflows[]);
+	void INTERFACE_SETSTATES(double* time, double hubState[6][3], double* shaftSpeed);
+	void INTERFACE_ADVANCESTATES(double* time, int* rkFlag, double hubKinematics[6][3], double* shaftSpeed, 
+		int* nBlades, int* nNodes, double bladeNodeInflow[], double forceAndMoment[], double massMatrix[],
+		double addedMassMatrix[], double* genTorque);
 
 	void INTERFACE_GETOUTPUTS(double* time, double* forceAndMoment[], double* generatorTorque, double massMatrix[], double addedMassMatrix[]);
-	void INTERFACE_SETBLADEINFLOW(double* time, double* bladeNodeInflow);
+	void INTERFACE_SETBLADEINFLOW(double* time, double bladeNodeInflow[]);
 	void INTERFACE_GETBLADENODEPOS(double* time, double* nodePos);
 	void INTERFACE_CLOSE();
 }
@@ -52,7 +55,8 @@ int nNodes;
 
 
 // This is the initialization function. It loads the AD_interface DLL, initializes the model, etc.
-int DECLDIR Turbine_init(int* nBladesOut, int* nNodesOut)
+// Right after this, we must set the inflows to finish the initialization
+int DECLDIR Turbine_init(double hubKinematics[6][3], double shaftSpeed, int* nBladesOut, int* nNodesOut)
 {
 
 	// SetErrorMode(SEM_FAILCRITICALERRORS);    // @mht: what does this do ??
@@ -62,12 +66,12 @@ int DECLDIR Turbine_init(int* nBladesOut, int* nNodesOut)
 	cout << "Finished loading DLL and functions" << endl;
 
 	// call to initialize AeroDyn driver, which includes reading in important parameters
-	INTERFACE_INIT(&nBlades, &nNodes);
+	INTERFACE_INIT(hubKinematics, &shaftSpeed, &nBlades, &nNodes);
 
 	// allocate some arrays based on number of blades and nodes
-	inflow = new double[6 * nBlades * nNodes];  // dynamically allocate the array to hold inflow data passed to AD_Interface
-	inflowInterp = new double[6 * nBlades * nNodes];  // dynamically allocate the array to hold inflow data passed to AD_Interface
-	inflowOld = new double[6 * nBlades * nNodes];  // dynamically allocate the array to hold inflow data passed to AD_Interface
+	inflow = new double[3 * nBlades * nNodes];  // dynamically allocate the array to hold inflow data passed to AD_Interface
+	inflowInterp = new double[3 * nBlades * nNodes];  // dynamically allocate the array to hold inflow data passed to AD_Interface
+	inflowOld = new double[3 * nBlades * nNodes];  // dynamically allocate the array to hold inflow data passed to AD_Interface
 	nodePos2 = new double[3 * nBlades * nNodes];  // dynamically allocate the array to hold node coordinates passed from AD_Interface
 	nodePos2Old = new double[3 * nBlades * nNodes];  // dynamically allocate the array to hold node coordinates passed from AD_Interface
 	
@@ -81,9 +85,24 @@ int DECLDIR Turbine_init(int* nBladesOut, int* nNodesOut)
 	return 1; // just return this for now because they've declared the function this way
 }
 
+int DECLDIR Turbine_initInflows(vector<double>& inflows)
+{
+	INTERFACE_INITINFLOWS(&nBlades, &nNodes, &inflows[0]);
+
+	return 1;
+}
+
+
+int DECLDIR Turbine_setInflows(vector<double>& inflows)
+{
+	INTERFACE_SETINFLOWS(&nBlades, &nNodes, &inflows[0]);
+
+	return 1;
+}
+
 
 // Combination of set_inputs, advance, and get_outputs
-int DECLDIR Turbine_solve(double time, int RK_flag, const vector<double>& hubState, double shaftSpeed,
+int DECLDIR Turbine_solve(double time, int RK_flag, double hubKinematics[6][3], double shaftSpeed,
 	vector<double>& forceAndMoment, vector< vector<double> >& massMatrix,
 	vector< vector<double> >& addedMassMatrix, double* genTorque)
 {
@@ -111,7 +130,7 @@ int DECLDIR Turbine_solve(double time, int RK_flag, const vector<double>& hubSta
 	//cout << "interpolating flow " <<endl;
 
    // interpolate inflow data for the current time!
-	for (int i = 0; i < 6 * nBlades * nNodes; i++) { // loop through all inflow data
+	for (int i = 0; i < 3 * nBlades * nNodes; i++) { // loop through all inflow data
 		// @dustin: We're going to forget about interpolation until we know things are working with a constant flow
 		//inflowInterp[i] = inflowOld[i] + (time - inflowTimeOld) * (inflow[i] - inflowOld[i]) / (inflowTime - inflowTimeOld);  // linear interpolation
 	
@@ -123,27 +142,28 @@ int DECLDIR Turbine_solve(double time, int RK_flag, const vector<double>& hubSta
 	// FAST convention: 
 	// ProteusDS convention: 
 
-	double hubKinematics[18];
+	//double hubKinematics[6][3];
 
 	// @dustin: just took out coordinate flips until later
-	hubKinematics[0] = hubState[0]; // positions (m), adjusted for coordinates change
-	hubKinematics[1] = hubState[1];
-	hubKinematics[2] = hubState[2];
-	hubKinematics[3] = hubState[3]; // rotations (rad), adjusted for coordinates change
-	hubKinematics[4] = hubState[4];
-	hubKinematics[5] = hubState[5];
-	hubKinematics[6] = hubState[6]; // velocities (m/s), adjusted for coordinates change
-	hubKinematics[7] = hubState[7];
-	hubKinematics[8] = hubState[8];
-	hubKinematics[9] = hubState[9]; // angular rates (rad/s), adjusted for coordinates change (should include rotor rotation!)
-	hubKinematics[10] = hubState[10];
-	hubKinematics[11] = hubState[11];
-	hubKinematics[12] = 0.0;  // accelerations (m/s^2) - not yet used
-	hubKinematics[13] = 0.0;
-	hubKinematics[14] = 0.0;
-	hubKinematics[15] = 0.0; // anglar accelerations (rad/s^2) - not yet used
-	hubKinematics[16] = 0.0;
-	hubKinematics[17] = 0.0;
+
+	//hubKinematics[0][0] = hubState[0]; // positions (m), adjusted for coordinates change
+	//hubKinematics[0][1] = hubState[1];
+	//hubKinematics[0][2] = hubState[2];
+	//hubKinematics[1][0] = hubState[3]; // rotations (rad), adjusted for coordinates change
+	//hubKinematics[1][1] = hubState[4];
+	//hubKinematics[1][2] = hubState[5];
+	//hubKinematics[2][0] = hubState[6]; // velocities (m/s), adjusted for coordinates change
+	//hubKinematics[2][1] = hubState[7];
+	//hubKinematics[2][2] = hubState[8];
+	//hubKinematics[3][0] = hubState[9]; // angular rates (rad/s), adjusted for coordinates change (should include rotor rotation!)
+	//hubKinematics[3][1] = hubState[10];
+	//hubKinematics[3][2] = hubState[11];
+	//hubKinematics[4][0] = 0.0;  // accelerations (m/s^2) - not yet used
+	//hubKinematics[4][1] = 0.0;
+	//hubKinematics[4][2] = 0.0;
+	//hubKinematics[5][0] = 0.0; // anglar accelerations (rad/s^2) - not yet used
+	//hubKinematics[5][1] = 0.0;
+	//hubKinematics[5][2] = 0.0;
 
 	//hubKinematics[0] = hubState[0]; // positions (m), adjusted for coordinates change
 	//hubKinematics[1] = -hubState[1];
@@ -178,7 +198,8 @@ int DECLDIR Turbine_solve(double time, int RK_flag, const vector<double>& hubSta
 	cout << "calling AD step advance states, with shaft speed " << shaftSpeed << endl;
 
 	// now that things have been converted in terms of both data type and coordinate system, call the DLL function
-	INTERFACE_ADVANCESTATES(&time, &RKflag, hubKinematics, &shaftSpeed, inflowInterp, forceAndMoment2, massMatrix2, addedMassMatrix2, &genTorque2);
+	INTERFACE_ADVANCESTATES(&time, &RKflag, hubKinematics, &shaftSpeed, &nBlades, &nNodes, inflowInterp, 
+		forceAndMoment2, massMatrix2, addedMassMatrix2, &genTorque2);
 
 	// copy outputs into arrays passed in from ProteusDS (do we need to also convert coordinates?)
 	for (int i = 0; i < 6; i++)
@@ -207,7 +228,7 @@ int DECLDIR Turbine_setBladeInflow(double time, const vector<double>& bladeNodeI
 
    // STORE previous data
 
-	memcpy(inflowOld, inflow, 6 * nBlades * nNodes * sizeof(double)); // save copy of previous inflow data
+	memcpy(inflowOld, inflow, 3 * nBlades * nNodes * sizeof(double)); // save copy of previous inflow data
 	memcpy(nodePos2Old, nodePos2, 3 * nBlades * nNodes * sizeof(double)); // save copy of previous node position data
 
 	inflowTimeOld = inflowTime;
@@ -224,12 +245,12 @@ int DECLDIR Turbine_setBladeInflow(double time, const vector<double>& bladeNodeI
 		{
 			//cout << "writing to index (+0:5) of "<< iB*nNodes*6 + iN*6 << endl;
 
-			inflow[iB * nNodes * 6 + iN * 6 + 0] = bladeNodeInflow[iB * nNodes * 6 + iN * 6 + 0]; // x velocity (m/s)
-			inflow[iB * nNodes * 6 + iN * 6 + 1] = -1 * bladeNodeInflow[iB * nNodes * 6 + iN * 6 + 1]; // y velocity (m/s) flipped coordinates
-			inflow[iB * nNodes * 6 + iN * 6 + 2] = -1 * bladeNodeInflow[iB * nNodes * 6 + iN * 6 + 2]; // z velocity (m/s) flipped coordinates
-			inflow[iB * nNodes * 6 + iN * 6 + 3] = bladeNodeInflow[iB * nNodes * 6 + iN * 6 + 3]; // x acceleration (m/s^2)
-			inflow[iB * nNodes * 6 + iN * 6 + 4] = -1 * bladeNodeInflow[iB * nNodes * 6 + iN * 6 + 4]; // y acceleration (m/s^2) flipped coordinates
-			inflow[iB * nNodes * 6 + iN * 6 + 5] = -1 * bladeNodeInflow[iB * nNodes * 6 + iN * 6 + 5]; // z acceleration (m/s^2) flipped coordinates
+			inflow[iB * nNodes * 3 + iN * 3 + 0] = bladeNodeInflow[iB * nNodes * 6 + iN * 6 + 0]; // x velocity (m/s)
+			inflow[iB * nNodes * 3 + iN * 3 + 1] = -1 * bladeNodeInflow[iB * nNodes * 6 + iN * 6 + 1]; // y velocity (m/s) flipped coordinates
+			inflow[iB * nNodes * 3 + iN * 3 + 2] = -1 * bladeNodeInflow[iB * nNodes * 6 + iN * 6 + 2]; // z velocity (m/s) flipped coordinates
+			inflow[iB * nNodes * 3 + iN * 3 + 3] = bladeNodeInflow[iB * nNodes * 6 + iN * 6 + 3]; // x acceleration (m/s^2)
+			inflow[iB * nNodes * 3 + iN * 6 + 4] = -1 * bladeNodeInflow[iB * nNodes * 6 + iN * 6 + 4]; // y acceleration (m/s^2) flipped coordinates
+			inflow[iB * nNodes * 3 + iN * 6 + 5] = -1 * bladeNodeInflow[iB * nNodes * 6 + iN * 6 + 5]; // z acceleration (m/s^2) flipped coordinates
 		}
 	}
 

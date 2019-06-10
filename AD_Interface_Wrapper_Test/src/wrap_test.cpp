@@ -21,8 +21,10 @@ using namespace std;
 
 // first make types for the functions (just need to specify the parameter types and return type, I also include parameter variable names as a reminder)
 typedef int(*Init_DLL)();
-typedef int(*Turbine_init)(int* nBlades, int* nNodes);
-typedef int(*Turbine_solve)(double time, int RK_flag, const vector<double>& hubState, double shaftSpeed,
+typedef int(*Turbine_init)(double hubKinematics[6][3], double shaftSpeed, int* nBlades, int* nNodes);
+typedef int(*Turbine_initInflows)(vector<double>& inflows);
+typedef int(*Turbine_setInflows)(vector<double>& inflows);
+typedef int(*Turbine_solve)(double time, int RK_flag, double hubKinematics[6][3], double shaftSpeed,
 	  vector<double> &forceAndMoment, vector< vector<double> > &massMatrix,
 	  vector< vector<double> > &addedMassMatrix, double* genTorque);
 typedef int(*Turbine_setBladeInflow)(double time, vector<double> &bladeNodeInflow);
@@ -33,6 +35,8 @@ typedef int(*Turbine_close)();
 
 Init_DLL		checkDLL;
 Turbine_init		init;
+Turbine_initInflows initInflows;
+Turbine_setInflows setInflows;
 Turbine_solve		solve;
 Turbine_setBladeInflow	setBladeInflow;
 Turbine_getBladeNodePos	getBladeNodePos;
@@ -70,6 +74,8 @@ int main(int argc, char *argv[])
 	// get addresses to each function within the DLL
 	//checkDLL  = 	(Init_DLL)GetProcAddress(hInstLibraryTurbine, "Init_DLL");
 	init = (Turbine_init)GetProcAddress(hInstLibraryTurbine, "Turbine_init");
+	initInflows = (Turbine_initInflows)GetProcAddress(hInstLibraryTurbine, "Turbine_initInflows");
+	setInflows = (Turbine_setInflows)GetProcAddress(hInstLibraryTurbine, "Turbine_setInflows");
 	solve = (Turbine_solve)GetProcAddress(hInstLibraryTurbine, "Turbine_solve");
 	setBladeInflow = (Turbine_setBladeInflow)GetProcAddress(hInstLibraryTurbine, "Turbine_setBladeInflow");
 	getBladeNodePos = (Turbine_getBladeNodePos)GetProcAddress(hInstLibraryTurbine, "Turbine_getBladeNodePos");
@@ -81,6 +87,12 @@ int main(int argc, char *argv[])
 
 	if (init)	  	cout << " Got address for turbine init" << endl;
 	else			  cout << " ERROR: Failed to get address for turbine init" << endl;
+
+	if (initInflows) cout << " Got address for init inflows" << endl;
+	else             cout << "ERROR: Failed to get address for init inflows" << endl;
+
+	if (setInflows) cout << " Got address for set infows" << endl;
+	else            cout << "Error: Failed to get address for set inflows" << endl;
 
 	if (solve)	  	cout << " Got address for turbine solve" << endl;
 	else			  cout << " ERROR: Failed to get address for turbine solve" << endl;
@@ -98,8 +110,35 @@ int main(int argc, char *argv[])
 
 	cout << "All done.  Now try calling some functions of the C++ wrapper functions..." << endl;
 
+	double shaftSpeed = 2.0944; // in rad/s should translate to around 20.0 rpm
+	double genTorque = 0;
+
+	// initialize the vectors	
+	double hubState[6][3];      // 6 position DOFS (x,y,z,roll,pitch,yaw) then velocities, then accelerations
+	for (int i = 0; i < 6; i++) {
+		for (int j = 0; j < 3; j++) {
+			hubState[i][j] = 0.0;
+		}
+	}
+	hubState[3][0] = shaftSpeed;
+
+	vector<double> forceAndMoment(6, 0.0); // 6 DOF reaction forces/moments returned from rotor
+
 	// call the wrapper DLL function that initializes the model
-	init(&nBlades, &nNodes);
+	init(hubState, shaftSpeed, &nBlades, &nNodes);
+
+	// initialize vectors based on rotor discretization
+	vector<double> nodePos(3 * nNodes * nBlades, 0.0);
+	vector<double> inflows(6 * nNodes * nBlades, 0.0);
+
+	// create a steady flow situation in +x direction
+	for (int i = 0; i < nBlades; i++)
+		for (int j = 0; j < nNodes; j++)
+			inflows[6 * nNodes * i + 6 * j + 0] = 8.7;  // 2 m/s flow rate in x direction
+
+
+
+	initInflows(inflows);
 	
 	cout << " DONE initializing " << endl;
 	
@@ -108,27 +147,8 @@ int main(int argc, char *argv[])
 	
 	cout << "There are " << nBlades << " blades with " << nNodes << " nodes each." << endl;
 	
-	// initialize vectors based on rotor discretization
-	vector<double> nodePos(3*nNodes*nBlades, 0.0);
-	vector<double> inflows(6*nNodes*nBlades, 0.0);
-	
-	// TODO: this is extremely hacky
-	// create a steady flow situation in +x direction
-
-	for (int i=0; i<nBlades; i++)
-		for (int j=0; j<nNodes; j++)
-			inflows[6*nNodes*i + 6*j + 0] = 8.7;  // 2 m/s flow rate in x direction
-	
-	
-	
-	// initialize the vectors	
-	vector<double> hubState(18, 0.0);      // 6 position DOFS (x,y,z,roll,pitch,yaw) then velocities, then accelerations
-	vector<double> forceAndMoment(6, 0.0); // 6 DOF reaction forces/moments returned from rotor
 	vector< vector<double> > massMatrix( 6, vector<double>(6,  0.0) );
 	vector< vector<double> > addedMassMatrix( 6, vector<double>(6,  0.0) );
-
-	double shaftSpeed = 2.0944; // in rad/s should translate to around 20.0 rpm
-	double genTorque = 0;
 	
 		
 	//cout << "THIS IS nodePOS as created ";
@@ -158,8 +178,8 @@ int main(int argc, char *argv[])
 		setBladeInflow(t_i, inflows);
 		
 		// prescribe the hub (coupling point) rotation for now:
-		hubState[9] = shaftSpeed;
-		hubState[3] = (hubState[3] + shaftSpeed*dt);
+		hubState[2][0] = shaftSpeed; // this should be rotational vel
+		hubState[1][0] = (hubState[1][0] + shaftSpeed*dt);
 		
 		
 		cout << "call the time stepping function of the model" << endl;
