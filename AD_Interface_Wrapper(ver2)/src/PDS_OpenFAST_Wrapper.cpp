@@ -8,10 +8,10 @@
 
 #include "PDS_OpenFAST_Wrapper.h"
 #include <iostream>
-#include <windows.h>  
-#include <stdlib.h>  
-#include <string.h>  
-#include <tchar.h>  
+#include <windows.h>
+#include <stdlib.h>
+#include <string.h>
+#include <tchar.h>
 #include <iostream>
 
 
@@ -69,11 +69,11 @@ int DECLDIR Turbine_init(double hubKinematics[6][3], double shaftSpeed, int* nBl
 	INTERFACE_INIT(hubKinematics, &shaftSpeed, &nBlades, &nNodes);
 
 	// allocate some arrays based on number of blades and nodes
-	inflow = new double[3 * nBlades * nNodes];  // dynamically allocate the array to hold inflow data passed to AD_Interface
-	inflowInterp = new double[3 * nBlades * nNodes];  // dynamically allocate the array to hold inflow data passed to AD_Interface
-	inflowOld = new double[3 * nBlades * nNodes];  // dynamically allocate the array to hold inflow data passed to AD_Interface
-	nodePos2 = new double[3 * nBlades * nNodes];  // dynamically allocate the array to hold node coordinates passed from AD_Interface
-	nodePos2Old = new double[3 * nBlades * nNodes];  // dynamically allocate the array to hold node coordinates passed from AD_Interface
+	inflow = new double[nBlades * nNodes * 3];  // dynamically allocate the array to hold inflow data passed to AD_Interface
+	inflowInterp = new double[nBlades * nNodes * 3];  // dynamically allocate the array to hold inflow data passed to AD_Interface
+	inflowOld = new double[nBlades * nNodes * 3];  // dynamically allocate the array to hold inflow data passed to AD_Interface
+	nodePos2 = new double[nBlades * nNodes * 3];  // dynamically allocate the array to hold node coordinates passed from AD_Interface
+	nodePos2Old = new double[nBlades * nNodes * 3];  // dynamically allocate the array to hold node coordinates passed from AD_Interface
 	
 	cout << "There are " << nBlades << " blades with " << nNodes << " nodes each." << endl;
 
@@ -100,13 +100,11 @@ int DECLDIR Turbine_setInflows(vector<double>& inflows)
 	return 1;
 }
 
-
 // Combination of set_inputs, advance, and get_outputs
 int DECLDIR Turbine_solve(double time, int RK_flag, double hubKinematics[6][3], double shaftSpeed,
 	vector<double>& forceAndMoment, vector< vector<double> >& massMatrix,
 	vector< vector<double> >& addedMassMatrix, double* genTorque)
 {
-
 	// step (integer): current step number in the simulation
 	// hubState (double [18]): serialized vector of the state variables for the rotor hub in ProteusDS.  
 	// Vector includes, in order:
@@ -130,7 +128,7 @@ int DECLDIR Turbine_solve(double time, int RK_flag, double hubKinematics[6][3], 
 	//cout << "interpolating flow " <<endl;
 
    // interpolate inflow data for the current time!
-	for (int i = 0; i < 3 * nBlades * nNodes; i++) { // loop through all inflow data
+	for (int i = 0; i < nBlades * nNodes * 3; i++) { // loop through all inflow data
 		// @dustin: We're going to forget about interpolation until we know things are working with a constant flow
 		//inflowInterp[i] = inflowOld[i] + (time - inflowTimeOld) * (inflow[i] - inflowOld[i]) / (inflowTime - inflowTimeOld);  // linear interpolation
 	
@@ -142,28 +140,13 @@ int DECLDIR Turbine_solve(double time, int RK_flag, double hubKinematics[6][3], 
 	// FAST convention: 
 	// ProteusDS convention: 
 
-	//double hubKinematics[6][3];
-
 	// @dustin: just took out coordinate flips until later
-
-	//hubKinematics[0][0] = hubState[0]; // positions (m), adjusted for coordinates change
-	//hubKinematics[0][1] = hubState[1];
-	//hubKinematics[0][2] = hubState[2];
-	//hubKinematics[1][0] = hubState[3]; // rotations (rad), adjusted for coordinates change
-	//hubKinematics[1][1] = hubState[4];
-	//hubKinematics[1][2] = hubState[5];
-	//hubKinematics[2][0] = hubState[6]; // velocities (m/s), adjusted for coordinates change
-	//hubKinematics[2][1] = hubState[7];
-	//hubKinematics[2][2] = hubState[8];
-	//hubKinematics[3][0] = hubState[9]; // angular rates (rad/s), adjusted for coordinates change (should include rotor rotation!)
-	//hubKinematics[3][1] = hubState[10];
-	//hubKinematics[3][2] = hubState[11];
-	//hubKinematics[4][0] = 0.0;  // accelerations (m/s^2) - not yet used
-	//hubKinematics[4][1] = 0.0;
-	//hubKinematics[4][2] = 0.0;
-	//hubKinematics[5][0] = 0.0; // anglar accelerations (rad/s^2) - not yet used
-	//hubKinematics[5][1] = 0.0;
-	//hubKinematics[5][2] = 0.0;
+	/*
+	for (int i = 0; i < 6; ++i) {
+		hubKinematics[i][0] = hubState[i][0]; // x
+		hubKinematics[i][1] = -hubState[i][1]; // y
+		hubKinematics[i][2] = -hubState[i][2]; // z
+	}*/
 
 	//hubKinematics[0] = hubState[0]; // positions (m), adjusted for coordinates change
 	//hubKinematics[1] = -hubState[1];
@@ -233,24 +216,17 @@ int DECLDIR Turbine_setBladeInflow(double time, const vector<double>& bladeNodeI
 
 	inflowTimeOld = inflowTime;
 
-
-	// STORE LATEST DATA NOW
-
-	 //cout << "Turbine_setBladeInflow: size of bladeNodeInflow is "<< bladeNodeInflow.size() << endl;
-
 	 // create flow kinematics array from the one passed from ProteusDS, including coordinate system conversion    
 	for (int iB = 0; iB < nBlades; iB++) // loop through blades
 	{
 		for (int iN = 0; iN < nNodes; iN++) // loop through nodes on the blade
 		{
-			//cout << "writing to index (+0:5) of "<< iB*nNodes*6 + iN*6 << endl;
-
-			inflow[iB * nNodes * 3 + iN * 3 + 0] = bladeNodeInflow[iB * nNodes * 6 + iN * 6 + 0]; // x velocity (m/s)
-			inflow[iB * nNodes * 3 + iN * 3 + 1] = -1 * bladeNodeInflow[iB * nNodes * 6 + iN * 6 + 1]; // y velocity (m/s) flipped coordinates
-			inflow[iB * nNodes * 3 + iN * 3 + 2] = -1 * bladeNodeInflow[iB * nNodes * 6 + iN * 6 + 2]; // z velocity (m/s) flipped coordinates
-			inflow[iB * nNodes * 3 + iN * 3 + 3] = bladeNodeInflow[iB * nNodes * 6 + iN * 6 + 3]; // x acceleration (m/s^2)
-			inflow[iB * nNodes * 3 + iN * 6 + 4] = -1 * bladeNodeInflow[iB * nNodes * 6 + iN * 6 + 4]; // y acceleration (m/s^2) flipped coordinates
-			inflow[iB * nNodes * 3 + iN * 6 + 5] = -1 * bladeNodeInflow[iB * nNodes * 6 + iN * 6 + 5]; // z acceleration (m/s^2) flipped coordinates
+			inflow[iB * nNodes * 3 + iN * 3 + 0] = bladeNodeInflow[iB * nNodes * 3 + iN * 3 + 0]; // x velocity (m/s)
+			inflow[iB * nNodes * 3 + iN * 3 + 1] = -1 * bladeNodeInflow[iB * nNodes * 3 + iN * 3 + 1]; // y velocity (m/s) flipped coordinates
+			inflow[iB * nNodes * 3 + iN * 3 + 2] = -1 * bladeNodeInflow[iB * nNodes * 3 + iN * 3 + 2]; // z velocity (m/s) flipped coordinates
+			//inflow[iB * nNodes * 3 + iN * 3 + 3] = bladeNodeInflow[iB * nNodes * 6 + iN * 6 + 3]; // x acceleration (m/s^2)
+			//inflow[iB * nNodes * 3 + iN * 3 + 4] = -1 * bladeNodeInflow[iB * nNodes * 6 + iN * 6 + 4]; // y acceleration (m/s^2) flipped coordinates
+			//inflow[iB * nNodes * 3 + iN * 3 + 5] = -1 * bladeNodeInflow[iB * nNodes * 6 + iN * 6 + 5]; // z acceleration (m/s^2) flipped coordinates
 		}
 	}
 

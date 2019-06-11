@@ -19,9 +19,11 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="src\InflowState.cpp" />
     <ClCompile Include="src\PDS_OpenFAST_Wrapper.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="src\InflowState.h" />
     <ClInclude Include="src\PDS_OpenFAST_Wrapper.h" />
   </ItemGroup>
   <ItemGroup>

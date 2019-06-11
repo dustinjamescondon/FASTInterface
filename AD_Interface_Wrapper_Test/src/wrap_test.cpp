@@ -110,17 +110,18 @@ int main(int argc, char *argv[])
 
 	cout << "All done.  Now try calling some functions of the C++ wrapper functions..." << endl;
 
-	double shaftSpeed = 2.0944; // in rad/s should translate to around 20.0 rpm
+	double shaftSpeed = 1.66504; // in rad/s should translate to around 20.0 rpm
 	double genTorque = 0;
 
-	// initialize the vectors	
+	// initialize the hubState
 	double hubState[6][3];      // 6 position DOFS (x,y,z,roll,pitch,yaw) then velocities, then accelerations
 	for (int i = 0; i < 6; i++) {
 		for (int j = 0; j < 3; j++) {
 			hubState[i][j] = 0.0;
 		}
 	}
-	hubState[3][0] = shaftSpeed;
+
+	hubState[3][0] = shaftSpeed; // set shaft rotational velocity
 
 	vector<double> forceAndMoment(6, 0.0); // 6 DOF reaction forces/moments returned from rotor
 
@@ -129,12 +130,12 @@ int main(int argc, char *argv[])
 
 	// initialize vectors based on rotor discretization
 	vector<double> nodePos(3 * nNodes * nBlades, 0.0);
-	vector<double> inflows(6 * nNodes * nBlades, 0.0);
+	vector<double> inflows(3 * nNodes * nBlades, 0.0);
 
 	// create a steady flow situation in +x direction
 	for (int i = 0; i < nBlades; i++)
 		for (int j = 0; j < nNodes; j++)
-			inflows[6 * nNodes * i + 6 * j + 0] = 8.7;  // 2 m/s flow rate in x direction
+			inflows[3 * nNodes * i + 3 * j + 0] = 8.7;  // m/s flow rate in x direction
 
 
 
@@ -160,14 +161,12 @@ int main(int argc, char *argv[])
 	outfile << "Forces(x,y,z)     Moments(Mx, My, Mz) \n";
 	
 	// Testing loop
-	for(int i=0; i<32; i++)
+	for(int i=0; i<8000; i++)
 	{
 		t_i = i*dt;
 		
 		cout << endl << " -------------- TIME STEP " << i << " --------------" << endl;
-		
-		// Calls? need to test these
-		
+				
 		cout << "get blade node positions from the model" << endl;
 		getBladeNodePos(t_i, nodePos);
 		
@@ -178,8 +177,8 @@ int main(int argc, char *argv[])
 		setBladeInflow(t_i, inflows);
 		
 		// prescribe the hub (coupling point) rotation for now:
-		hubState[2][0] = shaftSpeed; // this should be rotational vel
-		hubState[1][0] = (hubState[1][0] + shaftSpeed*dt);
+		hubState[3][0] = shaftSpeed; // this is rotational vel
+		hubState[1][0] = (hubState[1][0] + shaftSpeed*dt); // this is orientation
 		
 		
 		cout << "call the time stepping function of the model" << endl;
@@ -194,28 +193,4 @@ int main(int argc, char *argv[])
 
 	outfile.close();
 	close();
-	
-	/* // Test method calls 
-	int step = 10;
-	double state [9] = {0,1,2,3,4,5,6,7,8};
-	
-	double FM [6];
-	
-	
-	Advance_AD_states(0, 0.1, 0.1, 1, 10);
-	
-	cout << "yeet" << endl;
-		
-	
-	get_AD_bladeNodePos(step);
-	
-	get_AD_hubForceandMoment(step, FM);
-	
-	// PDS
-	
-	set_AD_hubstate(step, state);
-	
-	Advance_AD_states(1, 0.1, 0.1, 1, 10); */
-	
-	
 }

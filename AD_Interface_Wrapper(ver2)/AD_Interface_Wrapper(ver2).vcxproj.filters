@@ -18,9 +18,15 @@
     <ClCompile Include="src\PDS_OpenFAST_Wrapper.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="src\InflowState.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\PDS_OpenFAST_Wrapper.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\InflowState.h">
       <Filter>Source Files</Filter>
     </ClInclude>
   </ItemGroup>

@@ -64,10 +64,11 @@ True          SumPrint            - Generate a summary file listing input option
           0   NTwOuts             - Number of tower node outputs [0 - 9]  (-)
           1,          2,          3,          4,          5    TwOutNd             - Tower nodes whose values will be output  (-)
                    OutList             - The next line(s) contains a list of output parameters.  See OutListParameters.xlsx for a listing of available output channels, (-)
-"RtSkew, RtSpeed, RtAeroPwr"   
+"RtSkew, RtSpeed, RtAeroPwr"
+"B1Pitch, B2Pitch, B2Pitch"   
 "RtVAvgxh, RtVAvgyh, RtVAvgzh"    
 "RTAeroFxh, RTAeroFyh, RTAeroFzh"
 "RTAeroMxh, RTAeroMyh, RTAeroMzh" 
-"RtTSR, RtArea"         
+"RtTSR, RtAeroCp"         
 END of input file (the word "END" must appear in the first 3 columns of this last OutList line)
 ---------------------------------------------------------------------------------------
