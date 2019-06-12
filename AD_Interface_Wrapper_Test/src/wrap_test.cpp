@@ -137,7 +137,7 @@ int main(int argc, char *argv[])
 		for (int j = 0; j < nNodes; j++)
 			inflows[3 * nNodes * i + 3 * j + 0] = 8.7;  // m/s flow rate in x direction
 
-
+	// PDS: get the node positions so you can pass in the appropriate inflows
 
 	initInflows(inflows);
 	

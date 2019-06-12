@@ -19,12 +19,14 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="src\InflowState.cpp" />
+    <ClCompile Include="src\PDS_State.cpp" />
     <ClCompile Include="src\PDS_OpenFAST_Wrapper.cpp" />
+    <ClCompile Include="src\Vector_AD.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="src\InflowState.h" />
+    <ClInclude Include="src\PDS_State.h" />
     <ClInclude Include="src\PDS_OpenFAST_Wrapper.h" />
+    <ClInclude Include="src\Vector_AD.h" />
   </ItemGroup>
   <ItemGroup>
     <Library Include="..\AD_Interface_Wrapper_Test\AD_Interface_x64_Debug_Double.lib" />

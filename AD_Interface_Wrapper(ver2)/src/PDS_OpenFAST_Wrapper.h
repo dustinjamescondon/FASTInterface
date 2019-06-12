@@ -13,13 +13,13 @@
 #define DECLDIR __declspec(dllimport)   
 #endif  
 
-#include "InflowState.h"
+#include "PDS_State.h"
 #include <vector> // for vector data type used by ProteusDS
 
-class PDS_FAST_Wrapper {
+class PDS_AD_Wrapper {
 public:
 	// PDS_FAST is a singleton class, so this returns a pointer to the only instance of the class
-	static PDS_FAST_Wrapper* DECLDIR getInstance();
+	static PDS_AD_Wrapper* DECLDIR getInstance();
 
 	// Initialize the Aerodyn and it's interface
 	// ---
@@ -35,7 +35,7 @@ public:
 	//				 nNodes_out  - the number of nodes per blade, to be assigned upon calling the function
 	int DECLDIR init_inputFiles(double hubKinematics[6][3], double shaftSpeed, int* nBlades_out, int* nNodes_out);
 
-	// Initialize the inflows. The format expected is (in global coordinate system)
+	// Initialize the inflows. The format expected is (in global coordinate system):
 	// inflows[0] inflow velocity in x direction at node 0
 	//     ...[1] inflow velocity in y direction at node 0
 	//     ...[2] inflow velocity in z direction at node 0
@@ -43,19 +43,28 @@ public:
 	// ... etc
 	int DECLDIR init_inflows(const vector<double>& inflows);
 
-	// 
-	int DECLDIR setInflows(const vector<double>& inflows);
+	// This 
+	int DECLDIR updateState(double time,
+							const double hubPosition[3],
+							const double hubOrientation[3],
+							const double hubVelocity[3],
+							const double hubRotationalVelocity[3],
+							const vector<double>& inflows);
 
 	//
 	int DECLDIR solve(double time, double hubKinematics[6][3], vector<double>& forceAndMoment_out,
 		vector< vector<double> >& massMatrix_out, vector< vector<double> >& addedMassMatrix);
 
-	int DECLDIR getBladeNodePositions(double time, vector<double>& bladeNodePos_out);
+	// Note, does not actually set the hub orientation and position in AD, it just passes these to 
+	// AD so it can do the calculation of where the nodes are.
+	void DECLDIR getBladeNodePositions(double hubPosition[3], double hubOrientation[3],
+		vector<double>& bladeNodePos_out);
 
-	int DECLDIR setBladeNodePositions(double time, vector<double>& bladeNodePos);
+
+
 
 private:
-	InflowState inflowState;
+	PDS_State pds_state;
 
 	int nBlades;
 	int nNodes;
