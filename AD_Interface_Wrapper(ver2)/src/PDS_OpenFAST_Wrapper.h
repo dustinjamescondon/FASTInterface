@@ -22,18 +22,16 @@ public:
 	static PDS_AD_Wrapper* DECLDIR getInstance();
 
 	// Initialize the Aerodyn and it's interface
-	// ---
-	// hubKinematics - two dimensional array constaining the following data about the hub
-	//               hubKinematics[0][0-2] position
-	//                         ...[1][0-2] orientation
-	//                         ...[2][0-2] velocity
-	//                         ...[3][0-2] rotational velocity
-	//                         ...[4][0-2] acceleration
-	//                         ...[5][0-2] rotational acceleration
 	//				 shaftSpeed - the rotional speed of the shaft in rads/sec
 	//				 nBlades_out - the number of blades, to be assigned upon calling the function
 	//				 nNodes_out  - the number of nodes per blade, to be assigned upon calling the function
-	int DECLDIR init_inputFiles(double hubKinematics[6][3], double shaftSpeed, int* nBlades_out, int* nNodes_out);
+	int DECLDIR init_inputFiles(const Vector_3D& hubPosition,
+		const Vector_3D& hubOrientation,
+		const Vector_3D& hubVelocity,
+		const Vector_3D& hubRotationalVelocity,
+		double shaftSpeed, 
+		int* nBlades_out, 
+		int* nNodes_out);
 
 	// Initialize the inflows. The format expected is (in global coordinate system):
 	// inflows[0] inflow velocity in x direction at node 0
@@ -52,12 +50,19 @@ public:
 							const vector<double>& inflows);
 
 	//
-	int DECLDIR solve(double time, double hubKinematics[6][3], vector<double>& forceAndMoment_out,
-		vector< vector<double> >& massMatrix_out, vector< vector<double> >& addedMassMatrix);
+	int DECLDIR solve(double time,
+		const Vector_3D& hubPosition,
+		const Vector_3D& hubOrientation,
+		const Vector_3D& hubVelocity,
+		const Vector_3D& hubRotationalVelocity, 
+		Vector_3D& force_out,
+		Vector_3D& moment_out,
+		vector< vector<double> >& massMatrix_out, 
+		vector< vector<double> >& addedMassMatrix);
 
 	// Note, does not actually set the hub orientation and position in AD, it just passes these to 
 	// AD so it can do the calculation of where the nodes are.
-	void DECLDIR getBladeNodePositions(double hubPosition[3], double hubOrientation[3],
+	void DECLDIR getBladeNodePositions(const Vector_3D& hubPosition, double hubOrientation[3],
 		vector<double>& bladeNodePos_out);
 
 

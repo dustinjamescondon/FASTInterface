@@ -1,19 +1,36 @@
-#include "Vector_AD.h"
+#include "Vector_3D.h"
 
-Vector_AD::Vector_AD()
+Vector_3D::Vector_3D()
 {
+	vec[0] = 0.0;
+	vec[1] = 0.0;
+	vec[2] = 0.0;
 }
 
-Vector_AD::Vector_AD(const Vector_AD& v) 
+Vector_3D::Vector_3D(const Vector_3D& v) 
 {
 	vec[0] = v.vec[0];
 	vec[1] = v.vec[1];
 	vec[2] = v.vec[2];
 }
 
-Vector_AD Vector_AD::operator+(const Vector_AD& v) const
+Vector_3D::Vector_3D(const double arr[3])
 {
-	Vector_AD result;
+	vec[0] = arr[0];
+	vec[1] = arr[1];
+	vec[2] = arr[2];
+}
+
+Vector_3D::Vector_3D(double x, double y, double z)
+{
+	vec[0] = x;
+	vec[1] = y;
+	vec[2] = z;
+}
+
+Vector_3D Vector_3D::operator+(const Vector_3D& v) const
+{
+	Vector_3D result;
 	result.vec[0] = vec[0] + v.vec[0];
 	result.vec[1] = vec[1] + v.vec[1];
 	result.vec[2] = vec[2] + v.vec[2];
@@ -21,42 +38,52 @@ Vector_AD Vector_AD::operator+(const Vector_AD& v) const
 	return result;
 }
 
-const double* Vector_AD::getCArray() const {
+Vector_3D Vector_3D::operator-(const Vector_3D& v) const
+{
+	Vector_3D result;
+	result.vec[0] = vec[0] - v.vec[0];
+	result.vec[1] = vec[1] - v.vec[1];
+	result.vec[2] = vec[2] - v.vec[2];
+
+	return result;
+}
+
+const double* Vector_3D::getCArray() const {
 	return vec;
 }
 
-double* Vector_AD::getCArray() {
+double* Vector_3D::getCArray() {
 	return vec;
 }
 
-double& Vector_AD::x() {
+double& Vector_3D::x() {
 	return vec[0];
 }
 
-double& Vector_AD::y() {
+double& Vector_3D::y() {
 	return vec[1];
 }
 
-double& Vector_AD::z() {
+double& Vector_3D::z() {
 	return vec[2];
 }
 
-const double& Vector_AD::x() const { 
+const double& Vector_3D::x() const { 
 	return vec[0];
 }
 
-const double& Vector_AD::y() const { 
+const double& Vector_3D::y() const { 
 	return vec[1];
 }
 
-const double& Vector_AD::z() const { 
+const double& Vector_3D::z() const { 
 	return vec[2]; 
 }
 
 
-Vector_AD operator*(double s, const Vector_AD& v) 
+Vector_3D operator*(double s, const Vector_3D& v) 
 {
-	Vector_AD result;
+	Vector_3D result;
 	result.vec[0] = v.vec[0] * s;
 	result.vec[1] = v.vec[1] * s;
 	result.vec[2] = v.vec[2] * s;
@@ -64,9 +91,9 @@ Vector_AD operator*(double s, const Vector_AD& v)
 	return result;
 }
 
-Vector_AD operator*(const Vector_AD& v, double s)
+Vector_3D operator*(const Vector_3D& v, double s)
 {
-	Vector_AD result;
+	Vector_3D result;
 	result.vec[0] = v.vec[0] * s;
 	result.vec[1] = v.vec[1] * s;
 	result.vec[2] = v.vec[2] * s; 

@@ -1,6 +1,6 @@
 #pragma once
 
-#include "Vector_AD.h"
+#include "Vector_3D.h"
 #include <vector>
 
 
@@ -17,20 +17,23 @@ public:
 		const double hubOrientation[3],
 		const double hubVelocity[3],
 		const double hubRotationalVelocity[3],
-		const vector<double>& inflows);
+		const std::vector<double>& inflows);
 
-	Vector_AD interpolateHubPosition(double time) const;
-	Vector_AD interpolateHubOrientation(double time) const;
-	Vector_AD interpolateHubVelocity(double time) const;
-	Vector_AD interpolateHubRotationalVelocity(double time) const;
+	Vector_3D interpolateHubPosition(double time) const;
+	Vector_3D interpolateHubOrientation(double time) const;
+	Vector_3D interpolateHubVelocity(double time) const;
+	Vector_3D interpolateHubRotationalVelocity(double time) const;
 
 private:
+	Vector_3D interpolateSpatialDirection(double time, const Vector_3D& prev, const Vector_3D& curr) const;
+	Vector_3D interpolateEulerAngles(double time, const Vector_3D& prev, const Vector_3D& curr) const;
+
 	double prevTime, currTime;
 
 	std::vector<double> prevInflows, currInflows;
 
-	Vector_AD prevHubPosition, currHubPosition;
-	Vector_AD prevHubOrientation, currHubOrientation;
-	Vector_AD prevHubVelocity, currHubVelocity;
-	Vector_AD prevHubRotationalVelocity, currHubRotationalVelocity;
+	Vector_3D prevHubPosition, currHubPosition;
+	Vector_3D prevHubOrientation, currHubOrientation;
+	Vector_3D prevHubVelocity, currHubVelocity;
+	Vector_3D prevHubRotationalVelocity, currHubRotationalVelocity;
 };
