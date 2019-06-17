@@ -16,22 +16,23 @@
 #include "PDS_State.h"
 #include <vector> // for vector data type used by ProteusDS
 
+using namespace std;
+
 class PDS_AD_Wrapper {
 public:
-	// PDS_FAST is a singleton class, so this returns a pointer to the only instance of the class
-	static PDS_AD_Wrapper* DECLDIR getInstance();
+	DECLDIR PDS_AD_Wrapper();
 
 	// Initialize the Aerodyn and it's interface
-	//				 shaftSpeed - the rotional speed of the shaft in rads/sec
-	//				 nBlades_out - the number of blades, to be assigned upon calling the function
-	//				 nNodes_out  - the number of nodes per blade, to be assigned upon calling the function
-	int DECLDIR init_inputFiles(const Vector_3D& hubPosition,
-		const Vector_3D& hubOrientation,
-		const Vector_3D& hubVelocity,
-		const Vector_3D& hubRotationalVelocity,
-		double shaftSpeed, 
-		int* nBlades_out, 
-		int* nNodes_out);
+	int DECLDIR init_inputFiles(
+		const char* inputFilename,
+		Vector_3D hubPosition,
+		Vector_3D hubOrientation,
+		Vector_3D hubVelocity,
+		Vector_3D hubRotationalVelocity,
+		double shaftSpeed, // rotional speed of the shaft in rads/sec
+		double bladePitch,
+		int* nBlades_out,  // number of blades, to be assigned upon calling the function
+		int* nNodes_out);  // number of nodes per blade, to be assigned upon calling the function
 
 	// Initialize the inflows. The format expected is (in global coordinate system):
 	// inflows[0] inflow velocity in x direction at node 0
@@ -39,94 +40,31 @@ public:
 	//     ...[2] inflow velocity in z direction at node 0
 	//     ...[3] inflow velocity in x direction at node 1
 	// ... etc
-	int DECLDIR init_inflows(const vector<double>& inflows);
+	int DECLDIR init_inflows(vector<double>& inflows);
 
-	// This 
-	int DECLDIR updateState(double time,
-							const double hubPosition[3],
-							const double hubOrientation[3],
-							const double hubVelocity[3],
-							const double hubRotationalVelocity[3],
-							const vector<double>& inflows);
+	// call this before calling solve, 
+	void DECLDIR updateHubState(double time,
+		Vector_3D hubPosition,
+		Vector_3D hubOrientation,
+		Vector_3D hubVelocity,
+		Vector_3D hubRotationalVelocity,
+		double shaftSpeed,
+		double bladePitch);
 
-	//
-	int DECLDIR solve(double time,
-		const Vector_3D& hubPosition,
-		const Vector_3D& hubOrientation,
-		const Vector_3D& hubVelocity,
-		const Vector_3D& hubRotationalVelocity, 
+	// once updateHubState has been called, we call this to get where that input put the blade nodes
+	void DECLDIR getBladeNodePositions(vector<double>& bladeNodePositions);
+	
+	//  then we call this, passing the inflows at "time", and we will get back the loads and moments from 
+	// previous time up until this current time
+	void DECLDIR solve(
+		vector<double>& inflows,
 		Vector_3D& force_out,
 		Vector_3D& moment_out,
-		vector< vector<double> >& massMatrix_out, 
-		vector< vector<double> >& addedMassMatrix);
-
-	// Note, does not actually set the hub orientation and position in AD, it just passes these to 
-	// AD so it can do the calculation of where the nodes are.
-	void DECLDIR getBladeNodePositions(const Vector_3D& hubPosition, double hubOrientation[3],
-		vector<double>& bladeNodePos_out);
-
-
-
+		double massMatrix_out[6][6],
+		double addedMassMatrix[6][6]);
 
 private:
-	PDS_State pds_state;
 
 	int nBlades;
 	int nNodes;
-
-
 };
-
-extern "C" {
-
-
-	using namespace std;
-
-
-	// Initialization - loads the AD_interface DLL, initializes the model, etc.
-	int DECLDIR Turbine_init(double hubKinematics[6][3], double shaftSpeed, int* nBladesOut, int* nNodesOut);
-	// nBladesOut - returns number of blades
-	// nNodesOut - returns number of nodes per blade
-
-	int DECLDIR Turbine_initInflows(vector<double>& inflows);
-
-	int DECLDIR Turbine_setInflows(vector<double>& inflows);
-
-
-// Send hub kinematics and get turbine reaction forces - this is the coupling function
-	int DECLDIR Turbine_solve(double time, int RK_flag, double hubKinematics[6][3], double shaftSpeed,
-		vector<double>& forceAndMoment, vector< vector<double> >& massMatrix,
-		vector< vector<double> >& addedMassMatrix, double* genTorque);
-	// time: current simulation time in s
-   // RK_flag (integer): stage in the RK45 integration process (i.e. which sub-step number) [work in progress]
-	// hubState (double [18]): serialized vector of the statevaria bles for the rotor hub in ProteusDS. The vector includes, in order:
-	// Position (x, y, z) (m)
-	// Orientation (roll, pitch, yaw) (rad)
-	// Velocity (Vx, Vy, Vz) (m/s)
-	// Angular Velocity (Vroll, Vpitch, Vyaw) (rad/s)
-	// Acceleration (Ax, Ay, Az) (m/s^2)
-	// Angular Acceleration (Aroll, Apitch, Ayaw) (rad/s^2)
-	// shaftSpeed (double): Rotational speed of the low speed shaft (rad/s)
-	// forceAndMoment (double [6]): Forces and moments at the turbine rotor hub.  Stored as a vector (Fx, Fy, Fz, Mx, My, Mz).
-	// massMatrix (double [36]): The sum of all inertial terms of the turbine.  Ordered as ( mxx, mxy, mxz, mx,roll, mx,pitch, mx,yaw, myx, myy etc.)
-	// addedMassMatrix (double [36]): The sum of all hydrodynamic added mass terms. Ordered as ( mxx, mxy, mxz, mx,roll, mx,pitch, mx,yaw, myx, myy etc.)
-	// genTorque (double): Torque exerted on the low speed rotor shaft by the generator.  Equal and opposite to the body reaction torque.
-
-
-// @dustin: made bladeNodeInflow pass by reference so the vector doesn't need to be copied
-// Receives water kinematics at blade node points
-	int DECLDIR Turbine_setBladeInflow(double time, const vector<double>& bladeNodeInflow);
-	// time: current simulation time in s
-	// nodePos(double [3*n*b], n = number of nodes per blade, b = number of blades): Current positions of the blade nodes.  Stored as a serialized vector ordered as ( xb1,n1, yb1,n1, zb1,n1, xb1,n2, yb1,n2, zb1,n2, etc. )
-
-// Returns blade node positions 
-	int DECLDIR Turbine_getBladeNodePos(double time, vector<double>& nodePos);
-	// time: current simulation time in s
-	// nodePos(double) [3*n*b], n = number of nodes per blade, b = number of blades): Current positions of the blade nodes.  
-	//                        Stored as a serialized vector ordered as ( xb1,n1, yb1,n1, zb1,n1, xb1,n2, yb1,n2, zb1,n2, etc. )
-
-// Close things, free memory
-	int DECLDIR Turbine_close();
-
-
-}

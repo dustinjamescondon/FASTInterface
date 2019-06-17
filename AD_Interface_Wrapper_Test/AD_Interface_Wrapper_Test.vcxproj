@@ -125,6 +125,12 @@
   <ItemGroup>
     <ClCompile Include="src\wrap_test.cpp" />
   </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\AD_Interface_Wrapper(ver2)\src\PDS_OpenFAST_Wrapper.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <Library Include="..\x64\Debug\AD_Interface_Wrapper.lib" />
+  </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
   </ImportGroup>

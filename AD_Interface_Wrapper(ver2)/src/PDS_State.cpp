@@ -14,11 +14,28 @@ void PDS_State::allocate(int totalNodes)
 	prevInflows.resize(totalNodes * 3, 0.0);
 }
 
+
+void PDS_State::initializeHubState(Vector_3D hubPosition,
+	Vector_3D hubOrientation,
+	Vector_3D hubVelocity,
+	Vector_3D hubRotationalVelocity)
+{
+	currHubPosition = hubPosition;
+	currHubOrientation = hubOrientation;
+	currHubVelocity = hubVelocity;
+	currHubRotationalVelocity = hubRotationalVelocity;
+}
+
+void PDS_State::initializeInflows(const std::vector<double>& inflows)
+{
+	currInflows = inflows;
+}
+
 void PDS_State::updateStates(double time, 
-	const double hubPosition[3],
-	const double hubOrientation[3],
-	const double hubVelocity[3],
-	const double hubRotationVelocity[3],
+	Vector_3D hubPosition,
+	Vector_3D hubOrientation,
+	Vector_3D hubVelocity,
+	Vector_3D hubRotationVelocity,
 	const std::vector<double>& inflows)
 {
 	prevInflows = currInflows;
@@ -36,6 +53,24 @@ void PDS_State::updateStates(double time,
 
 	prevTime = currTime;
 	currTime = time;
+}
+
+Vector_3D PDS_State::getCurrentHubPosition() const
+{
+	return currHubPosition;
+}
+
+Vector_3D PDS_State::getCurrentHubOrientation() const
+{
+	return currHubOrientation;
+}
+Vector_3D PDS_State::getCurrentHubVelocity() const
+{
+	return currHubVelocity;
+}
+Vector_3D PDS_State::getCurrentHubRotationalVelocity() const
+{
+	return currHubRotationalVelocity;
 }
 
 Vector_3D PDS_State::interpolateSpatialDirection(double time, const Vector_3D& prev, const Vector_3D& curr) const
@@ -67,7 +102,7 @@ Vector_3D PDS_State::interpolateHubOrientation(double time) const
 
 Vector_3D PDS_State::interpolateHubVelocity(double time) const
 {
-	return interpolateSpatialDirection(time, prevHubVelocity);
+	return interpolateSpatialDirection(time, prevHubVelocity, currHubVelocity);
 }
 
 Vector_3D PDS_State::interpolateHubRotationalVelocity(double time) const

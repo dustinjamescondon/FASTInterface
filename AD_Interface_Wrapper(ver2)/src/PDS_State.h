@@ -10,14 +10,28 @@ public:
 
 	void allocate(int totalNodes);
 
+	void initializeHubState(
+		Vector_3D hubPosition,
+		Vector_3D hubOrientation,
+		Vector_3D hubVelocity,
+		Vector_3D hubRotationalVelocity);
+
+	void initializeInflows(const std::vector<double>& inflows);
+
+
 	// Above here, PDS will have used the hub state to find the node positions, and then used
 	// those node positions to find inflows (by passing hub state to AD and getting node positions).
 	void updateStates(double time,
-		const double hubPosition[3],
-		const double hubOrientation[3],
-		const double hubVelocity[3],
-		const double hubRotationalVelocity[3],
+		Vector_3D hubPosition,
+		Vector_3D hubOrientation,
+		Vector_3D hubVelocity,
+		Vector_3D hubRotationVelocity,
 		const std::vector<double>& inflows);
+
+	Vector_3D getCurrentHubPosition() const;
+	Vector_3D getCurrentHubOrientation() const;
+	Vector_3D getCurrentHubVelocity() const;
+	Vector_3D getCurrentHubRotationalVelocity() const;
 
 	Vector_3D interpolateHubPosition(double time) const;
 	Vector_3D interpolateHubOrientation(double time) const;

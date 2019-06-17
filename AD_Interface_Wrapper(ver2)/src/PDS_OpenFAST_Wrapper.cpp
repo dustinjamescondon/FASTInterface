@@ -7,6 +7,7 @@
 //  #include whatever stuff you need here (this isn't a working example)
 
 #include "PDS_OpenFAST_Wrapper.h"
+#include <assert.h>
 #include <iostream>
 #include <windows.h>
 #include <stdlib.h>
@@ -14,92 +15,82 @@
 #include <tchar.h>
 #include <iostream>
 
-
-using namespace std;
-
-
 // declare the existence of the FORTRAN subroutines which are in the DLL
 extern "C" {
-	void INTERFACE_INIT(double hubKinematics[6][3], double *shaftSpeed, int* nBlades, int* nNodes);
+	void INTERFACE_INIT(const char* inputFilename, int* fname_len, double* hubPos, double* hubOri, double* hubVel,
+		double* hubRotVel, double *shaftSpeed, double* bladePitch, int* nBlades, int* nNodes);
 	void INTERFACE_INITINFLOWS(int* nBlades, int* nNodes, double inflows[]);
-	void INTERFACE_SETINFLOWS(int* nBlades, int* nNodes, double inflows[]);
-	void INTERFACE_SETSTATES(double* time, double hubState[6][3], double* shaftSpeed);
-	void INTERFACE_ADVANCESTATES(double* time, int* rkFlag, double hubKinematics[6][3], double* shaftSpeed, 
-		int* nBlades, int* nNodes, double bladeNodeInflow[], double forceAndMoment[], double massMatrix[],
-		double addedMassMatrix[], double* genTorque);
 
-	void INTERFACE_GETOUTPUTS(double* time, double* forceAndMoment[], double* generatorTorque, double massMatrix[], double addedMassMatrix[]);
-	void INTERFACE_SETBLADEINFLOW(double* time, double bladeNodeInflow[]);
-	void INTERFACE_GETBLADENODEPOS(double* time, double* nodePos);
+	void INTERFACE_SETHUBSTATE(double* time, double hubPos[3], double hubOri[3], double hubVel[3],
+		double hubRotVel[3], double* shaftSpeed, double* bladePitch);
+
+	void INTERFACE_ADVANCESTATES(int* nBlades, int* nNodes, double bladeNodeInflow[], double* force_out,
+		double* moment_out, double massMatrix[6][6], double addedMassMatrix[6][6]);
+
+	void INTERFACE_GETBLADENODEPOS(double* nodePos);
 	void INTERFACE_CLOSE();
 }
 
-// ------------------------ some global variables -----------------------------
-// pointers to arrays that will hold the variables passed from AD_Interface
-double* inflow;          // latest flow data 
-double* inflowOld;       // previous flow data   
-double* inflowInterp;       // flow data interpolated for current coupling instant
-double* nodePos2;
-double* nodePos2Old;
-double inflowTime;   // time that inflow data corresponds to
-double inflowTimeOld;
-
-
-double* forceAndMoment2;
-double* massMatrix2;
-double* addedMassMatrix2;
-
-int nBlades;
-int nNodes;
-
-
-
-// This is the initialization function. It loads the AD_interface DLL, initializes the model, etc.
-// Right after this, we must set the inflows to finish the initialization
-int DECLDIR Turbine_init(double hubKinematics[6][3], double shaftSpeed, int* nBladesOut, int* nNodesOut)
+PDS_AD_Wrapper::PDS_AD_Wrapper()
 {
-
-	// SetErrorMode(SEM_FAILCRITICALERRORS);    // @mht: what does this do ??
-
-	cout << "All done.  Now try calling some functions..." << endl;
-
-	cout << "Finished loading DLL and functions" << endl;
-
-	// call to initialize AeroDyn driver, which includes reading in important parameters
-	INTERFACE_INIT(hubKinematics, &shaftSpeed, &nBlades, &nNodes);
-
-	// allocate some arrays based on number of blades and nodes
-	inflow = new double[nBlades * nNodes * 3];  // dynamically allocate the array to hold inflow data passed to AD_Interface
-	inflowInterp = new double[nBlades * nNodes * 3];  // dynamically allocate the array to hold inflow data passed to AD_Interface
-	inflowOld = new double[nBlades * nNodes * 3];  // dynamically allocate the array to hold inflow data passed to AD_Interface
-	nodePos2 = new double[nBlades * nNodes * 3];  // dynamically allocate the array to hold node coordinates passed from AD_Interface
-	nodePos2Old = new double[nBlades * nNodes * 3];  // dynamically allocate the array to hold node coordinates passed from AD_Interface
-	
-	cout << "There are " << nBlades << " blades with " << nNodes << " nodes each." << endl;
-
-	// save to passed in pointers for use by calling program
-
-	*nBladesOut = nBlades;
-	*nNodesOut = nNodes;
-
-	return 1; // just return this for now because they've declared the function this way
+	nBlades = nNodes = 0;
 }
 
-int DECLDIR Turbine_initInflows(vector<double>& inflows)
+int PDS_AD_Wrapper::init_inputFiles(
+	const char* inputFilename,
+	Vector_3D hubPos,
+	Vector_3D hubOri,
+	Vector_3D hubVel,
+	Vector_3D hubRotVel,
+	double shaftSpeed, // rotional speed of the shaft in rads/sec
+	double bladePitch,
+	int* nBlades_out,  // number of blades, to be assigned upon calling the function
+	int* nNodes_out)  // number of nodes per blade, to be assigned upon calling the function
+{
+	int fname_len = strlen(inputFilename);
+
+	INTERFACE_INIT(inputFilename, &fname_len, hubPos.getCArray(), hubOri.getCArray(), hubVel.getCArray(),
+		hubRotVel.getCArray(), &shaftSpeed, &bladePitch, &nBlades, &nNodes);
+	*nBlades_out = nBlades;
+	*nNodes_out = nNodes;
+
+	assert(nBlades > 2);
+	assert(nNodes > 0);
+
+	return 1;
+}
+
+int PDS_AD_Wrapper::init_inflows(vector<double>& inflows)
 {
 	INTERFACE_INITINFLOWS(&nBlades, &nNodes, &inflows[0]);
 
 	return 1;
 }
 
-
-int DECLDIR Turbine_setInflows(vector<double>& inflows)
+void PDS_AD_Wrapper::updateHubState(double time,
+	Vector_3D hubPosition,
+	Vector_3D hubOrientation,
+	Vector_3D hubVelocity,
+	Vector_3D hubRotationalVelocity,
+	double shaftSpeed,
+	double bladePitch)
 {
-	INTERFACE_SETINFLOWS(&nBlades, &nNodes, &inflows[0]);
-
-	return 1;
+	INTERFACE_SETHUBSTATE(&time, hubPosition.getCArray(), hubOrientation.getCArray(), hubVelocity.getCArray(),
+		hubRotationalVelocity.getCArray(), &shaftSpeed, &bladePitch);
 }
 
+void PDS_AD_Wrapper::solve(
+	std::vector<double>& inflows,
+	Vector_3D& force_out,
+	Vector_3D& moment_out,
+	double massMatrix_out[6][6],
+	double addedMassMatrix_out[6][6])
+{
+	INTERFACE_ADVANCESTATES(&nBlades, &nNodes, &inflows[0], force_out.getCArray(), moment_out.getCArray(),
+		massMatrix_out, addedMassMatrix_out);
+}
+
+/*
 // Combination of set_inputs, advance, and get_outputs
 int DECLDIR Turbine_solve(double time, int RK_flag, double hubKinematics[6][3], double shaftSpeed,
 	vector<double>& forceAndMoment, vector< vector<double> >& massMatrix,
@@ -166,7 +157,7 @@ int DECLDIR Turbine_solve(double time, int RK_flag, double hubKinematics[6][3], 
 	//hubKinematics[15] = 0.0; // anglar accelerations (rad/s^2) - not yet used
 	//hubKinematics[16] = 0.0;
 	//hubKinematics[17] = 0.0;
-
+/*
 
 
 
@@ -198,64 +189,17 @@ int DECLDIR Turbine_solve(double time, int RK_flag, double hubKinematics[6][3], 
 	}
 
 	return 1;
-}
-
-
-// Changed: stores flow data passed from calling program 
-int DECLDIR Turbine_setBladeInflow(double time, const vector<double>& bladeNodeInflow)
-{
-	// step (integer): current step number in the simulation
-	// nodePos(double [3*n*b], n = number of nodes per blade, b = number of blades): Current positions of the blade nodes.  Stored as a serialized vector ordered as ( xb1,n1, yb1,n1, zb1,n1, xb1,n2, yb1,n2, zb1,n2, etc. )
-
-
-
-   // STORE previous data
-
-	memcpy(inflowOld, inflow, 3 * nBlades * nNodes * sizeof(double)); // save copy of previous inflow data
-	memcpy(nodePos2Old, nodePos2, 3 * nBlades * nNodes * sizeof(double)); // save copy of previous node position data
-
-	inflowTimeOld = inflowTime;
-
-	 // create flow kinematics array from the one passed from ProteusDS, including coordinate system conversion    
-	for (int iB = 0; iB < nBlades; iB++) // loop through blades
-	{
-		for (int iN = 0; iN < nNodes; iN++) // loop through nodes on the blade
-		{
-			inflow[iB * nNodes * 3 + iN * 3 + 0] = bladeNodeInflow[iB * nNodes * 3 + iN * 3 + 0]; // x velocity (m/s)
-			inflow[iB * nNodes * 3 + iN * 3 + 1] = -1 * bladeNodeInflow[iB * nNodes * 3 + iN * 3 + 1]; // y velocity (m/s) flipped coordinates
-			inflow[iB * nNodes * 3 + iN * 3 + 2] = -1 * bladeNodeInflow[iB * nNodes * 3 + iN * 3 + 2]; // z velocity (m/s) flipped coordinates
-			//inflow[iB * nNodes * 3 + iN * 3 + 3] = bladeNodeInflow[iB * nNodes * 6 + iN * 6 + 3]; // x acceleration (m/s^2)
-			//inflow[iB * nNodes * 3 + iN * 3 + 4] = -1 * bladeNodeInflow[iB * nNodes * 6 + iN * 6 + 4]; // y acceleration (m/s^2) flipped coordinates
-			//inflow[iB * nNodes * 3 + iN * 3 + 5] = -1 * bladeNodeInflow[iB * nNodes * 6 + iN * 6 + 5]; // z acceleration (m/s^2) flipped coordinates
-		}
-	}
-
-	inflowTime = time;
-
-
-
-	// WE WILL JUST STORE THIS DATA IN THIS DLL UNTIL THE NEXT COUPLING CALL, THEN IT WILL BE USED TO INTERPOLATE FROM
-
-	 //cout<< inflow << endl;
-	 //cout<<"-------------------"<<endl;
-
-	 // call DLL's function to set inflows
-	 //int success = setBladeInflow(&time, inflow);
-
-	return 1;
-}
-
+} */
 
 // Description:  Communicates blade nods positions to ProteusDS.  This needs to be separate from the other outputs so that it can be used to get inflow values at the current time step.
-int DECLDIR Turbine_getBladeNodePos(double time, vector<double>& nodePos)
+void PDS_AD_Wrapper::getBladeNodePositions(vector<double>& nodePos)
 {
 	// step (integer): current step number in the simulation
 	// nodePos(double [3*n*b], n = number of nodes per blade, b = number of blades): Current positions of the blade nodes.  Stored as a serialized vector ordered as ( xb1,n1, yb1,n1, zb1,n1, xb1,n2, yb1,n2, zb1,n2, etc. )
+	//
 
-	// call DLL's function to get node coordinates filled in
-	INTERFACE_GETBLADENODEPOS(&time, nodePos2);
-
-	//cout << "Turbine_getBladeNodePos: size of nodePos is "<< nodePos.size() << endl;
+	// fills nodePos with node positions. Note! It assumes enough elements have been allocated
+	INTERFACE_GETBLADENODEPOS(&nodePos[0]);
 
 	// copy node positions into the vector<double> for ProteusDS, including coordinate system conversion
 	for (int iB = 0; iB < nBlades; iB++) // loop through blades
@@ -264,22 +208,11 @@ int DECLDIR Turbine_getBladeNodePos(double time, vector<double>& nodePos)
 		{
 			//cout << "reading from index (+0,1,2) of "<< iB*nNodes*3 + iN*3 << endl;
 
-			nodePos[iB * nNodes * 3 + iN * 3 + 0] = nodePos2[iB * nNodes * 3 + iN * 3 + 0]; // x position of node (m)
-			nodePos[iB * nNodes * 3 + iN * 3 + 1] = -1 * nodePos2[iB * nNodes * 3 + iN * 3 + 1]; // y position of node (m) flipped coordinates
-			nodePos[iB * nNodes * 3 + iN * 3 + 2] = -1 * nodePos2[iB * nNodes * 3 + iN * 3 + 2]; // z position of node (m) flipped coordinates
+			nodePos[iB * nNodes * 3 + iN * 3 + 0] = nodePos[iB * nNodes * 3 + iN * 3 + 0]; // x position of node (m)
+			nodePos[iB * nNodes * 3 + iN * 3 + 1] = -1 * nodePos[iB * nNodes * 3 + iN * 3 + 1]; // y position of node (m) flipped coordinates
+			nodePos[iB * nNodes * 3 + iN * 3 + 2] = -1 * nodePos[iB * nNodes * 3 + iN * 3 + 2]; // z position of node (m) flipped coordinates
 		}
 	}
 
-	return 1;
 }
 
-
-// @dustin TODO: free the rest of the allocated variables
-// @mth: todo: need a close/cleanup function to delete inflow and nodePos arrays
-int DECLDIR Turbine_close()
-{
-	delete inflow;
-	delete nodePos2;
-
-	return 0;
-}
