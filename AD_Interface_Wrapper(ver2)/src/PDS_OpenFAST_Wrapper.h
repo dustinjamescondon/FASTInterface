@@ -1,9 +1,3 @@
-// Dummy header file for the wrapper DLL (wrapper.dll) that facilitates ProteusDS interacting with the AD_Interface DLL.
-// It converts between ProtuesDS's vector data types and regular arrays, and it handles coordinate system conversions since ProteusDS uses positive-down.
-
-// Matt Hall, Patrick Connolly - 2018-07
-
-
 #pragma once
 
 // Note, this is defined in the project preprocessor section
@@ -16,14 +10,13 @@
 #include "PDS_State.h"
 #include <vector> // for vector data type used by ProteusDS
 
-using namespace std;
-
 class PDS_AD_Wrapper {
 public:
 	DECLDIR PDS_AD_Wrapper();
 
-	// Initialize the Aerodyn and it's interface
-	int DECLDIR init_inputFiles(
+	// Initialize AeroDyn by loading input files and setting initial hub state. Returns the total amount of 
+	// nodes used in the simulation.
+	int DECLDIR initHub(
 		const char* inputFilename,
 		Vector_3D hubPosition,
 		Vector_3D hubOrientation,
@@ -40,7 +33,7 @@ public:
 	//     ...[2] inflow velocity in z direction at node 0
 	//     ...[3] inflow velocity in x direction at node 1
 	// ... etc
-	int DECLDIR init_inflows(vector<double>& inflows);
+	void DECLDIR initInflows(std::vector<double>& inflows);
 
 	// call this before calling solve, 
 	void DECLDIR updateHubState(double time,
@@ -52,12 +45,12 @@ public:
 		double bladePitch);
 
 	// once updateHubState has been called, we call this to get where that input put the blade nodes
-	void DECLDIR getBladeNodePositions(vector<double>& bladeNodePositions);
+	void DECLDIR getBladeNodePositions(std::vector<double>& bladeNodePositions);
 	
 	//  then we call this, passing the inflows at "time", and we will get back the loads and moments from 
 	// previous time up until this current time
 	void DECLDIR solve(
-		vector<double>& inflows,
+		std::vector<double>& inflows,
 		Vector_3D& force_out,
 		Vector_3D& moment_out,
 		double massMatrix_out[6][6],

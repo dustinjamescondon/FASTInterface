@@ -1,18 +1,10 @@
-// Wrapper DLL that facilitates ProteusDS interacting with the AD_Interface DLL.
-// It converts between ProtuesDS's vector data types and regular arrays,
-// and it handles coordinate system conversions since ProteusDS uses positive-down.
-
-// Matt Hall, Patrick Connolly - 2018-07
-
-//  #include whatever stuff you need here (this isn't a working example)
 
 #include "PDS_OpenFAST_Wrapper.h"
+#include "ISO_Fortran_binding.h"
 #include <assert.h>
 #include <iostream>
-#include <windows.h>
 #include <stdlib.h>
 #include <string.h>
-#include <tchar.h>
 #include <iostream>
 
 // declare the existence of the FORTRAN subroutines which are in the DLL
@@ -36,7 +28,7 @@ PDS_AD_Wrapper::PDS_AD_Wrapper()
 	nBlades = nNodes = 0;
 }
 
-int PDS_AD_Wrapper::init_inputFiles(
+int PDS_AD_Wrapper::initHub(
 	const char* inputFilename,
 	Vector_3D hubPos,
 	Vector_3D hubOri,
@@ -57,14 +49,13 @@ int PDS_AD_Wrapper::init_inputFiles(
 	assert(nBlades > 2);
 	assert(nNodes > 0);
 
-	return 1;
+	// return the total amount of nodes used in the simulation
+	return nBlades * nNodes;
 }
 
-int PDS_AD_Wrapper::init_inflows(vector<double>& inflows)
+void PDS_AD_Wrapper::initInflows(std::vector<double>& inflows)
 {
 	INTERFACE_INITINFLOWS(&nBlades, &nNodes, &inflows[0]);
-
-	return 1;
 }
 
 void PDS_AD_Wrapper::updateHubState(double time,
@@ -192,7 +183,7 @@ int DECLDIR Turbine_solve(double time, int RK_flag, double hubKinematics[6][3], 
 } */
 
 // Description:  Communicates blade nods positions to ProteusDS.  This needs to be separate from the other outputs so that it can be used to get inflow values at the current time step.
-void PDS_AD_Wrapper::getBladeNodePositions(vector<double>& nodePos)
+void PDS_AD_Wrapper::getBladeNodePositions(std::vector<double>& nodePos)
 {
 	// step (integer): current step number in the simulation
 	// nodePos(double [3*n*b], n = number of nodes per blade, b = number of blades): Current positions of the blade nodes.  Stored as a serialized vector ordered as ( xb1,n1, yb1,n1, zb1,n1, xb1,n2, yb1,n2, zb1,n2, etc. )
