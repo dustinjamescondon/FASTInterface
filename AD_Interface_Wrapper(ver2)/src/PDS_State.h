@@ -1,3 +1,10 @@
+/*
+Class to do interpolation given two sets of hub states (and inflows). Won't be needed if we can make Aerodyn have a 
+variable time step though... Also, I found out after writing this that Aerodyn has an existing inperolation subroutine
+for inputs (hub pos, vel, ori, rotvel, inflow vel), so if we do go with interpolation later, that would be the 
+approach to take; that is, interpolating on the lower FORTRAN DLL level.
+*/
+
 #pragma once
 
 #include "Vector_3D.h"

@@ -1,3 +1,24 @@
+/* 
+Wrapper for AD_Interface, which is written in FORTRAN. Main purpose is to provide Aerodyn with inputs, for which it 
+can return loads and moment on the hub. 
+
+The expected order of function calls is follows:
+
+1) initHub, passing driver input file name, hub kinematics, and blade pitch; receiving the total number of nodes used
+2) getBladeNodePositions, receiving the positions of the blade nodes relative to the hub coordinate system (must confirm this)
+3) initInflows, passing the inflows at time=0
+----------- simulation loop -------------
+4) setHubState, passing hubstate at time = 0
+5) getBladeNodePositions, ...
+6) solve, passing the inflow at time = 0
+---next iteration---
+7) setHubState, passing hubstate at time = t_1
+8) getBladeNodePositions, ...
+9) solve, passing the inflow at time = t_1
+
+etc.
+*/
+
 #pragma once
 
 // Note, this is defined in the project preprocessor section
@@ -17,23 +38,24 @@ public:
 	// Initialize AeroDyn by loading input files and setting initial hub state. Returns the total amount of 
 	// nodes used in the simulation.
 	int DECLDIR initHub(
-		const char* inputFilename,
-		Vector_3D hubPosition,
-		Vector_3D hubOrientation,
-		Vector_3D hubVelocity,
-		Vector_3D hubRotationalVelocity,
-		double shaftSpeed, // rotional speed of the shaft in rads/sec
-		double bladePitch,
-		int* nBlades_out,  // number of blades, to be assigned upon calling the function
-		int* nNodes_out);  // number of nodes per blade, to be assigned upon calling the function
+		const char* inputFilename,		 // filename (including path) of the main driver input file
+		Vector_3D hubPosition,			 // in meters
+		Vector_3D hubOrientation,        // in Euler angles, radians
+		Vector_3D hubVelocity,			 // in meters/sec
+		Vector_3D hubRotationalVelocity, // in Euler angles, radians/sec
+		double shaftSpeed,               // rotional speed of the shaft in radians/sec
+		double bladePitch,               // pitch of the blade in radians
+		int* nBlades_out,                // number of blades, to be assigned upon calling the function
+		int* nNodes_out);				 // number of nodes per blade, to be assigned upon calling the function
 
-	// Initialize the inflows. The format expected is (in global coordinate system):
+	// Initialize the inflows
+	void DECLDIR initInflows(const std::vector<double>& inflows);
+	// The format expected is(in global coordinate system or hub coordinate system?)
 	// inflows[0] inflow velocity in x direction at node 0
 	//     ...[1] inflow velocity in y direction at node 0
 	//     ...[2] inflow velocity in z direction at node 0
 	//     ...[3] inflow velocity in x direction at node 1
 	// ... etc
-	void DECLDIR initInflows(std::vector<double>& inflows);
 
 	// call this before calling solve, 
 	void DECLDIR updateHubState(double time,

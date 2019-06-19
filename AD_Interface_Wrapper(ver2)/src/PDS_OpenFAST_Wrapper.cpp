@@ -11,7 +11,7 @@
 extern "C" {
 	void INTERFACE_INIT(const char* inputFilename, int* fname_len, double* hubPos, double* hubOri, double* hubVel,
 		double* hubRotVel, double *shaftSpeed, double* bladePitch, int* nBlades, int* nNodes);
-	void INTERFACE_INITINFLOWS(int* nBlades, int* nNodes, double inflows[]);
+	void INTERFACE_INITINFLOWS(int* nBlades, int* nNodes, const double inflows[]);
 
 	void INTERFACE_SETHUBSTATE(double* time, double hubPos[3], double hubOri[3], double hubVel[3],
 		double hubRotVel[3], double* shaftSpeed, double* bladePitch);
@@ -53,7 +53,7 @@ int PDS_AD_Wrapper::initHub(
 	return nBlades * nNodes;
 }
 
-void PDS_AD_Wrapper::initInflows(std::vector<double>& inflows)
+void PDS_AD_Wrapper::initInflows(const std::vector<double>& inflows)
 {
 	INTERFACE_INITINFLOWS(&nBlades, &nNodes, &inflows[0]);
 }
