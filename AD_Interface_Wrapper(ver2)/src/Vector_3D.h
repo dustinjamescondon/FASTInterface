@@ -11,8 +11,6 @@
 // 3D vector implemented using a fixed array of length 3
 class Vector_3D {
 public:
-	friend Vector_3D operator*(double, const Vector_3D&);
-	friend Vector_3D operator*(const Vector_3D&, double);
 
 	DECLDIR Vector_3D();
 	DECLDIR Vector_3D(const Vector_3D&); // copy constructor
@@ -21,6 +19,7 @@ public:
 	
 	DECLDIR Vector_3D operator+(const Vector_3D& v) const;
 	DECLDIR Vector_3D operator-(const Vector_3D& v) const;
+	DECLDIR Vector_3D operator*(double) const;
 
 	DECLDIR const double* getCArray() const;
 	DECLDIR double* getCArray();
@@ -36,7 +35,3 @@ public:
 private:
 	double vec[3];
 };
-
-// We define this operator outside the class so that we can have the scalar (double) on the LHS as well as RHS.
-Vector_3D operator*(double, const Vector_3D&);
-Vector_3D operator*(const Vector_3D&, double);

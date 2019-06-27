@@ -48,6 +48,17 @@ Vector_3D Vector_3D::operator-(const Vector_3D& v) const
 	return result;
 }
 
+Vector_3D Vector_3D::operator*(double s) const
+{
+	Vector_3D result = *this;
+	
+	result.vec[0] *= s;
+	result.vec[1] *= s;
+	result.vec[2] *= s;
+
+	return result;
+}
+
 const double* Vector_3D::getCArray() const {
 	return vec;
 }
@@ -78,25 +89,4 @@ const double& Vector_3D::y() const {
 
 const double& Vector_3D::z() const { 
 	return vec[2]; 
-}
-
-
-Vector_3D operator*(double s, const Vector_3D& v) 
-{
-	Vector_3D result;
-	result.vec[0] = v.vec[0] * s;
-	result.vec[1] = v.vec[1] * s;
-	result.vec[2] = v.vec[2] * s;
-
-	return result;
-}
-
-Vector_3D operator*(const Vector_3D& v, double s)
-{
-	Vector_3D result;
-	result.vec[0] = v.vec[0] * s;
-	result.vec[1] = v.vec[1] * s;
-	result.vec[2] = v.vec[2] * s; 
-
-	return result;
 }

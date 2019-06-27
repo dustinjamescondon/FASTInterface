@@ -1,16 +1,19 @@
 
 #include "PDS_OpenFAST_Wrapper.h"
-#include "ISO_Fortran_binding.h"
+#include <Eigen/Dense>
 #include <assert.h>
 #include <iostream>
 #include <stdlib.h>
-#include <string.h>
-#include <iostream>
+
+// Create a 6x6 matrix from Eigen3's template for transforming the mass matrix
+using Eigen::Matrix;
+typedef Matrix<double, 6, 6> Matrix6d;
+
 
 // declare the existence of the FORTRAN subroutines which are in the DLL
 extern "C" {
 	void INTERFACE_INIT(const char* inputFilename, int* fname_len, double* hubPos, double* hubOri, double* hubVel,
-		double* hubRotVel, double *shaftSpeed, double* bladePitch, int* nBlades, int* nNodes);
+		double* hubRotVel, double* shaftSpeed, double* bladePitch, int* nBlades, int* nNodes);
 	void INTERFACE_INITINFLOWS(int* nBlades, int* nNodes, const double inflows[]);
 
 	void INTERFACE_SETHUBSTATE(double* time, double hubPos[3], double hubOri[3], double hubVel[3],
@@ -23,9 +26,49 @@ extern "C" {
 	void INTERFACE_CLOSE();
 }
 
+
+Vector_3D transform_PDStoAD(const Vector_3D& v)
+{
+	return Vector_3D(v.x(), -v.y(), -v.z());
+}
+
+Vector_3D transform_ADtoPDS(const Vector_3D& v)
+{
+	return Vector_3D(v.x(), -v.y(), -v.z());
+}
+
+void transformHubKinematics_PDStoAD(Vector_3D& hubPos, Vector_3D& hubOri, Vector_3D& hubVel,
+	Vector_3D& hubRotVel)
+{
+	hubPos = transform_PDStoAD(hubPos);
+	hubOri = transform_PDStoAD(hubOri);
+	hubVel = transform_PDStoAD(hubVel);
+	hubRotVel = transform_PDStoAD(hubRotVel);
+}
+
+Matrix6d transform_ADtoPDS(const Matrix6d& m)
+{
+	// TODO, figure out how to transform a mass matrix from positive-up to positive-down (roll pi radians)
+	return m;
+}
+
+// Returns the inflows transformed from PDS' coordinate system to that of AD's
+std::vector<double> PDS_AD_Wrapper::transformInflows_PDStoAD(const std::vector<double>& pdsInflows) const
+{
+	std::vector<double> adInflows(totalNodes * 3);
+
+	// iterate through all the x, y, z components of the inflows, negating the y and z components
+	for (int i = 0; i < totalNodes; ++i) {
+		adInflows[(i * 3) + 0] = pdsInflows[(i * 3) + 0];
+		adInflows[(i * 3) + 1] = pdsInflows[(i * 3) + 1];
+		adInflows[(i * 3) + 2] = pdsInflows[(i * 3) + 2];
+	}
+	return adInflows;
+}
+
 PDS_AD_Wrapper::PDS_AD_Wrapper()
 {
-	nBlades = nNodes = 0;
+	nBlades = nNodes = totalNodes = 0;
 }
 
 int PDS_AD_Wrapper::initHub(
@@ -39,23 +82,30 @@ int PDS_AD_Wrapper::initHub(
 	int* nBlades_out,  // number of blades, to be assigned upon calling the function
 	int* nNodes_out)  // number of nodes per blade, to be assigned upon calling the function
 {
+	// Parameters are passed by reference, and are therefore transformed.
+	//transformHubKinematics_PDStoAD(hubPos, hubOri, hubVel, hubRotVel);
+
 	int fname_len = strlen(inputFilename);
+
+	transformHubKinematics_PDStoAD(hubPos, hubOri, hubVel, hubRotVel);
 
 	INTERFACE_INIT(inputFilename, &fname_len, hubPos.getCArray(), hubOri.getCArray(), hubVel.getCArray(),
 		hubRotVel.getCArray(), &shaftSpeed, &bladePitch, &nBlades, &nNodes);
 	*nBlades_out = nBlades;
 	*nNodes_out = nNodes;
 
-	assert(nBlades > 2);
-	assert(nNodes > 0);
-
 	// return the total amount of nodes used in the simulation
-	return nBlades * nNodes;
+	totalNodes = nBlades * nNodes;
+	return totalNodes;
 }
 
-void PDS_AD_Wrapper::initInflows(const std::vector<double>& inflows)
+// Transform each inflow from PDS' coordinate system (positive-down) to AD's (positive-up), and send them 
+// to AD for its initialization.
+void PDS_AD_Wrapper::initInflows(const std::vector<double>& pdsInflows)
 {
-	INTERFACE_INITINFLOWS(&nBlades, &nNodes, &inflows[0]);
+	std::vector<double> adInflows = transformInflows_PDStoAD(pdsInflows);
+
+	INTERFACE_INITINFLOWS(&nBlades, &nNodes, &adInflows[0]);
 }
 
 void PDS_AD_Wrapper::updateHubState(double time,
@@ -66,6 +116,8 @@ void PDS_AD_Wrapper::updateHubState(double time,
 	double shaftSpeed,
 	double bladePitch)
 {
+	transformHubKinematics_PDStoAD(hubPosition, hubOrientation, hubVelocity, hubRotationalVelocity);
+
 	INTERFACE_SETHUBSTATE(&time, hubPosition.getCArray(), hubOrientation.getCArray(), hubVelocity.getCArray(),
 		hubRotationalVelocity.getCArray(), &shaftSpeed, &bladePitch);
 }
@@ -88,7 +140,7 @@ int DECLDIR Turbine_solve(double time, int RK_flag, double hubKinematics[6][3], 
 	vector< vector<double> >& addedMassMatrix, double* genTorque)
 {
 	// step (integer): current step number in the simulation
-	// hubState (double [18]): serialized vector of the state variables for the rotor hub in ProteusDS.  
+	// hubState (double [18]): serialized vector of the state variables for the rotor hub in ProteusDS.
 	// Vector includes, in order:
 	//   Position (x, y, z) (m)
 	//   Orientation (roll, pitch, yaw) (rad)
@@ -113,14 +165,14 @@ int DECLDIR Turbine_solve(double time, int RK_flag, double hubKinematics[6][3], 
 	for (int i = 0; i < nBlades * nNodes * 3; i++) { // loop through all inflow data
 		// @dustin: We're going to forget about interpolation until we know things are working with a constant flow
 		//inflowInterp[i] = inflowOld[i] + (time - inflowTimeOld) * (inflow[i] - inflowOld[i]) / (inflowTime - inflowTimeOld);  // linear interpolation
-	
+
 		inflowInterp[i] = inflow[i];
 	}
 
 
 	// create hub kinematics vector from the one passed from ProteusDS, including coordinate system conversion
-	// FAST convention: 
-	// ProteusDS convention: 
+	// FAST convention:
+	// ProteusDS convention:
 
 	// @dustin: just took out coordinate flips until later
 	/*
@@ -163,7 +215,7 @@ int DECLDIR Turbine_solve(double time, int RK_flag, double hubKinematics[6][3], 
 	cout << "calling AD step advance states, with shaft speed " << shaftSpeed << endl;
 
 	// now that things have been converted in terms of both data type and coordinate system, call the DLL function
-	INTERFACE_ADVANCESTATES(&time, &RKflag, hubKinematics, &shaftSpeed, &nBlades, &nNodes, inflowInterp, 
+	INTERFACE_ADVANCESTATES(&time, &RKflag, hubKinematics, &shaftSpeed, &nBlades, &nNodes, inflowInterp,
 		forceAndMoment2, massMatrix2, addedMassMatrix2, &genTorque2);
 
 	// copy outputs into arrays passed in from ProteusDS (do we need to also convert coordinates?)
@@ -185,24 +237,15 @@ int DECLDIR Turbine_solve(double time, int RK_flag, double hubKinematics[6][3], 
 // Description:  Communicates blade nods positions to ProteusDS.  This needs to be separate from the other outputs so that it can be used to get inflow values at the current time step.
 void PDS_AD_Wrapper::getBladeNodePositions(std::vector<double>& nodePos)
 {
-	// step (integer): current step number in the simulation
-	// nodePos(double [3*n*b], n = number of nodes per blade, b = number of blades): Current positions of the blade nodes.  Stored as a serialized vector ordered as ( xb1,n1, yb1,n1, zb1,n1, xb1,n2, yb1,n2, zb1,n2, etc. )
-	//
 
 	// fills nodePos with node positions. Note! It assumes enough elements have been allocated
 	INTERFACE_GETBLADENODEPOS(&nodePos[0]);
 
 	// copy node positions into the vector<double> for ProteusDS, including coordinate system conversion
-	for (int iB = 0; iB < nBlades; iB++) // loop through blades
-	{
-		for (int iN = 0; iN < nNodes; iN++) // loop through nodes on the blade
-		{
-			//cout << "reading from index (+0,1,2) of "<< iB*nNodes*3 + iN*3 << endl;
-
-			nodePos[iB * nNodes * 3 + iN * 3 + 0] = nodePos[iB * nNodes * 3 + iN * 3 + 0]; // x position of node (m)
-			nodePos[iB * nNodes * 3 + iN * 3 + 1] = -1 * nodePos[iB * nNodes * 3 + iN * 3 + 1]; // y position of node (m) flipped coordinates
-			nodePos[iB * nNodes * 3 + iN * 3 + 2] = -1 * nodePos[iB * nNodes * 3 + iN * 3 + 2]; // z position of node (m) flipped coordinates
-		}
+	for (int i = 0; i < totalNodes; ++i) {
+		nodePos[(i * 3) + 0] =  nodePos[(i * 3) + 0]; // x position of node (m)
+		nodePos[(i * 3) + 1] = -nodePos[(i * 3) + 1]; // y position of node (m) flipped coordinates
+		nodePos[(i * 3) + 2] = -nodePos[(i * 3) + 2]; // z position of node (m) flipped coordinates
 	}
 
 }

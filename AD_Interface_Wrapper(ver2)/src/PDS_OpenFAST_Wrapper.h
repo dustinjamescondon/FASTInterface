@@ -28,7 +28,7 @@ etc.
 #define DECLDIR __declspec(dllimport)   
 #endif  
 
-#include "PDS_State.h"
+#include "Vector_3D.h"
 #include <vector> // for vector data type used by ProteusDS
 
 class PDS_AD_Wrapper {
@@ -79,7 +79,9 @@ public:
 		double addedMassMatrix[6][6]);
 
 private:
+	std::vector<double> transformInflows_PDStoAD(const std::vector<double>& pdsInflows) const;
 
+	int totalNodes;
 	int nBlades;
 	int nNodes;
 };
