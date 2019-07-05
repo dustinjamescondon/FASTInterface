@@ -10,11 +10,11 @@ The expected order of function calls is follows:
 ----------- simulation loop -------------
 4) setHubState, passing hubstate at time = 0
 5) getBladeNodePositions, ...
-6) solve, passing the inflow at time = 0
+6) simulate, passing the inflow at time = 0
 ---next iteration---
 7) setHubState, passing hubstate at time = t_1
 8) getBladeNodePositions, ...
-9) solve, passing the inflow at time = t_1
+9) simulate, passing the inflow at time = t_1
 
 etc.
 */
@@ -39,6 +39,8 @@ public:
 	// nodes used in the simulation.
 	int DECLDIR initHub(
 		const char* inputFilename,		 // filename (including path) of the main driver input file
+		double fluidDensity,             // 
+		double kinematicFluidVisc,       //
 		Vector_3D hubPosition,			 // in meters
 		Vector_3D hubOrientation,        // in Euler angles, radians
 		Vector_3D hubVelocity,			 // in meters/sec
@@ -58,20 +60,21 @@ public:
 	// ... etc
 
 	// call this before calling solve, 
-	void DECLDIR updateHubState(double time,
-		Vector_3D hubPosition,
-		Vector_3D hubOrientation,
-		Vector_3D hubVelocity,
-		Vector_3D hubRotationalVelocity,
-		double shaftSpeed,
+	void DECLDIR updateHubState(
+		double time,                    // the moment in time that the inputs describe (seconds)
+		Vector_3D hubPosition,          // position of the hub in global coordinate system (meters)
+		Vector_3D hubOrientation,       // euler angles describing orientation of the hub of the hub (radians)
+		Vector_3D hubVelocity,          // velocity of the hub in the global coordinate system (meters/sec)
+		Vector_3D hubRotationalVelocity,// rotational velocity of the hub in global coordinate system (axis-angle?)
+		double shaftSpeed,              // rotational speed of the hub along its axis (radians/sec)
 		double bladePitch);
 
 	// once updateHubState has been called, we call this to get where that input put the blade nodes
 	void DECLDIR getBladeNodePositions(std::vector<double>& bladeNodePositions);
 	
-	//  then we call this, passing the inflows at "time", and we will get back the loads and moments from 
-	// previous time up until this current time
-	void DECLDIR solve(
+	// then we call this, passing the inflows at "time", and we will get back the load and moment
+	// at time passed to updateHubState
+	void DECLDIR simulate(
 		std::vector<double>& inflows,
 		Vector_3D& force_out,
 		Vector_3D& moment_out,
