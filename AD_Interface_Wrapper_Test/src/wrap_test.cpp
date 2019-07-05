@@ -14,7 +14,6 @@ void renderBladeNodes(sf::RenderWindow& wnd, const std::vector<double>& bladeNod
 Matrix3d EulerConstruct(const Vector3d& eulerAngles);
 Vector3d EulerExtract(const Matrix3d& rotationMatrix);
 
-
 int main(int argc, char *argv[])
 {	
 	sf::RenderWindow window(sf::VideoMode(800, 800), "Node position test");
@@ -26,17 +25,18 @@ int main(int argc, char *argv[])
 	double dt = 0.03;            
 	double bladePitch = 0.0;
 	double inflowSpeed = 8.7;    // in meters/sec
+	double fluidDensity = 1.236;
+	double kinematicFluidVisc = 1.4639e-05;
 	//-------------------------
 	// Local variables
 	int nSteps = (int)ceil(simulationTime / dt);
 	double time = 0.0;
 
-	double fluidDensity = 1.236;
-	double kinematicFluidVisc = 1.4639e-05;
-	Vector_3D hubPos(0.0, 50.0, 50.0);
-	Vector_3D hubOri(0.0, 3.143 / 4.0, 0.0);
-	Vector_3D hubVel(0.0, 0.0, 0.0);
-	Vector_3D hubRotVel(shaftSpeed, 0.0, 0.0);
+	Vector3d hubPos(0.0, 50.0, 50.0);
+	Vector3d hubOri(0.0, 3.143 / 4.0, 0.0);
+	Matrix3d hubOriMatrix = EulerConstruct(hubOri);
+	Vector3d hubVel(0.0, 0.0, 0.0);
+	Vector3d hubRotVel = hubOriMatrix.row(1) * shaftSpeed;
 
 	int nBlades, nNodes;
 	int totalNodes = 0;
@@ -143,7 +143,6 @@ void createInflows(std::vector<double>& inflows, int totalNodes, double inflowSp
 	}
 }
 
-
 Matrix3d EulerConstruct(const Vector3d& theta)
 {
 	double cx = cos(theta(1));
@@ -169,12 +168,12 @@ Matrix3d EulerConstruct(const Vector3d& theta)
 	return result;
 }
 
-
 double sign(double a, double b)
 {
 	if (b > 0) return a;
 	else return -a;
 }
+
 Vector3d EulerExtract(const Matrix3d& m)
 {
 	double cx, cy, cz, sx, sy, sz;
