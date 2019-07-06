@@ -1,18 +1,17 @@
 #include "..\..\AD_Interface_Wrapper(ver2)\src\PDS_OpenFAST_Wrapper.h"
-#include "..\..\AD_Interface_Wrapper(ver2)\eigen\Eigen\SparseCore"
+#include "..\..\AD_Interface_Wrapper(ver2)\eigen\Eigen\Dense"
 #include <SFML/Graphics.hpp>
 #include <iostream>
 #include <vector>
 
 using namespace Eigen;
 
-const double epsilon = 1.0e-6;
-
-void updateHubState(Vector_3D& hubPos, Vector_3D& hubOri, Vector_3D& hubVel, Vector_3D& hubRotVel, double dt);
+void updateHubState(Vector3d& hubPos, Vector3d& hubOri, Vector3d& hubVel, Vector3d& hubRotVel, double dt);
 void createInflows(std::vector<double>& inflows, int totalNodes, double inflowSpeed);
-void renderBladeNodes(sf::RenderWindow& wnd, const std::vector<double>& bladeNodePositions, const Vector_3D& hubPos, double pixelsPerMeter, int nNodes);
-Matrix3d EulerConstruct(const Vector3d& eulerAngles);
-Vector3d EulerExtract(const Matrix3d& rotationMatrix);
+void renderBladeNodes(sf::RenderWindow& wnd, const std::vector<double>& bladeNodePositions, const Vector3d& hubPos, double pixelsPerMeter, int nNodes);
+Matrix3d EulerConstruct(const Vector3d& eulerAngles);  // creates global to local rotation matrix
+Vector3d EulerExtract(const Matrix3d& rotationMatrix); // get Euler angles from global to local rotation matrix
+Vector3d axisAngleRotation(const Vector3d& v, const Vector3d& e, double theta); // v is vector to be rotated around e by theta radians (right-hand rule applies)
 
 int main(int argc, char *argv[])
 {	
@@ -33,15 +32,16 @@ int main(int argc, char *argv[])
 	double time = 0.0;
 
 	Vector3d hubPos(0.0, 50.0, 50.0);
-	Vector3d hubOri(0.0, 3.143 / 4.0, 0.0);
+	Vector3d hubOri(0.0, 0.0, 0.0);
 	Matrix3d hubOriMatrix = EulerConstruct(hubOri);
 	Vector3d hubVel(0.0, 0.0, 0.0);
-	Vector3d hubRotVel = hubOriMatrix.row(1) * shaftSpeed;
+	Vector3d hubRotVel = hubOriMatrix.row(0) * shaftSpeed;
 
 	int nBlades, nNodes;
 	int totalNodes = 0;
 
-	Vector_3D force, moment;
+	Vector3d force, moment;
+	double power;
 	double massMatrix[6][6];
 	double addedMassMatrix[6][6];
 
@@ -54,7 +54,7 @@ int main(int argc, char *argv[])
 	PDS_AD_Wrapper adWrapper;
 
 	totalNodes = adWrapper.initHub("input/ad_driver_example.inp", fluidDensity, kinematicFluidVisc,
-		hubPos, hubOri, hubVel, hubRotVel, shaftSpeed, bladePitch, &nBlades, &nNodes);
+		&hubPos(0), &hubOri(0), &hubVel(0), &hubRotVel(0), shaftSpeed, bladePitch, &nBlades, &nNodes);
 
 	// now we know the total number of nodes, so allocate accordingly
 	inflows.resize(totalNodes * 3, 0.0);
@@ -85,7 +85,7 @@ int main(int argc, char *argv[])
 		updateHubState(hubPos, hubOri, hubVel, hubRotVel, dt);
 
 		// send Aerodyn the hub kinematics.
-		adWrapper.updateHubState(time, hubPos, hubOri, hubVel, hubRotVel, shaftSpeed, bladePitch);
+		adWrapper.updateHubState(time, hubPos.data(), hubOri.data(), hubVel.data(), hubRotVel.data(), shaftSpeed, bladePitch);
 
 		// then would usually request the current node positions from Aerodyn by calling 
 		// getBladeNodePos(...)
@@ -93,8 +93,8 @@ int main(int argc, char *argv[])
 		// so we just leave the inflow as constant.
 
 		// then we call solve, which will make Aerodyn step forward and simulate up to 'time', and return the 
-		// force moment at that time.
-		adWrapper.simulate(inflows, force, moment, massMatrix, addedMassMatrix);
+		// force, moment, and power at that time.
+		adWrapper.simulate(inflows, force.data(), moment.data(), &power, massMatrix, addedMassMatrix);
 
 		adWrapper.getBladeNodePositions(bladeNodePositions);
 
@@ -104,7 +104,7 @@ int main(int argc, char *argv[])
 	return 0;
 }
 
-void renderBladeNodes(sf::RenderWindow& wnd, const std::vector<double>& bladeNodePositions, const Vector_3D& hubPos, double pixelsPerMeter, int nNodes) 
+void renderBladeNodes(sf::RenderWindow& wnd, const std::vector<double>& bladeNodePositions, const Vector3d& hubPos, double pixelsPerMeter, int nNodes) 
 {
 
 	sf::CircleShape shape(1.0);
@@ -113,11 +113,11 @@ void renderBladeNodes(sf::RenderWindow& wnd, const std::vector<double>& bladeNod
 
 	for (int i = 0; i < nNodes; i++)
 	{
-		Vector_3D nodePos(&bladeNodePositions[i * 3]);
-		Vector_3D relNodePos = nodePos - hubPos; // relative to the center position of the hub
-		Vector_3D scaledRelNodePos = relNodePos * pixelsPerMeter;
-		Vector_3D scaledHubPos = hubPos * pixelsPerMeter;
-		Vector_3D screenNodePos = scaledHubPos + scaledRelNodePos;
+		Vector3d nodePos(&bladeNodePositions[i * 3]); // set the node position from a pointer to the beginning of an array
+		Vector3d relNodePos = nodePos - hubPos; // relative to the center position of the hub
+		Vector3d scaledRelNodePos = relNodePos * pixelsPerMeter;
+		Vector3d scaledHubPos = hubPos * pixelsPerMeter;
+		Vector3d screenNodePos = scaledHubPos + scaledRelNodePos;
 		
 		// just take the y and z coordinates
 		sf::Vector2f pos(screenNodePos.y(), screenNodePos.z());
@@ -129,9 +129,27 @@ void renderBladeNodes(sf::RenderWindow& wnd, const std::vector<double>& bladeNod
 	wnd.display();
 }
 
-void updateHubState(Vector_3D& hubPos, Vector_3D& hubOri, Vector_3D& hubVel, Vector_3D& hubRotVel, double dt)
+void updateHubState(Vector3d& hubPos, Vector3d& hubOri, Vector3d& hubVel, Vector3d& hubRotVel, double dt)
 {
-	hubOri = hubOri + (hubRotVel * dt);
+	// update the orientation using rotational velocity
+	Matrix3d hubOriMatrix = EulerConstruct(hubOri);
+	Vector3d basisX = hubOriMatrix.row(0);
+	Vector3d basisY = hubOriMatrix.row(1);
+	Vector3d basisZ = hubOriMatrix.row(2);
+
+	// rotate each basis vector around the axis
+	basisX = axisAngleRotation(basisX, hubRotVel.normalized(), hubRotVel.norm() * dt);
+	basisY = axisAngleRotation(basisY, hubRotVel.normalized(), hubRotVel.norm() * dt);
+	basisZ = axisAngleRotation(basisZ, hubRotVel.normalized(), hubRotVel.norm() * dt);
+
+	hubOriMatrix.row(0) = basisX;
+	hubOriMatrix.row(1) = basisY;
+	hubOriMatrix.row(2) = basisZ;
+
+	// get the Euler angles out of the new orientation matrix
+	hubOri = EulerExtract(hubOriMatrix);
+
+	// integrate position
 	hubPos = hubPos + (hubVel * dt);
 }
 
@@ -143,73 +161,86 @@ void createInflows(std::vector<double>& inflows, int totalNodes, double inflowSp
 	}
 }
 
+// taken from Aerodyn's subroutine of the same name
 Matrix3d EulerConstruct(const Vector3d& theta)
 {
-	double cx = cos(theta(1));
-	double sx = sin(theta(1));
+	double cx = cos(theta(0));
+	double sx = sin(theta(0));
 
-	double cy = cos(theta(2));
-	double sy = sin(theta(2));
+	double cy = cos(theta(1));
+	double sy = sin(theta(1));
 
-	double cz = cos(theta(3));
-	double sz = sin(theta(3));
+	double cz = cos(theta(2));
+	double sz = sin(theta(2));
 
 	Matrix3d result;
-	result(1, 1) = cy * cz;
-	result(2, 1) = -cy * sz;
-	result(3, 1) = sy;
-	result(1, 2) = cx * sz + sx * sy * cz;
-	result(2, 2) = cx * cz - sx * sy * sz;
-	result(3, 2) = -sx * cy;
-	result(1, 3) = sx * sz - cx * sy * cz;
-	result(2, 3) = sx * cz + cx * sy * sz;
-	result(3, 3) = cx * cy;
+	result(0, 0) = cy * cz;
+	result(1, 0) = -cy * sz;
+	result(2, 0) = sy;
+	result(0, 1) = cx * sz + sx * sy * cz;
+	result(1, 1) = cx * cz - sx * sy * sz;
+	result(2, 1) = -sx * cy;
+	result(0, 2) = sx * sz - cx * sy * cz;
+	result(1, 2) = sx * cz + cx * sy * sz;
+	result(2, 2) = cx * cy;
 	
 	return result;
 }
 
+// a build-in subroutine in FORTRAN. Multiply abs(a) by the sign of b
 double sign(double a, double b)
 {
 	if (b > 0) return a;
 	else return -a;
 }
 
+// taken from Aerodyn's subroutine of the same name
 Vector3d EulerExtract(const Matrix3d& m)
 {
+	static const double epsilon = 1.0e-5;
+
 	double cx, cy, cz, sx, sy, sz;
 	Vector3d theta;
 
-	cy = sqrt(pow(m(1, 1), 2) + pow(m(2, 1), 2));
+	cy = sqrt(pow(m(0, 0), 2) + pow(m(1, 0), 2));
 
-	if (cy <= epsilon) {
+	if (cy < epsilon) {
 
-		theta(2) = atan2(m(3, 1), cy);
-		theta(3) = 0.0;
-		theta(1) = atan2(m(2, 3), m(2, 2));
+		theta(1) = atan2(m(2, 0), cy);
+		theta(2) = 0.0;
+		theta(0) = atan2(m(1, 2), m(1, 1));
 	}
 	else {
-		theta(3) = atan2(-m(2, 1), m(1, 1));
-		cz = cos(theta(3));
-		sz = sin(theta(3));
+		theta(2) = atan2(-m(1, 0), m(0, 0));
+		cz = cos(theta(2));
+		sz = sin(theta(2));
 
 		if (cz < epsilon) {
-			cy = sign(cy, -m(2, 1) / sz);
+			cy = sign(cy, -m(1, 0) / sz);
 		}
 
 		else {
-			cy = sign(cy, m(1, 1) / cz);
+			cy = sign(cy, m(0, 0) / cz);
 
 		}
-		theta(2) = atan2(m(3, 1), cy);
+		theta(1) = atan2(m(2, 0), cy);
 
-		cz = cos(theta(3));
-		sz = sin(theta(3));
+		cz = cos(theta(2));
+		sz = sin(theta(2));
 
-		cx = sz * m(1, 2) + cz * m(2, 2);
-		sx = sz * m(1, 3) + cz * m(2, 3);
+		cx = sz * m(0, 1) + cz * m(1, 1);
+		sx = sz * m(0, 2) + cz * m(1, 2);
 
-		theta(1) = atan2(sx, cx);
+		theta(0) = atan2(sx, cx);
 	}
 
 	return theta;
+}
+
+// v is vector to be rotated around e by theta radians (right-hand rule applies)
+Vector3d axisAngleRotation(const Vector3d& v, const Vector3d& e, double theta)
+{
+	Vector3d result = cos(theta) * v + sin(theta) * e.cross(v) + (1 - cos(theta)) * e.dot(v) * e;
+
+	return result;
 }

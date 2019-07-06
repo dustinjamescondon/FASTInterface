@@ -28,8 +28,7 @@ etc.
 #define DECLDIR __declspec(dllimport)   
 #endif  
 
-#include "Vector_3D.h"
-#include <vector> // for vector data type used by ProteusDS
+#include <vector>
 
 class PDS_AD_Wrapper {
 public:
@@ -41,10 +40,10 @@ public:
 		const char* inputFilename,		 // filename (including path) of the main driver input file
 		double fluidDensity,             // 
 		double kinematicFluidVisc,       //
-		Vector_3D hubPosition,			 // in meters
-		Vector_3D hubOrientation,        // in Euler angles, radians
-		Vector_3D hubVelocity,			 // in meters/sec
-		Vector_3D hubRotationalVelocity, // in Euler angles, radians/sec
+		const double hubPosition[3],			 // in meters
+		const double hubOrientation[3],        // in Euler angles, radians
+		const double hubVelocity[3],			 // in meters/sec
+		const double hubRotationalVelocity[3], // axis-angle in global coordinate system
 		double shaftSpeed,               // rotional speed of the shaft in radians/sec
 		double bladePitch,               // pitch of the blade in radians
 		int* nBlades_out,                // number of blades, to be assigned upon calling the function
@@ -62,28 +61,31 @@ public:
 	// call this before calling solve, 
 	void DECLDIR updateHubState(
 		double time,                    // the moment in time that the inputs describe (seconds)
-		Vector_3D hubPosition,          // position of the hub in global coordinate system (meters)
-		Vector_3D hubOrientation,       // euler angles describing orientation of the hub of the hub (radians)
-		Vector_3D hubVelocity,          // velocity of the hub in the global coordinate system (meters/sec)
-		Vector_3D hubRotationalVelocity,// rotational velocity of the hub in global coordinate system (axis-angle?)
+		const double hubPosition[3],          // position of the hub in global coordinate system (meters)
+		const double hubOrientation[3],       // euler angles describing orientation of the hub of the hub (radians)
+		const double hubVelocity[3],          // velocity of the hub in the global coordinate system (meters/sec)
+		const double hubRotationalVelocity[3],// rotational velocity of the hub in global coordinate system (axis-angle?)
 		double shaftSpeed,              // rotational speed of the hub along its axis (radians/sec)
 		double bladePitch);
 
-	// once updateHubState has been called, we call this to get where that input put the blade nodes
+	// once updateHubState has been called, we call this to get where those hub kinematics put the blade nodes
 	void DECLDIR getBladeNodePositions(std::vector<double>& bladeNodePositions);
 	
 	// then we call this, passing the inflows at "time", and we will get back the load and moment
 	// at time passed to updateHubState
 	void DECLDIR simulate(
 		std::vector<double>& inflows,
-		Vector_3D& force_out,
-		Vector_3D& moment_out,
+		double force_out[3],
+		double moment_out[3],
+		double power_out[3],
 		double massMatrix_out[6][6],
 		double addedMassMatrix[6][6]);
 
 private:
-	std::vector<double> transformInflows_PDStoAD(const std::vector<double>& pdsInflows) const;
+	// updates aerodynInflows with transformed pdsInflows
+	void transformInflows_PDStoAD(const std::vector<double>& pdsInflows);
 
+	std::vector<double> aerodynInflows;
 	int totalNodes;
 	int nBlades;
 	int nNodes;
