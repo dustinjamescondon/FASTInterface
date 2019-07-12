@@ -26,5 +26,6 @@
   </ItemGroup>
   <ItemGroup>
     <Library Include="..\x64\Debug\AD_Interface_Wrapper.lib" />
+    <Library Include="..\Win32\Debug\AD_Interface_Wrapper.lib" />
   </ItemGroup>
 </Project>

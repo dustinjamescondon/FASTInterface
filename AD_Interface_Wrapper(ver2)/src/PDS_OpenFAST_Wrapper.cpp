@@ -11,23 +11,23 @@ using Eigen::Vector3d;
 
 typedef Matrix<double, 6, 6> Matrix6d;
 
-
 // declare the existence of the FORTRAN subroutines which are in the DLL
 extern "C" {
-	void INTERFACE_INIT(const char* inputFilename, int* fname_len, double* fluidDensity, double* kinematicFluidVisc,
-		double* hubPos, double* hubOri, double* hubVel, double* hubRotVel, double* shaftSpeed, 
-		double* bladePitch, int* nBlades, int* nNodes);
+	void INTERFACE_INITAERODYN(const char* inputFilename, int* fname_len, double* fluidDensity, double* kinematicFluidVisc,
+		double* hubRad, double* hubPos, double* hubOri, double* hubVel, double* hubRotVel, 
+	    double* bladePitch, int* nBlades_out, int* nNodes_out, int* turbineIndex_out);
 
-	void INTERFACE_INITINFLOWS(int* nBlades, int* nNodes, const double inflows[]);
+	void INTERFACE_INITINFLOWS(int* turbineIndex, int* nBlades, int* nNodes, const double inflows[]);
 
-	void INTERFACE_SETHUBSTATE(double* time, double hubPos[3], double hubOri[3], double hubVel[3],
-		double hubRotVel[3], double* shaftSpeed, double* bladePitch);
+	void INTERFACE_SETHUBMOTION(int* turbineIndex, double* time, double hubPos[3], double hubOri[3], double hubVel[3],
+		double hubRotVel[3], double* bladePitch);
 
-	void INTERFACE_ADVANCESTATES(int* nBlades, int* nNodes, double bladeNodeInflow[], double* force_out,
-		double* moment_out, double* power_out, double massMatrix[6][6], double addedMassMatrix[6][6]);
+	void INTERFACE_ADVANCESTATES(int* turbineIndex, int* nBlades, int* nNodes, double bladeNodeInflow[], double* force_out,
+		double* moment_out, double* power_out, double massMatrix_out[6][6], double addedMassMatrix_out[6][6]);
 
-	void INTERFACE_GETBLADENODEPOS(double* nodePos);
-	void INTERFACE_CLOSE();
+	void INTERFACE_GETBLADENODEPOS(int* turbineIndex, double* nodePos);
+
+	void INTERFACE_END(int* turbineIndex);
 }
 
 
@@ -53,7 +53,7 @@ void transformHubKinematics_PDStoAD(double hubPos[3], double hubOri[3], double h
 
 Matrix6d transform_ADtoPDS(const Matrix6d& m)
 {
-	// TODO, figure out how to transform a mass matrix from positive-up to positive-down (roll pi radians)
+	// TODO figure out how to transform a mass matrix from positive-up to positive-down (roll pi radians)
 	return m;
 }
 
@@ -71,17 +71,24 @@ void PDS_AD_Wrapper::transformInflows_PDStoAD(const std::vector<double>& pdsInfl
 PDS_AD_Wrapper::PDS_AD_Wrapper()
 {
 	nBlades = nNodes = totalNodes = 0;
+
+	turbineIndex = 0;
 }
 
-int PDS_AD_Wrapper::initHub(
+PDS_AD_Wrapper::~PDS_AD_Wrapper()
+{
+	INTERFACE_END(&turbineIndex);
+}
+
+int PDS_AD_Wrapper::initAerodyn(
 	const char* inputFilename,
 	double fluidDensity,
 	double kinematicFluidVisc,
+	double hubRad,
 	const double hubPosition[3],
 	const double hubOrientation[3],
 	const double hubVelocity[3],
 	const double hubRotationalVelocity[3],
-	double shaftSpeed, // rotional speed of the shaft in rads/sec
 	double bladePitch,
 	int* nBlades_out,  // number of blades, to be assigned upon calling the function
 	int* nNodes_out)  // number of nodes per blade, to be assigned upon calling the function
@@ -107,8 +114,9 @@ int PDS_AD_Wrapper::initHub(
 	transformHubKinematics_PDStoAD(_hubPos, _hubOri, _hubVel, _hubRotVel);
 
 	// call the initialization subroutine in the FORTRAN DLL
-	INTERFACE_INIT(inputFilename, &fname_len, &fluidDensity, &kinematicFluidVisc, _hubPos, _hubOri, _hubVel,
-		_hubRotVel, &shaftSpeed, &bladePitch, &nBlades, &nNodes);
+	INTERFACE_INITAERODYN(inputFilename, &fname_len, &fluidDensity, &kinematicFluidVisc,
+		&hubRad, _hubPos, _hubOri, _hubVel,
+		_hubRotVel, &bladePitch, &nBlades, &nNodes, &turbineIndex);
 	*nBlades_out = nBlades;
 	*nNodes_out = nNodes;
 
@@ -127,15 +135,14 @@ void PDS_AD_Wrapper::initInflows(const std::vector<double>& pdsInflows)
 	transformInflows_PDStoAD(pdsInflows);
 
 	// call inflow initialization subroutine in FORTRAN DLL with these transformed inflows
-	INTERFACE_INITINFLOWS(&nBlades, &nNodes, &aerodynInflows[0]);
+	INTERFACE_INITINFLOWS(&turbineIndex, &nBlades, &nNodes, &aerodynInflows[0]);
 }
 
-void PDS_AD_Wrapper::updateHubState(double time,
+void PDS_AD_Wrapper::updateHubMotion(double time,
 	const double hubPosition[3],
 	const double hubOrientation[3],
 	const double hubVelocity[3],
 	const double hubRotationalVelocity[3],
-	double shaftSpeed,
 	double bladePitch)
 {
 	// copy all the vectors into their own local static arrays so we can transform them for Aerodyn's 
@@ -154,8 +161,8 @@ void PDS_AD_Wrapper::updateHubState(double time,
 	// transform them to Aerodyn's global coordinate system 
 	transformHubKinematics_PDStoAD(_hubPos, _hubOri, _hubVel, _hubRotVel);
 
-	INTERFACE_SETHUBSTATE(&time, _hubPos, _hubOri, _hubVel,
-		_hubRotVel, &shaftSpeed, &bladePitch);
+	INTERFACE_SETHUBMOTION(&turbineIndex, &time, _hubPos, _hubOri, _hubVel,
+		_hubRotVel, &bladePitch);
 }
 
 void PDS_AD_Wrapper::simulate(
@@ -166,7 +173,7 @@ void PDS_AD_Wrapper::simulate(
 	double massMatrix_out[6][6],
 	double addedMassMatrix_out[6][6])
 {
-	INTERFACE_ADVANCESTATES(&nBlades, &nNodes, &inflows[0], force_out, moment_out, power_out,
+	INTERFACE_ADVANCESTATES(&turbineIndex, &nBlades, &nNodes, &inflows[0], force_out, moment_out, power_out,
 		massMatrix_out, addedMassMatrix_out);
 }
 
@@ -175,7 +182,7 @@ void PDS_AD_Wrapper::simulate(
 void PDS_AD_Wrapper::getBladeNodePositions(std::vector<double>& nodePos)
 {
 	// fills nodePos with node positions. Note! It assumes enough elements have been allocated
-	INTERFACE_GETBLADENODEPOS(&nodePos[0]);
+	INTERFACE_GETBLADENODEPOS(&turbineIndex, nodePos.data());
 
 	// copy node positions into the vector<double> for ProteusDS, including coordinate system conversion
 	for (int i = 0; i < totalNodes; ++i) {
@@ -183,6 +190,5 @@ void PDS_AD_Wrapper::getBladeNodePositions(std::vector<double>& nodePos)
 		nodePos[(i * 3) + 1] = -nodePos[(i * 3) + 1]; // y position of node (m) flipped coordinates
 		nodePos[(i * 3) + 2] = -nodePos[(i * 3) + 2]; // z position of node (m) flipped coordinates
 	}
-
 }
 

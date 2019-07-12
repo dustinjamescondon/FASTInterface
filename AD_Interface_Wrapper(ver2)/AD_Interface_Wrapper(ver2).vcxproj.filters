@@ -25,6 +25,7 @@
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <Library Include="..\AD_Interface_Wrapper_Test\AD_Interface_x64_Debug_Double.lib" />
+    <Library Include="..\AD_Interface_Wrapper_Test\Aerodyn_Interface_C_x64_Interface_Debug_Double.lib" />
+    <Library Include="..\AD_Interface_Wrapper_Test\Aerodyn_Interface_C_Win32_Interface_Debug_Double.lib" />
   </ItemGroup>
 </Project>

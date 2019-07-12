@@ -343,3 +343,5 @@ healthchecksdb
 *.out
 *.dll
 /AD_Interface_Wrapper(ver2)/eigen
+/AD_Interface_Wrapper_Test/pack
+/AD_Interface_Wrapper_Test/pack.zip

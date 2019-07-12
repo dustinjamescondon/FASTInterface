@@ -4,28 +4,53 @@
 #include <iostream>
 #include <vector>
 
+// used to define vectors and matrices in this small example
 using namespace Eigen;
 
-void updateHubState(Vector3d& hubPos, Vector3d& hubOri, Vector3d& hubVel, Vector3d& hubRotVel, double dt);
-void createInflows(std::vector<double>& inflows, int totalNodes, double inflowSpeed);
-void renderBladeNodes(sf::RenderWindow& wnd, const std::vector<double>& bladeNodePositions, const Vector3d& hubPos, double pixelsPerMeter, int nNodes);
-Matrix3d EulerConstruct(const Vector3d& eulerAngles);  // creates global to local rotation matrix
-Vector3d EulerExtract(const Matrix3d& rotationMatrix); // get Euler angles from global to local rotation matrix
-Vector3d axisAngleRotation(const Vector3d& v, const Vector3d& e, double theta); // v is vector to be rotated around e by theta radians (right-hand rule applies)
+//----------------------------
+// Functions that mimic what ProteusDS would be doing
 
-int main(int argc, char *argv[])
+// Integrates hub velocity and rotational velocity
+void updateHubMotion(Vector3d& hubPos, Vector3d& hubOri, const Vector3d& hubVel, const Vector3d& hubRotVel, double dt);
+//
+void generateInflowVelocities(const std::vector<double>& nodePositions, int totalNodes, double inflowSpeed, std::vector<double>& inflows);
+
+//----------------------------
+// Function to display the blade nodes to visualize rotation
+
+
+// Projects the node positions onto the yz plane and displays them on the screen as dots
+void renderBladeNodes(sf::RenderWindow& wnd, const std::vector<double>& bladeNodePositions, const Vector3d& hubPos, double pixelsPerMeter, int nNodes);
+
+//----------------------------
+// Some utility functions to help update the orientation for our small example
+
+// Returns the global-to-local orientation matrix from the euler angles
+// That is, R = R_z*R_y*R_x
+Matrix3d EulerConstruct(const Vector3d& eulerAngles);  // creates global to local rotation matrix
+
+// Returns the euler angles that generate the given rotation matrix
+Vector3d EulerExtract(const Matrix3d& rotationMatrix); // get Euler angles from global to local rotation matrix
+
+// Rotates v around e by theta radians (right-hand rule applies)
+Vector3d axisAngleRotation(const Vector3d& v, const Vector3d& e, double theta);
+
+//----------------------------
+// main routine
+int main()
 {	
 	sf::RenderWindow window(sf::VideoMode(800, 800), "Node position test");
 
-	//------------------------
-	// Parameters
+	//-------------------------
+	// Simulation parameters
 	double simulationTime = 8.0; // the amount of time to be simulated (in seconds)
 	double shaftSpeed = 2.0;     // in rads/sec
-	double dt = 0.03;            
+	double dt = 0.05;            // the time-step anagolous to what ProteusDS would be taking
 	double bladePitch = 0.0;
-	double inflowSpeed = 8.7;    // in meters/sec
+	double inflowSpeed = 8.7;    // in metres/sec
 	double fluidDensity = 1.236;
 	double kinematicFluidVisc = 1.4639e-05;
+	double hubRadius = 3.5;      // in metres
 	//-------------------------
 	// Local variables
 	int nSteps = (int)ceil(simulationTime / dt);
@@ -35,26 +60,30 @@ int main(int argc, char *argv[])
 	Vector3d hubOri(0.0, 0.0, 0.0);
 	Matrix3d hubOriMatrix = EulerConstruct(hubOri);
 	Vector3d hubVel(0.0, 0.0, 0.0);
-	Vector3d hubRotVel = hubOriMatrix.row(0) * shaftSpeed;
+
+	// create an axis-angle angular velocity using the x basis in global coordinate system
+	Vector3d hubRotVel = hubOriMatrix.row(0) * shaftSpeed; 
+
+	std::vector<double> inflows;
+	std::vector<double> bladeNodePositions;
 
 	int nBlades, nNodes;
 	int totalNodes = 0;
-
+	//--------------------------
+	// Outputs from Aerodyn
 	Vector3d force, moment;
 	double power;
 	double massMatrix[6][6];
 	double addedMassMatrix[6][6];
 
-	std::vector<double> inflows;
-	std::vector<double> bladeNodePositions;
-	//-------------------------
+	//--------------------------
 	// Initialization
 
 	// Create instance of the wrapper class
 	PDS_AD_Wrapper adWrapper;
 
-	totalNodes = adWrapper.initHub("input/ad_driver_example.inp", fluidDensity, kinematicFluidVisc,
-		&hubPos(0), &hubOri(0), &hubVel(0), &hubRotVel(0), shaftSpeed, bladePitch, &nBlades, &nNodes);
+	totalNodes = adWrapper.initAerodyn("input/ad_driver_example.inp", fluidDensity, kinematicFluidVisc,
+		hubRadius, &hubPos(0), &hubOri(0), &hubVel(0), &hubRotVel(0), bladePitch, &nBlades, &nNodes);
 
 	// now we know the total number of nodes, so allocate accordingly
 	inflows.resize(totalNodes * 3, 0.0);
@@ -64,7 +93,7 @@ int main(int argc, char *argv[])
 
 	// But for this test, just have a constant inflow
 	// create a steady flow situation in +x direction
-	createInflows(inflows, totalNodes, inflowSpeed);
+	generateInflowVelocities(bladeNodePositions, totalNodes, inflowSpeed, inflows);
 
 	adWrapper.initInflows(inflows);
 
@@ -74,35 +103,40 @@ int main(int argc, char *argv[])
 	// Simulation loop
 	for (int i = 0; i <= nSteps; i++)
 	{
+		// visualization window event handling
 		sf::Event event;
 		while (window.pollEvent(event))
 		{
 			if (event.type == sf::Event::Closed)
 				window.close();
 		}
-		// this would be where ProteusDS would take its time step, updating the hub kinematics.
+
+		// this would be where ProteusDS would take its time step and update the hub motion variables.
 		time = i * dt;
-		updateHubState(hubPos, hubOri, hubVel, hubRotVel, dt);
+		updateHubMotion(hubPos, hubOri, hubVel, hubRotVel, dt);
 
 		// send Aerodyn the hub kinematics.
-		adWrapper.updateHubState(time, hubPos.data(), hubOri.data(), hubVel.data(), hubRotVel.data(), shaftSpeed, bladePitch);
+		adWrapper.updateHubMotion(time, hubPos.data(), hubOri.data(), hubVel.data(), hubRotVel.data(), bladePitch);
 
-		// then would usually request the current node positions from Aerodyn by calling 
-		// getBladeNodePos(...)
-		// and then figure out what the inflows would be, but our inflow is just constant anyway,
-		// so we just leave the inflow as constant.
+		// then request the current node positions from Aerodyn by calling 
+		adWrapper.getBladeNodePositions(bladeNodePositions);
 
-		// then we call solve, which will make Aerodyn step forward and simulate up to 'time', and return the 
+		// and then figure out what the inflows are at those node positions
+		generateInflowVelocities(bladeNodePositions, totalNodes, inflowSpeed, inflows);
+
+		// then we call simulate, which will make Aerodyn step forward and simulate up to 'time', and return the 
 		// force, moment, and power at that time.
 		adWrapper.simulate(inflows, force.data(), moment.data(), &power, massMatrix, addedMassMatrix);
-
-		adWrapper.getBladeNodePositions(bladeNodePositions);
 
 		renderBladeNodes(window, bladeNodePositions, hubPos, 7.0, totalNodes);
 	}
 
 	return 0;
 }
+
+//-----------------------------
+// Function definitions
+//-----------------------------
 
 void renderBladeNodes(sf::RenderWindow& wnd, const std::vector<double>& bladeNodePositions, const Vector3d& hubPos, double pixelsPerMeter, int nNodes) 
 {
@@ -129,7 +163,7 @@ void renderBladeNodes(sf::RenderWindow& wnd, const std::vector<double>& bladeNod
 	wnd.display();
 }
 
-void updateHubState(Vector3d& hubPos, Vector3d& hubOri, Vector3d& hubVel, Vector3d& hubRotVel, double dt)
+void updateHubMotion(Vector3d& hubPos, Vector3d& hubOri, const Vector3d& hubVel, const Vector3d& hubRotVel, double dt)
 {
 	// update the orientation using rotational velocity
 	Matrix3d hubOriMatrix = EulerConstruct(hubOri);
@@ -137,7 +171,7 @@ void updateHubState(Vector3d& hubPos, Vector3d& hubOri, Vector3d& hubVel, Vector
 	Vector3d basisY = hubOriMatrix.row(1);
 	Vector3d basisZ = hubOriMatrix.row(2);
 
-	// rotate each basis vector around the axis
+	// integrate the rotational radians/sec and rotate each basis vector around the axis accordingly
 	basisX = axisAngleRotation(basisX, hubRotVel.normalized(), hubRotVel.norm() * dt);
 	basisY = axisAngleRotation(basisY, hubRotVel.normalized(), hubRotVel.norm() * dt);
 	basisZ = axisAngleRotation(basisZ, hubRotVel.normalized(), hubRotVel.norm() * dt);
@@ -153,7 +187,7 @@ void updateHubState(Vector3d& hubPos, Vector3d& hubOri, Vector3d& hubVel, Vector
 	hubPos = hubPos + (hubVel * dt);
 }
 
-void createInflows(std::vector<double>& inflows, int totalNodes, double inflowSpeed)
+void generateInflowVelocities(const std::vector<double>& nodePositions, int totalNodes, double inflowSpeed, std::vector<double>& inflows)
 {
 	for (int i = 0; i < totalNodes; i++)
 	{
@@ -238,6 +272,7 @@ Vector3d EulerExtract(const Matrix3d& m)
 }
 
 // v is vector to be rotated around e by theta radians (right-hand rule applies)
+// Implementes Rodrigues' rotation formula
 Vector3d axisAngleRotation(const Vector3d& v, const Vector3d& e, double theta)
 {
 	Vector3d result = cos(theta) * v + sin(theta) * e.cross(v) + (1 - cos(theta)) * e.dot(v) * e;
