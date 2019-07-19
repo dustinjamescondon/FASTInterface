@@ -63,8 +63,8 @@ void PDS_AD_Wrapper::transformInflows_PDStoAD(const std::vector<double>& pdsInfl
 	// iterate through all the x, y, z components of the inflows, negating the y and z components
 	for (int i = 0; i < totalNodes; ++i) {
 		aerodynInflows[(i * 3) + 0] = pdsInflows[(i * 3) + 0];
-		aerodynInflows[(i * 3) + 1] = pdsInflows[(i * 3) + 1];
-		aerodynInflows[(i * 3) + 2] = pdsInflows[(i * 3) + 2];
+		aerodynInflows[(i * 3) + 1] = -pdsInflows[(i * 3) + 1];
+		aerodynInflows[(i * 3) + 2] = -pdsInflows[(i * 3) + 2];
 	}
 }
 
