@@ -82,7 +82,7 @@ public:
 		std::vector<double>& inflows,
 		double force_out[3],
 		double moment_out[3],
-		double power_out[3],
+		double* power_out,
 		double massMatrix_out[6][6],
 		double addedMassMatrix_out[6][6]);
 
