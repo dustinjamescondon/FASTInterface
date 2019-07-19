@@ -169,11 +169,15 @@ void PDS_AD_Wrapper::simulate(
 	std::vector<double>& inflows,
 	double force_out[3],
 	double moment_out[3],
-	double power_out[3],
+	double* power_out,
 	double massMatrix_out[6][6],
 	double addedMassMatrix_out[6][6])
 {
-	INTERFACE_ADVANCESTATES(&turbineIndex, &nBlades, &nNodes, &inflows[0], force_out, moment_out, power_out,
+	transformInflows_PDStoAD(inflows);
+
+	// Note, we're passing out transformed inflows here, not the inflows from the 
+	// function parameter.
+	INTERFACE_ADVANCESTATES(&turbineIndex, &nBlades, &nNodes, &aerodynInflows[0], force_out, moment_out, power_out,
 		massMatrix_out, addedMassMatrix_out);
 }
 
