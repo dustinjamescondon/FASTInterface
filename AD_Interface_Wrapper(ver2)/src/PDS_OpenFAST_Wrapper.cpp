@@ -15,7 +15,8 @@ typedef Matrix<double, 6, 6> Matrix6d;
 extern "C" {
 	void INTERFACE_INITAERODYN(const char* inputFilename, int* fname_len, double* fluidDensity, double* kinematicFluidVisc,
 		double* hubRad, double* hubPos, double* hubOri, double* hubVel, double* hubRotVel, 
-	    double* bladePitch, int* nBlades_out, int* nNodes_out, int* turbineIndex_out);
+	    double* bladePitch, int* nBlades_out, int* nNodes_out, int* turbineIndex_out,
+		int* errStat, char* errMsg);
 
 	void INTERFACE_INITINFLOWS(int* turbineIndex, int* nBlades, int* nNodes, const double inflows[]);
 
@@ -91,7 +92,9 @@ int PDS_AD_Wrapper::initAerodyn(
 	const double hubRotationalVelocity[3],
 	double bladePitch,
 	int* nBlades_out,  // number of blades, to be assigned upon calling the function
-	int* nNodes_out)  // number of nodes per blade, to be assigned upon calling the function
+	int* nNodes_out,
+	int* errStat_out,
+	char* errMsg_out)  // number of nodes per blade, to be assigned upon calling the function
 {
 	// get the length of the string to pass to the FORTRAN subroutine (FORTRAN needs the length, because it 
 	// doesn't recognize null-terminated character as the end of the string)
@@ -115,10 +118,22 @@ int PDS_AD_Wrapper::initAerodyn(
 
 	// call the initialization subroutine in the FORTRAN DLL
 	INTERFACE_INITAERODYN(inputFilename, &fname_len, &fluidDensity, &kinematicFluidVisc,
-		&hubRad, _hubPos, _hubOri, _hubVel,
-		_hubRotVel, &bladePitch, &nBlades, &nNodes, &turbineIndex);
+		&hubRad, _hubPos, _hubOri, _hubVel, _hubRotVel, 
+		&bladePitch, &nBlades, &nNodes, &turbineIndex, errStat_out,
+		errMsg_out);
+
 	*nBlades_out = nBlades;
 	*nNodes_out = nNodes;
+
+	// check the error status number 
+	if (*errStat_out == 5) {
+		throw ADInputFileNotFound(errMsg_out);
+	} 
+	// 5 isn't actually a number that errStat_out will take yet, have to specify
+	// specific error numbers for specific erros on the FORTRAN side still
+	else if (*errStat_out == 6) {
+		throw ADInputFileContents(errMsg_out);
+	}
 
 	// return the total amount of nodes used in the simulation
 	totalNodes = nBlades * nNodes;

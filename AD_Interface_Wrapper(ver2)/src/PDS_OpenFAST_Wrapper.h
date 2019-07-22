@@ -29,6 +29,19 @@ etc.
 #endif  
 
 #include <vector>
+#include <stdexcept>
+
+// exception class for when the AeroDyn cannot be found
+class ADInputFileNotFound : public std::runtime_error {
+public: 
+	inline ADInputFileNotFound(const char* errMsg) : runtime_error(errMsg) {}
+};
+
+// exception class fro when the AeroDyn input file has invalid contents
+class ADInputFileContents : public std::runtime_error {
+public:
+	inline ADInputFileContents(const char* errMsg) : std::runtime_error(errMsg) {}
+};
 
 class PDS_AD_Wrapper {
 public:
@@ -49,7 +62,9 @@ public:
 		const double hubRotationalVelocity[3], // axis-angle form in global coordinate system
 		double bladePitch,                     // radians
 		int* nBlades_out,                      // number of blades, to be assigned upon calling the function
-		int* nNodes_out);				       // number of nodes per blade, to be assigned upon calling the function
+		int* nNodes_out,
+		int* errStat_out,
+		char* errMsg_out);				       // number of nodes per blade, to be assigned upon calling the function
 
 	// Initializes the inflows. Note, inflow velocities are in global coordinate system
 	void DECLDIR initInflows(const std::vector<double>& inflows);

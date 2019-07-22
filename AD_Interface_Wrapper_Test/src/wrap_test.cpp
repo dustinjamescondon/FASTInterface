@@ -75,6 +75,8 @@ int main()
 	double power;
 	double massMatrix[6][6];
 	double addedMassMatrix[6][6];
+	int errStat;
+	char errMsg[1025];
 
 	//--------------------------
 	// Initialization
@@ -82,8 +84,21 @@ int main()
 	// Create instance of the wrapper class
 	PDS_AD_Wrapper adWrapper;
 
-	totalNodes = adWrapper.initAerodyn("input/ad_driver_example.inp", fluidDensity, kinematicFluidVisc,
-		hubRadius, &hubPos(0), &hubOri(0), &hubVel(0), &hubRotVel(0), bladePitch, &nBlades, &nNodes);
+	try {
+		totalNodes = adWrapper.initAerodyn("input/ad_driver_example.inp", fluidDensity, kinematicFluidVisc,
+			hubRadius, &hubPos(0), &hubOri(0), &hubVel(0), &hubRotVel(0), bladePitch, &nBlades, &nNodes,
+			&errStat, errMsg);
+	}
+	catch (ADInputFileNotFound& e) {
+		std::cout << "Input file couldn't be found" << std::endl;
+		std::cout << e.what();
+		return 0;
+	}
+	catch (ADInputFileContents& e) {
+		std::cout << "Input file has invalid contents" << std::endl;
+		std::cout << e.what();
+		return 0;
+	}
 
 	// now we know the total number of nodes, so allocate accordingly
 	inflows.resize(totalNodes * 3, 0.0);
@@ -272,7 +287,7 @@ Vector3d EulerExtract(const Matrix3d& m)
 }
 
 // v is vector to be rotated around e by theta radians (right-hand rule applies)
-// Implementes Rodrigues' rotation formula
+// Implements Rodrigues' rotation formula
 Vector3d axisAngleRotation(const Vector3d& v, const Vector3d& e, double theta)
 {
 	Vector3d result = cos(theta) * v + sin(theta) * e.cross(v) + (1 - cos(theta)) * e.dot(v) * e;
