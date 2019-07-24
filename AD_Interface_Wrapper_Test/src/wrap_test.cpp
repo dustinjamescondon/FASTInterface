@@ -43,8 +43,8 @@ int main()
 
 	//-------------------------
 	// Simulation parameters
-	double simulationTime = 8.0; // the amount of time to be simulated (in seconds)
-	double shaftSpeed = 2.0;     // in rads/sec
+	double simulationTime = 16.0; // the amount of time to be simulated (in seconds)
+	double shaftSpeed = 1.0;     // in rads/sec
 	double dt = 0.05;            // the time-step anagolous to what ProteusDS would be taking
 	double bladePitch = 0.0;
 	double inflowSpeed = 8.7;    // in metres/sec
@@ -67,7 +67,6 @@ int main()
 	std::vector<double> inflows;
 	std::vector<double> bladeNodePositions;
 
-	int nBlades, nNodes;
 	int totalNodes = 0;
 	//--------------------------
 	// Outputs from Aerodyn
@@ -75,8 +74,6 @@ int main()
 	double power;
 	double massMatrix[6][6];
 	double addedMassMatrix[6][6];
-	int errStat;
-	char errMsg[1025];
 
 	//--------------------------
 	// Initialization
@@ -85,9 +82,8 @@ int main()
 	PDS_AD_Wrapper adWrapper;
 
 	try {
-		totalNodes = adWrapper.initAerodyn("input/ad_driver_example.inp", fluidDensity, kinematicFluidVisc,
-			hubRadius, &hubPos(0), &hubOri(0), &hubVel(0), &hubRotVel(0), bladePitch, &nBlades, &nNodes,
-			&errStat, errMsg);
+		adWrapper.InitAerodyn("input/ad_driver_example.inp", fluidDensity, kinematicFluidVisc,
+			hubRadius, &hubPos(0), &hubOri(0), &hubVel(0), &hubRotVel(0), bladePitch);
 	}
 	catch (ADInputFileNotFound& e) {
 		std::cout << "Input file couldn't be found" << std::endl;
@@ -100,6 +96,8 @@ int main()
 		return 0;
 	}
 
+	totalNodes = adWrapper.GetNumNodes();
+
 	// now we know the total number of nodes, so allocate accordingly
 	inflows.resize(totalNodes * 3, 0.0);
 	bladeNodePositions.resize(totalNodes * 3);
@@ -110,9 +108,9 @@ int main()
 	// create a steady flow situation in +x direction
 	generateInflowVelocities(bladeNodePositions, totalNodes, inflowSpeed, inflows);
 
-	adWrapper.initInflows(inflows);
+	adWrapper.InitInflows(inflows);
 
-	std::cout << "Simulating..." << std::endl;
+	//std::cout << "Simulating..." << std::endl;
 	
 	//-------------------------------
 	// Simulation loop
@@ -131,17 +129,17 @@ int main()
 		updateHubMotion(hubPos, hubOri, hubVel, hubRotVel, dt);
 
 		// send Aerodyn the hub kinematics.
-		adWrapper.updateHubMotion(time, hubPos.data(), hubOri.data(), hubVel.data(), hubRotVel.data(), bladePitch);
+		adWrapper.UpdateHubMotion(time, hubPos.data(), hubOri.data(), hubVel.data(), hubRotVel.data(), bladePitch);
 
 		// then request the current node positions from Aerodyn by calling 
-		adWrapper.getBladeNodePositions(bladeNodePositions);
+		adWrapper.GetBladeNodePositions(bladeNodePositions);
 
 		// and then figure out what the inflows are at those node positions
 		generateInflowVelocities(bladeNodePositions, totalNodes, inflowSpeed, inflows);
 
 		// then we call simulate, which will make Aerodyn step forward and simulate up to 'time', and return the 
 		// force, moment, and power at that time.
-		adWrapper.simulate(inflows, force.data(), moment.data(), &power, massMatrix, addedMassMatrix);
+		adWrapper.Simulate(inflows, force.data(), moment.data(), &power, massMatrix, addedMassMatrix);
 
 		renderBladeNodes(window, bladeNodePositions, hubPos, 7.0, totalNodes);
 	}

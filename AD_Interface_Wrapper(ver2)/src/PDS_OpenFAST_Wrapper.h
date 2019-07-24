@@ -31,13 +31,13 @@ etc.
 #include <vector>
 #include <stdexcept>
 
-// exception class for when the AeroDyn cannot be found
+// exception class for when the AeroDyn input file cannot be found
 class ADInputFileNotFound : public std::runtime_error {
 public: 
 	inline ADInputFileNotFound(const char* errMsg) : runtime_error(errMsg) {}
 };
 
-// exception class fro when the AeroDyn input file has invalid contents
+// exception class for when the AeroDyn input file has invalid contents
 class ADInputFileContents : public std::runtime_error {
 public:
 	inline ADInputFileContents(const char* errMsg) : std::runtime_error(errMsg) {}
@@ -51,7 +51,7 @@ public:
 
 	// Initializes AeroDyn by loading input files and setting initial hub state. Returns the total amount of 
 	// nodes used in the simulation.
-	int DECLDIR initAerodyn(
+	void DECLDIR InitAerodyn(
 		const char* inputFilename,		       // filename (including path) of the main driver input file
 		double fluidDensity,                   // kg/m^3
 		double kinematicFluidVisc,             // m^2/sec
@@ -60,14 +60,10 @@ public:
 		const double hubOrientation[3],        // Euler angles (in radians)
 		const double hubVelocity[3],		   // metres/sec
 		const double hubRotationalVelocity[3], // axis-angle form in global coordinate system
-		double bladePitch,                     // radians
-		int* nBlades_out,                      // number of blades, to be assigned upon calling the function
-		int* nNodes_out,
-		int* errStat_out,
-		char* errMsg_out);				       // number of nodes per blade, to be assigned upon calling the function
+		double bladePitch);                    // radians
 
 	// Initializes the inflows. Note, inflow velocities are in global coordinate system
-	void DECLDIR initInflows(const std::vector<double>& inflows);
+	void DECLDIR InitInflows(const std::vector<double>& inflows);
 	// The format expected is (in global coordinate system)
 	// inflows[0] inflow velocity in x direction at node 0
 	//     ...[1] inflow velocity in y direction at node 0
@@ -77,23 +73,29 @@ public:
 
 	// Updates the hub motion variables, changing the positions of the nodes accordingly. Call
 	// this before getBladeNodePositions(...)
-	void DECLDIR updateHubMotion(
+	void DECLDIR UpdateHubMotion(
 		double time,                          // the moment in time that the inputs describe (seconds)
 		const double hubPosition[3],          // position of the hub in global coordinate system (meters)
 		const double hubOrientation[3],       // euler angles describing orientation of the hub of the hub (radians)
 		const double hubVelocity[3],          // velocity of the hub in the global coordinate system (meters/sec)
-		const double hubRotationalVelocity[3],// rotational velocity of the hub in global coordinate system (axis-angle?)
+		const double hubRotationalVelocity[3],// rotational velocity of the hub in global coordinate system (axis-angle)
 		double bladePitch);
 
 	// Once updateHubState has been called, we call this to get where those hub kinematics put the blade nodes
-	void DECLDIR getBladeNodePositions(std::vector<double>& bladeNodePositions);
+	void DECLDIR GetBladeNodePositions(std::vector<double>& bladeNodePositions);
 	// The format expected is the same as initInflows. So indices 0,1,2 correspond to the x,y,z 
 	// position of node 0; and inflow indices 0,1,2 represent the x,y,z inflow velocity for that 
 	// node.
+
+	// Returns the total number of nodes (call after InitAerodyn)
+	int DECLDIR GetNumNodes() const;
+
+	// Returns the number of blades (call after InitAerodyn)
+	int DECLDIR GetNumBlades() const;
 	
 	// Then we call this, passing the inflow velocities at the time passed to updateHubMotion(...)
 	// Returns the resulting force, moment, and power at that same time
-	void DECLDIR simulate(
+	void DECLDIR Simulate(
 		std::vector<double>& inflows,
 		double force_out[3],
 		double moment_out[3],
@@ -103,7 +105,7 @@ public:
 
 private:
 	// updates aerodynInflows with transformed pdsInflows
-	void transformInflows_PDStoAD(const std::vector<double>& pdsInflows);
+	void TransformInflows_PDStoAD(const std::vector<double>& pdsInflows);
 
 	// the turbine index/number for the current instance of the class
 	int turbineIndex;
@@ -111,5 +113,5 @@ private:
 	std::vector<double> aerodynInflows;
 	int totalNodes;
 	int nBlades;
-	int nNodes;
+	int nNodes; // number of nodes per blade
 };
