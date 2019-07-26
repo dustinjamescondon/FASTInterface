@@ -39,6 +39,8 @@ Vector3d axisAngleRotation(const Vector3d& v, const Vector3d& e, double theta);
 // main routine
 int main()
 {	
+	std::cout << sizeof(void*) << std::endl;
+
 	sf::RenderWindow window(sf::VideoMode(800, 800), "Node position test");
 
 	//-------------------------
@@ -196,7 +198,7 @@ void updateHubMotion(Vector3d& hubPos, Vector3d& hubOri, const Vector3d& hubVel,
 	// get the Euler angles out of the new orientation matrix
 	hubOri = EulerExtract(hubOriMatrix);
 
-	// integrate position
+	// integrate to get position
 	hubPos = hubPos + (hubVel * dt);
 }
 

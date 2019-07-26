@@ -107,8 +107,8 @@ private:
 	// updates aerodynInflows with transformed pdsInflows
 	void TransformInflows_PDStoAD(const std::vector<double>& pdsInflows);
 
-	// the turbine index/number for the current instance of the class
-	int turbineIndex;
+	// the turbine instance pointer for the current instance of the class (points to a FORTRAN type)
+	void* simulationInstance;
 
 	std::vector<double> aerodynInflows;
 	int totalNodes;
