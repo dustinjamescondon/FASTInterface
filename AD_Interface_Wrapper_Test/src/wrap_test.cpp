@@ -39,8 +39,6 @@ Vector3d axisAngleRotation(const Vector3d& v, const Vector3d& e, double theta);
 // main routine
 int main()
 {	
-	std::cout << sizeof(void*) << std::endl;
-
 	sf::RenderWindow window(sf::VideoMode(800, 800), "Node position test");
 
 	//-------------------------
