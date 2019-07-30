@@ -4,6 +4,9 @@
 #include <iostream>
 #include <vector>
 
+#define _USE_MATH_DEFINES
+#include <math.h>
+
 // used to define vectors and matrices in this small example
 using namespace Eigen;
 
@@ -43,21 +46,21 @@ int main()
 
 	//-------------------------
 	// Simulation parameters
-	double simulationTime = 32.0; // the amount of time to be simulated (in seconds)
-	double shaftSpeed = 1.0;     // in rads/sec
-	double dt = 0.025;            // the time-step anagolous to what ProteusDS would be taking
+	double simulationTime = 8.0; // the amount of time to be simulated (in seconds)
+	double shaftSpeed = 1.665040;     // in rads/sec
+	double dt = 0.02;            // the time-step anagolous to what ProteusDS would be taking
 	double bladePitch = 0.0;
 	double inflowSpeed = 8.7;    // in metres/sec
 	double fluidDensity = 1.236;
 	double kinematicFluidVisc = 1.4639e-05;
-	double hubRadius = 3.5;      // in metres
+	double hubRadius = 1.75;      // in metres
 	//-------------------------
 	// Local variables
 	int nSteps = (int)ceil(simulationTime / dt);
 	double time = 0.0;
 
 	Vector3d hubPos(0.0, 50.0, 50.0);
-	Vector3d hubOri(0.0, 0.0, 3.14 * 0.5);
+	Vector3d hubOri(0.0, 0.0, 0.0);
 	Matrix3d hubOriMatrix = EulerConstruct(-hubOri).transpose();
 	Vector3d hubVel(0.0, 0.0, 0.0);
 
