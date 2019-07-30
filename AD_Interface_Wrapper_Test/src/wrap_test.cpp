@@ -61,7 +61,7 @@ int main()
 
 	Vector3d hubPos(0.0, 50.0, 50.0);
 	Vector3d hubOri(0.0, 0.0, 0.0);
-	Matrix3d hubOriMatrix = EulerConstruct(-hubOri).transpose();
+	Matrix3d hubOriMatrix = EulerConstruct(hubOri);
 	Vector3d hubVel(0.0, 0.0, 0.0);
 
 	// create an axis-angle angular velocity using the x basis in global coordinate system
@@ -203,7 +203,7 @@ void renderBladeNodes(sf::RenderWindow& wnd, const std::vector<double>& bladeNod
 void updateHubMotion(Vector3d& hubPos, Vector3d& hubOri, const Vector3d& hubVel, const Vector3d& hubRotVel, double dt)
 {
 	// update the orientation using rotational velocity
-	Matrix3d hubOriMatrix = EulerConstruct(-hubOri).transpose();
+	Matrix3d hubOriMatrix = EulerConstruct(hubOri);
 	Vector3d basisX = hubOriMatrix.row(0);
 	Vector3d basisY = hubOriMatrix.row(1);
 	Vector3d basisZ = hubOriMatrix.row(2);
@@ -218,7 +218,7 @@ void updateHubMotion(Vector3d& hubPos, Vector3d& hubOri, const Vector3d& hubVel,
 	hubOriMatrix.row(2) = basisZ;
 
 	// get the Euler angles out of the new orientation matrix
-	hubOri = -EulerExtract(hubOriMatrix.transpose());
+	hubOri = EulerExtract(hubOriMatrix);
 
 	// integrate to get position
 	hubPos = hubPos + (hubVel * dt);
