@@ -193,7 +193,6 @@ void PDS_AD_Wrapper::Simulate(
 		massMatrix_out, addedMassMatrix_out);
 }
 
-
 // Communicates blade node positions to ProteusDS.  This needs to be separate from the other outputs so that it can be used to get inflow values at the current time step.
 void PDS_AD_Wrapper::GetBladeNodePositions(std::vector<double>& nodePos)
 {

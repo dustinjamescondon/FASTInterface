@@ -43,9 +43,9 @@ int main()
 
 	//-------------------------
 	// Simulation parameters
-	double simulationTime = 16.0; // the amount of time to be simulated (in seconds)
+	double simulationTime = 32.0; // the amount of time to be simulated (in seconds)
 	double shaftSpeed = 1.0;     // in rads/sec
-	double dt = 0.05;            // the time-step anagolous to what ProteusDS would be taking
+	double dt = 0.025;            // the time-step anagolous to what ProteusDS would be taking
 	double bladePitch = 0.0;
 	double inflowSpeed = 8.7;    // in metres/sec
 	double fluidDensity = 1.236;
@@ -57,8 +57,8 @@ int main()
 	double time = 0.0;
 
 	Vector3d hubPos(0.0, 50.0, 50.0);
-	Vector3d hubOri(0.0, 0.0, 0.0);
-	Matrix3d hubOriMatrix = EulerConstruct(hubOri);
+	Vector3d hubOri(0.0, 0.0, 3.14 * 0.5);
+	Matrix3d hubOriMatrix = EulerConstruct(-hubOri).transpose();
 	Vector3d hubVel(0.0, 0.0, 0.0);
 
 	// create an axis-angle angular velocity using the x basis in global coordinate system
@@ -154,7 +154,7 @@ int main()
 void renderBladeNodes(sf::RenderWindow& wnd, const std::vector<double>& bladeNodePositions, const Vector3d& hubPos, double pixelsPerMeter, int nNodes) 
 {
 
-	sf::CircleShape shape(1.0);
+	sf::CircleShape shape(2.0);
 
 	wnd.clear();
 
@@ -168,7 +168,28 @@ void renderBladeNodes(sf::RenderWindow& wnd, const std::vector<double>& bladeNod
 		
 		// just take the y and z coordinates
 		sf::Vector2f pos(screenNodePos.y(), screenNodePos.z());
+		
+		// use e^(-x) to map the x distance of the node from hub pos to a color value
+		// between 0 - 255
+		double deltax = nodePos.x() - hubPos.x();
 
+		sf::Color clr;
+
+		if (deltax > 0) {
+			// make it blue
+			unsigned int val = unsigned int(255.0 * (1.0 - exp(-deltax * 0.1)));
+
+			clr = sf::Color(255 - val, 255 - val, 255);
+		}
+		else {
+			// make it red
+			unsigned int val = unsigned int(255.0 * (1.0 - exp(deltax * 0.1)));
+
+			clr = sf::Color(255, 255 - val, 255 - val);
+		}
+
+		shape.setFillColor(clr);
+		
 		shape.setPosition(pos);
 		wnd.draw(shape);
 	}
@@ -179,7 +200,7 @@ void renderBladeNodes(sf::RenderWindow& wnd, const std::vector<double>& bladeNod
 void updateHubMotion(Vector3d& hubPos, Vector3d& hubOri, const Vector3d& hubVel, const Vector3d& hubRotVel, double dt)
 {
 	// update the orientation using rotational velocity
-	Matrix3d hubOriMatrix = EulerConstruct(hubOri);
+	Matrix3d hubOriMatrix = EulerConstruct(-hubOri).transpose();
 	Vector3d basisX = hubOriMatrix.row(0);
 	Vector3d basisY = hubOriMatrix.row(1);
 	Vector3d basisZ = hubOriMatrix.row(2);
@@ -194,7 +215,7 @@ void updateHubMotion(Vector3d& hubPos, Vector3d& hubOri, const Vector3d& hubVel,
 	hubOriMatrix.row(2) = basisZ;
 
 	// get the Euler angles out of the new orientation matrix
-	hubOri = EulerExtract(hubOriMatrix);
+	hubOri = -EulerExtract(hubOriMatrix.transpose());
 
 	// integrate to get position
 	hubPos = hubPos + (hubVel * dt);
