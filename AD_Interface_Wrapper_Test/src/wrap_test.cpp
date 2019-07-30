@@ -46,7 +46,7 @@ int main()
 
 	//-------------------------
 	// Simulation parameters
-	double simulationTime = 8.0; // the amount of time to be simulated (in seconds)
+	double simulationTime = 32.0; // the amount of time to be simulated (in seconds)
 	double shaftSpeed = 1.665040;     // in rads/sec
 	double dt = 0.02;            // the time-step anagolous to what ProteusDS would be taking
 	double bladePitch = 0.0;
@@ -60,7 +60,7 @@ int main()
 	double time = 0.0;
 
 	Vector3d hubPos(0.0, 50.0, 50.0);
-	Vector3d hubOri(0.0, 0.0, 0.0);
+	Vector3d hubOri(0.0, 0.0, M_PI_4);
 	Matrix3d hubOriMatrix = EulerConstruct(hubOri);
 	Vector3d hubVel(0.0, 0.0, 0.0);
 
