@@ -31,10 +31,16 @@ etc.
 #include <vector>
 #include <stdexcept>
 
+// exception class for any other AeroDyn error
+class ADError : public std::runtime_error {
+public:
+	inline ADError(const char* errMsg) : std::runtime_error(errMsg) {}
+};
+
 // exception class for when the AeroDyn input file cannot be found
 class ADInputFileNotFound : public std::runtime_error {
 public: 
-	inline ADInputFileNotFound(const char* errMsg) : runtime_error(errMsg) {}
+	inline ADInputFileNotFound(const char* errMsg) : std::runtime_error(errMsg) {}
 };
 
 // exception class for when the AeroDyn input file has invalid contents
@@ -55,7 +61,7 @@ public:
 		const char* inputFilename,		       // filename (including path) of the main driver input file
 		double fluidDensity,                   // kg/m^3
 		double kinematicFluidVisc,             // m^2/sec
-		double hubRadius,                      // metres
+		double hubRadius,                      // metres (must be non-zero)
 		const double hubPosition[3],		   // metres
 		const double hubOrientation[3],        // Euler angles (in radians)
 		const double hubVelocity[3],		   // metres/sec
@@ -92,6 +98,8 @@ public:
 
 	// Returns the number of blades (call after InitAerodyn)
 	int DECLDIR GetNumBlades() const;
+
+	double DECLDIR GetTurbineDiameter() const;
 	
 	// Then we call this, passing the inflow velocities at the time passed to updateHubMotion(...)
 	// Returns the resulting force, moment, and power at that same time
@@ -100,6 +108,7 @@ public:
 		double force_out[3],
 		double moment_out[3],
 		double* power_out,
+		double* tsr_out,
 		double massMatrix_out[6][6],
 		double addedMassMatrix_out[6][6]);
 
@@ -111,6 +120,7 @@ private:
 	void* simulationInstance;
 
 	std::vector<double> aerodynInflows;
+	double turbineDiameter;
 	int totalNodes;
 	int nBlades;
 	int nNodes; // number of nodes per blade

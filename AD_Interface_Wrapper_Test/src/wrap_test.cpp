@@ -46,21 +46,21 @@ int main()
 
 	//-------------------------
 	// Simulation parameters
-	double simulationTime = 32.0; // the amount of time to be simulated (in seconds)
-	double shaftSpeed = 1.665040;     // in rads/sec
+	double simulationTime = 50.0; // the amount of time to be simulated (in seconds)
+	double shaftSpeed = 0.471238898;     // in rads/sec
 	double dt = 0.02;            // the time-step anagolous to what ProteusDS would be taking
 	double bladePitch = 0.0;
-	double inflowSpeed = 8.7;    // in metres/sec
+	double inflowSpeed = 10.0;    // in metres/sec
 	double fluidDensity = 1.236;
 	double kinematicFluidVisc = 1.4639e-05;
-	double hubRadius = 1.75;      // in metres
+	double hubRadius = 1.75;      // in metres (Not used right now)
 	//-------------------------
 	// Local variables
 	int nSteps = (int)ceil(simulationTime / dt);
 	double time = 0.0;
 
 	Vector3d hubPos(0.0, 50.0, 50.0);
-	Vector3d hubOri(0.0, 0.0, M_PI_4);
+	Vector3d hubOri(0.0, 0.0, 0.0);
 	Matrix3d hubOriMatrix = EulerConstruct(hubOri);
 	Vector3d hubVel(0.0, 0.0, 0.0);
 
@@ -75,6 +75,8 @@ int main()
 	// Outputs from Aerodyn
 	Vector3d force, moment;
 	double power;
+	double tsr;
+	double turbineDiameter;
 	double massMatrix[6][6];
 	double addedMassMatrix[6][6];
 
@@ -85,7 +87,7 @@ int main()
 	PDS_AD_Wrapper adWrapper;
 
 	try {
-		adWrapper.InitAerodyn("input/ad_driver_example.inp", fluidDensity, kinematicFluidVisc,
+		adWrapper.InitAerodyn("C:/Users/dusti/Documents/Work/PRIMED/inputfiles/ad_interface_example.inp", fluidDensity, kinematicFluidVisc,
 			hubRadius, &hubPos(0), &hubOri(0), &hubVel(0), &hubRotVel(0), bladePitch);
 	}
 	catch (ADInputFileNotFound& e) {
@@ -98,7 +100,12 @@ int main()
 		std::cout << e.what();
 		return 0;
 	}
+	catch (ADError& e) {
+		std::cout << "An error occured in AeroDyn" << std::endl;
+		std::cout << e.what();
+	}
 
+	turbineDiameter = adWrapper.GetTurbineDiameter();
 	totalNodes = adWrapper.GetNumNodes();
 
 	// now we know the total number of nodes, so allocate accordingly
@@ -142,7 +149,7 @@ int main()
 
 		// then we call simulate, which will make Aerodyn step forward and simulate up to 'time', and return the 
 		// force, moment, and power at that time.
-		adWrapper.Simulate(inflows, force.data(), moment.data(), &power, massMatrix, addedMassMatrix);
+		adWrapper.Simulate(inflows, force.data(), moment.data(), &power, &tsr, massMatrix, addedMassMatrix);
 
 		renderBladeNodes(window, bladeNodePositions, hubPos, 7.0, totalNodes);
 	}

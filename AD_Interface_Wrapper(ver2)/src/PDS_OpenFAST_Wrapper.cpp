@@ -15,7 +15,7 @@ typedef Matrix<double, 6, 6> Matrix6d;
 extern "C" {
 	void INTERFACE_INITAERODYN(const char* inputFilename, int* fname_len, double* fluidDensity, double* kinematicFluidVisc,
 		double* hubRad, double* hubPos, double* hubOri, double* hubVel, double* hubRotVel, 
-	    double* bladePitch, int* nBlades_out, int* nNodes_out, void** simulationInstance_out,
+	    double* bladePitch, int* nBlades_out, int* nNodes_out, double* turbDiameter_out, void** simulationInstance_out,
 		int* errStat, char* errMsg);
 
 	void INTERFACE_INITINFLOWS(void* simulationInstance, int* nBlades, int* nNodes, const double inflows[]);
@@ -24,7 +24,7 @@ extern "C" {
 		double hubRotVel[3], double* bladePitch);
 
 	void INTERFACE_ADVANCESTATES(void* simulationInstance, int* nBlades, int* nNodes, double bladeNodeInflow[], double* force_out,
-		double* moment_out, double* power_out, double massMatrix_out[6][6], double addedMassMatrix_out[6][6]);
+		double* moment_out, double* power_out, double* tsr_out, double massMatrix_out[6][6], double addedMassMatrix_out[6][6]);
 
 	void INTERFACE_GETBLADENODEPOS(void* simulationInstance, double* nodePos);
 
@@ -120,11 +120,14 @@ void PDS_AD_Wrapper::InitAerodyn(
 
 	// call the initialization subroutine in the FORTRAN DLL
 	INTERFACE_INITAERODYN(inputFilename, &fname_len, &fluidDensity, &kinematicFluidVisc,
-		&hubRad, _hubPos, _hubOri, _hubVel, _hubRotVel, 
-		&bladePitch, &nBlades, &nNodes, &simulationInstance, &errStat,
+		&hubRad, _hubPos, _hubOri, _hubVel, _hubRotVel,
+		&bladePitch, &nBlades, &nNodes, &turbineDiameter, &simulationInstance, &errStat,
 		errMsg);
 
 	// check the error status number 
+	if (errStat == 4) {
+		throw ADError(errMsg);
+	}
 	if (errStat == 5) {
 		throw ADInputFileNotFound(errMsg);
 	} 
@@ -182,6 +185,7 @@ void PDS_AD_Wrapper::Simulate(
 	double force_out[3],
 	double moment_out[3],
 	double* power_out,
+	double* tsr_out,
 	double massMatrix_out[6][6],
 	double addedMassMatrix_out[6][6])
 {
@@ -190,7 +194,7 @@ void PDS_AD_Wrapper::Simulate(
 	// Note, we're passing out transformed inflows here, not the inflows from the 
 	// function parameter.
 	INTERFACE_ADVANCESTATES(simulationInstance, &nBlades, &nNodes, &aerodynInflows[0], force_out, moment_out, power_out,
-		massMatrix_out, addedMassMatrix_out);
+		tsr_out, massMatrix_out, addedMassMatrix_out);
 }
 
 // Communicates blade node positions to ProteusDS.  This needs to be separate from the other outputs so that it can be used to get inflow values at the current time step.
@@ -215,4 +219,9 @@ int PDS_AD_Wrapper::GetNumBlades() const
 int PDS_AD_Wrapper::GetNumNodes() const
 {
 	return totalNodes;
+}
+
+double PDS_AD_Wrapper::GetTurbineDiameter() const
+{
+	return turbineDiameter;
 }
