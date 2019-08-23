@@ -46,14 +46,14 @@ int main()
 
 	//-------------------------
 	// Simulation parameters
-	double simulationTime = 50.0; // the amount of time to be simulated (in seconds)
-	double shaftSpeed = 0.471238898;     // in rads/sec
+	double simulationTime = 10.0; // the amount of time to be simulated (in seconds)
+	double shaftSpeed = 1.183333233;     // in rads/sec
 	double dt = 0.02;            // the time-step anagolous to what ProteusDS would be taking
 	double bladePitch = 0.0;
 	double inflowSpeed = 10.0;    // in metres/sec
-	double fluidDensity = 1.236;
+	double fluidDensity = 1.225;
 	double kinematicFluidVisc = 1.4639e-05;
-	double hubRadius = 1.75;      // in metres (Not used right now)
+	double hubRadius = 1.5;      // in metres (Not used right now)
 	//-------------------------
 	// Local variables
 	int nSteps = (int)ceil(simulationTime / dt);
@@ -87,7 +87,7 @@ int main()
 	PDS_AD_Wrapper adWrapper;
 
 	try {
-		adWrapper.InitAerodyn("C:/Users/dusti/Documents/Work/PRIMED/inputfiles/ad_interface_example.inp", fluidDensity, kinematicFluidVisc,
+		adWrapper.InitAerodyn("C:/Users/dusti/Documents/Work/PRIMED/inputfiles/ad_interface_example2.inp", fluidDensity, kinematicFluidVisc,
 			hubRadius, &hubPos(0), &hubOri(0), &hubVel(0), &hubRotVel(0), bladePitch);
 	}
 	catch (ADInputFileNotFound& e) {
