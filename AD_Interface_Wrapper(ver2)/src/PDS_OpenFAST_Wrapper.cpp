@@ -4,6 +4,30 @@
 #include <assert.h>
 #include <iostream>
 #include <stdlib.h>
+#include <fstream>
+
+// this is for writing the input log to disk so we can read what ProteusDS is sending our AD interface
+std::ofstream f;
+
+void logHeader()
+{
+	f << "time \t pos \t eulerAngles \t vel \t angularVel \t bladePitch" << std::endl;
+}
+
+void logVector(const double* v)
+{
+	f << " ( " << v[0] << ", " << v[1] << ", " << v[2] << " ) \t";
+}
+
+void logInput(double time, const double* pos, const double* eulerAngles, const double* vel, const double* angularVel, double bladePitch)
+{
+	f << time << "\t";
+	logVector(pos);
+	logVector(eulerAngles);
+	logVector(vel);
+	logVector(angularVel);
+	f << bladePitch << std::endl;
+}
 
 // Create a 6x6 matrix from Eigen3's template for transforming the mass matrix
 using Eigen::Matrix;
@@ -74,11 +98,15 @@ PDS_AD_Wrapper::PDS_AD_Wrapper()
 	nBlades = nNodes = totalNodes = 0;
 
 	simulationInstance = 0;
+
+	f.open("InputLog.txt", std::ofstream::out);
+	logHeader();
 }
 
 PDS_AD_Wrapper::~PDS_AD_Wrapper()
 {
 	INTERFACE_END(simulationInstance);
+	f.close();
 }
 
 void PDS_AD_Wrapper::InitAerodyn(
@@ -140,6 +168,8 @@ void PDS_AD_Wrapper::InitAerodyn(
 
 	// resize our internal vector so it can hold the velocity components of each node
 	aerodynInflows.resize(totalNodes * 3);
+
+	logInput(0.0, hubPosition, hubOrientation, hubVelocity, hubRotationalVelocity, bladePitch);
 }
 
 // Transform each inflow from PDS' coordinate system (positive-down) to AD's (positive-up), and send them 
@@ -178,6 +208,8 @@ void PDS_AD_Wrapper::UpdateHubMotion(double time,
 
 	INTERFACE_SETHUBMOTION(simulationInstance, &time, _hubPos, _hubOri, _hubVel,
 		_hubRotVel, &bladePitch);
+
+	logInput(time, hubPosition, hubOrientation, hubVelocity, hubRotationalVelocity, bladePitch);
 }
 
 void PDS_AD_Wrapper::Simulate(
@@ -225,3 +257,4 @@ double PDS_AD_Wrapper::GetTurbineDiameter() const
 {
 	return turbineDiameter;
 }
+
