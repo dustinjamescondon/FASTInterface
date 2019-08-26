@@ -169,7 +169,7 @@ void PDS_AD_Wrapper::InitAerodyn(
 	// resize our internal vector so it can hold the velocity components of each node
 	aerodynInflows.resize(totalNodes * 3);
 
-	logInput(0.0, hubPosition, hubOrientation, hubVelocity, hubRotationalVelocity, bladePitch);
+	logInput(-1.0, hubPosition, hubOrientation, hubVelocity, hubRotationalVelocity, bladePitch);
 }
 
 // Transform each inflow from PDS' coordinate system (positive-down) to AD's (positive-up), and send them 

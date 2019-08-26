@@ -48,7 +48,8 @@ int main()
 	// Simulation parameters
 	double simulationTime = 30.0; // the amount of time to be simulated (in seconds)
 	double shaftSpeed = 1.183333233;     // in rads/sec
-	double dt = 0.01;            // the time-step anagolous to what ProteusDS would be taking
+	const int NumTimes = 16;
+	double time_array[] = { 0.0, 0.0001, 0.0006, 0.0031, 0.0156, 0.0781, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0};            // the time-step anagolous to what ProteusDS would be taking
 	double bladePitch = 0.0;
 	double inflowSpeed = 10.0;    // in metres/sec
 	double fluidDensity = 1.225;
@@ -56,11 +57,10 @@ int main()
 	double hubRadius = 1.5;      // in metres (Not used right now)
 	//-------------------------
 	// Local variables
-	int nSteps = (int)ceil(simulationTime / dt);
 	double time = 0.0;
 
 	Vector3d hubPos(0.0, 50.0, 50.0);
-	Vector3d hubOri(0.0, 0.0, 0.0);
+	Vector3d hubOri(0.0, -0.0, 0.0);
 	Matrix3d hubOriMatrix = EulerConstruct(hubOri);
 	Vector3d hubVel(0.0, 0.0, 0.0);
 
@@ -122,9 +122,10 @@ int main()
 
 	//std::cout << "Simulating..." << std::endl;
 	
+	double prev_time = 0.0f; // need this to calculate dt for the local UpdateHubMotion
 	//-------------------------------
 	// Simulation loop
-	for (int i = 0; i <= nSteps; i++)
+	for (int i = 0; i < NumTimes; i++)
 	{
 		// visualization window event handling
 		sf::Event event;
@@ -133,9 +134,11 @@ int main()
 			if (event.type == sf::Event::Closed)
 				window.close();
 		}
+		double dt = time_array[i] - prev_time;
+		prev_time = time_array[i];
 
 		// this would be where ProteusDS would take its time step and update the hub motion variables.
-		time = i * dt;
+		time = time_array[i];
 		updateHubMotion(hubPos, hubOri, hubVel, hubRotVel, dt);
 
 		// send Aerodyn the hub kinematics.
