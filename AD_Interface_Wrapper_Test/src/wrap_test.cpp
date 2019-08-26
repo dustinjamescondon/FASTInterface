@@ -48,7 +48,7 @@ int main()
 	// Simulation parameters
 	double simulationTime = 30.0; // the amount of time to be simulated (in seconds)
 	double shaftSpeed = 1.183333233;     // in rads/sec
-	double dt = 0.1;            // the time-step anagolous to what ProteusDS would be taking
+	double dt = 0.01;            // the time-step anagolous to what ProteusDS would be taking
 	double bladePitch = 0.0;
 	double inflowSpeed = 10.0;    // in metres/sec
 	double fluidDensity = 1.225;
