@@ -50,7 +50,8 @@ int main()
 	double shaftSpeed = 1.183333233;     // in rads/sec
 	const int NumTimes = 16;
 	double time_array[] = { 0.0, 0.0001, 0.0006, 0.0031, 0.0156, 0.0781, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0};            // the time-step anagolous to what ProteusDS would be taking
-	double bladePitch = 0.0;
+	//double time_array[] = { 0.0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0 };            // the time-step anagolous to what ProteusDS would be taking
+	double bladePitch = 0.2;
 	double inflowSpeed = 10.0;    // in metres/sec
 	double fluidDensity = 1.225;
 	double kinematicFluidVisc = 1.4639e-05;
@@ -61,7 +62,7 @@ int main()
 
 	Vector3d hubPos(0.0, 50.0, 50.0);
 	Vector3d hubOri(0.0, -0.0, 0.0);
-	Matrix3d hubOriMatrix = EulerConstruct(hubOri);
+	Matrix3d hubOriMatrix = EulerConstruct(-hubOri).transpose();
 	Vector3d hubVel(0.0, 0.0, 0.0);
 
 	// create an axis-angle angular velocity using the x basis in global coordinate system
@@ -213,7 +214,7 @@ void renderBladeNodes(sf::RenderWindow& wnd, const std::vector<double>& bladeNod
 void updateHubMotion(Vector3d& hubPos, Vector3d& hubOri, const Vector3d& hubVel, const Vector3d& hubRotVel, double dt)
 {
 	// update the orientation using rotational velocity
-	Matrix3d hubOriMatrix = EulerConstruct(hubOri);
+	Matrix3d hubOriMatrix = EulerConstruct(-hubOri).transpose();
 	Vector3d basisX = hubOriMatrix.row(0);
 	Vector3d basisY = hubOriMatrix.row(1);
 	Vector3d basisZ = hubOriMatrix.row(2);
@@ -228,7 +229,7 @@ void updateHubMotion(Vector3d& hubPos, Vector3d& hubOri, const Vector3d& hubVel,
 	hubOriMatrix.row(2) = basisZ;
 
 	// get the Euler angles out of the new orientation matrix
-	hubOri = EulerExtract(hubOriMatrix);
+	hubOri = -EulerExtract(hubOriMatrix.transpose());
 
 	// integrate to get position
 	hubPos = hubPos + (hubVel * dt);
