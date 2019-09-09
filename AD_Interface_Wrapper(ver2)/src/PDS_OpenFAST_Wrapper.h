@@ -85,13 +85,17 @@ public:
 		const double hubOrientation[3],       // euler angles describing orientation of the hub of the hub (radians)
 		const double hubVelocity[3],          // velocity of the hub in the global coordinate system (meters/sec)
 		const double hubRotationalVelocity[3],// rotational velocity of the hub in global coordinate system (axis-angle)
-		double bladePitch);
+		double bladePitch,
+		bool isRealStep = true);
 
 	// Once updateHubState has been called, we call this to get where those hub kinematics put the blade nodes
-	void DECLDIR GetBladeNodePositions(std::vector<double>& bladeNodePositions);
+	void DECLDIR GetBladeNodePositions(
+		std::vector<double>& bladeNodePositions,
+		bool isRealStep = true);
 	// The format expected is the same as initInflows. So indices 0,1,2 correspond to the x,y,z 
 	// position of node 0; and inflow indices 0,1,2 represent the x,y,z inflow velocity for that 
 	// node.
+
 
 	// Returns the total number of nodes (call after InitAerodyn)
 	int DECLDIR GetNumNodes() const;
@@ -99,6 +103,7 @@ public:
 	// Returns the number of blades (call after InitAerodyn)
 	int DECLDIR GetNumBlades() const;
 
+	// Returns the diameter of the turbine (call after InitAeroDyn)
 	double DECLDIR GetTurbineDiameter() const;
 	
 	// Then we call this, passing the inflow velocities at the time passed to updateHubMotion(...)
@@ -110,7 +115,8 @@ public:
 		double* power_out,
 		double* tsr_out,
 		double massMatrix_out[6][6],
-		double addedMassMatrix_out[6][6]);
+		double addedMassMatrix_out[6][6],
+		bool isRealStep = true);
 
 private:
 	// updates aerodynInflows with transformed pdsInflows

@@ -47,10 +47,18 @@ extern "C" {
 	void INTERFACE_SETHUBMOTION(void* simulationInstance, double* time, double hubPos[3], double hubOri[3], double hubVel[3],
 		double hubRotVel[3], double* bladePitch);
 
+	void INTERFACE_SETHUBMOTION_FAKE(void* simulationInstance, double* time, double hubPos[3], double hubOri[3], double hubVel[3],
+		double hubRotVel[3], double* bladePitch);
+
 	void INTERFACE_ADVANCESTATES(void* simulationInstance, int* nBlades, int* nNodes, double bladeNodeInflow[], double* force_out,
 		double* moment_out, double* power_out, double* tsr_out, double massMatrix_out[6][6], double addedMassMatrix_out[6][6]);
 
+	void INTERFACE_ADVANCESTATES_FAKE(void* simulationInstance, int* nBlades, int* nNodes, double bladeNodeInflow[], double* force_out,
+		double* moment_out, double* power_out, double* tsr_out, double massMatrix_out[6][6], double addedMassMatrix_out[6][6]);
+
 	void INTERFACE_GETBLADENODEPOS(void* simulationInstance, double* nodePos);
+
+	void INTERFACE_GETBLADENODEPOS_FAKE(void* simulationInstance, double* nodePos);
 
 	void INTERFACE_END(void* simulationInstance);
 }
@@ -188,7 +196,8 @@ void PDS_AD_Wrapper::UpdateHubMotion(double time,
 	const double hubOrientation[3],
 	const double hubVelocity[3],
 	const double hubRotationalVelocity[3],
-	double bladePitch)
+	double bladePitch,
+	bool isRealStep)
 {
 	// copy all the vectors into their own local static arrays so we can transform them for Aerodyn's 
 	// coordinate system
@@ -206,11 +215,20 @@ void PDS_AD_Wrapper::UpdateHubMotion(double time,
 	// transform them to Aerodyn's global coordinate system 
 	TransformHubKinematics_PDStoAD(_hubPos, _hubOri, _hubVel, _hubRotVel);
 
-	INTERFACE_SETHUBMOTION(simulationInstance, &time, _hubPos, _hubOri, _hubVel,
-		_hubRotVel, &bladePitch);
+	// If this is a fake-step, then we don't want this to be permanent, so we call the fake version
+	if (!isRealStep) {
+		INTERFACE_SETHUBMOTION_FAKE(simulationInstance, &time, _hubPos, _hubOri, _hubVel,
+			_hubRotVel, &bladePitch);
+	}
+	// Otherwise we call the real version, which perminantly changes the inputs
+	else {
+		INTERFACE_SETHUBMOTION(simulationInstance, &time, _hubPos, _hubOri, _hubVel,
+			_hubRotVel, &bladePitch);
+	}
 
 	logInput(time, hubPosition, hubOrientation, hubVelocity, hubRotationalVelocity, bladePitch);
 }
+
 
 void PDS_AD_Wrapper::Simulate(
 	std::vector<double>& inflows,
@@ -219,21 +237,42 @@ void PDS_AD_Wrapper::Simulate(
 	double* power_out,
 	double* tsr_out,
 	double massMatrix_out[6][6],
-	double addedMassMatrix_out[6][6])
+	double addedMassMatrix_out[6][6],
+	bool isRealStep)
 {
+	// Assigns the transformed inflows to aeroDynInflows
 	TransformInflows_PDStoAD(inflows);
 
-	// Note, we're passing out transformed inflows here, not the inflows from the 
-	// function parameter.
-	INTERFACE_ADVANCESTATES(simulationInstance, &nBlades, &nNodes, &aerodynInflows[0], force_out, moment_out, power_out,
-		tsr_out, massMatrix_out, addedMassMatrix_out);
+	// If this is a fake-step, then we don't want this to be permanent, so we call the fake version
+	if ( !isRealStep ) {
+		// Note, we're passing our transformed inflows here, not the inflows from the 
+		// function parameter.
+		INTERFACE_ADVANCESTATES_FAKE(simulationInstance, &nBlades, &nNodes, &aerodynInflows[0], force_out, moment_out, power_out,
+			tsr_out, massMatrix_out, addedMassMatrix_out);
+	}
+	// Otherwise we call the real version, which permanently changes the states for this turbine
+	else {
+		// Note, we're passing our transformed inflows here, not the inflows from the 
+		// function parameter.
+		INTERFACE_ADVANCESTATES(simulationInstance, &nBlades, &nNodes, &aerodynInflows[0], force_out, moment_out, power_out,
+			tsr_out, massMatrix_out, addedMassMatrix_out);
+	}
 }
 
 // Communicates blade node positions to ProteusDS.  This needs to be separate from the other outputs so that it can be used to get inflow values at the current time step.
-void PDS_AD_Wrapper::GetBladeNodePositions(std::vector<double>& nodePos)
+void PDS_AD_Wrapper::GetBladeNodePositions(std::vector<double>& nodePos, bool isRealStep)
 {
-	// fills nodePos with node positions. Note! It assumes enough elements have been allocated
-	INTERFACE_GETBLADENODEPOS(simulationInstance, nodePos.data());
+	// If we're in the process of performing a fake step, then we call the fake version, which returns the 
+	// node positions according to the last call to the fake UpdateHubMotion
+	if ( !isRealStep ) {
+		// fills nodePos with node positions. Note! It assumes enough elements have been allocated
+		INTERFACE_GETBLADENODEPOS_FAKE(simulationInstance, nodePos.data());
+	} 
+	// Otherwise, return the node positions according to the last call to normal UpdateHubMotion
+	else {
+		// fills nodePos with node positions. Note! It assumes enough elements have been allocated
+		INTERFACE_GETBLADENODEPOS(simulationInstance, nodePos.data());
+	}
 
 	// copy node positions into the vector<double> for ProteusDS, including coordinate system conversion
 	for (int i = 0; i < totalNodes; ++i) {
