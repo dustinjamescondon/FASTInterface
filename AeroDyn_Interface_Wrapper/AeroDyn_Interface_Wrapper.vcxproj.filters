@@ -1,0 +1,70 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <ClCompile Include="src\FASTTurbine_Interface.cpp" />
+    <ClCompile Include="src\DriveTrain.cpp">
+      <Filter>DriveTrain</Filter>
+    </ClCompile>
+    <ClCompile Include="src\AeroDyn_Interface_Wrapper.cpp">
+      <Filter>AeroDyn_Interface</Filter>
+    </ClCompile>
+    <ClCompile Include="src\CSVSpecFunction.cpp">
+      <Filter>GeneratorControl</Filter>
+    </ClCompile>
+    <ClCompile Include="src\GenController.cpp">
+      <Filter>GeneratorControl</Filter>
+    </ClCompile>
+    <ClCompile Include="src\LowPassFilter.cpp">
+      <Filter>GeneratorControl\LowPassFilter</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="src\FASTTurbine_Interface.h" />
+    <ClInclude Include="src\DriveTrain.h">
+      <Filter>DriveTrain</Filter>
+    </ClInclude>
+    <ClInclude Include="src\ControllerExceptions.h">
+      <Filter>GeneratorControl</Filter>
+    </ClInclude>
+    <ClInclude Include="src\CSVSpecFunction.h">
+      <Filter>GeneratorControl</Filter>
+    </ClInclude>
+    <ClInclude Include="src\GenController.h">
+      <Filter>GeneratorControl</Filter>
+    </ClInclude>
+    <ClInclude Include="src\LowPassFilter.h">
+      <Filter>GeneratorControl\LowPassFilter</Filter>
+    </ClInclude>
+    <ClInclude Include="src\AeroDyn_Interface_Wrapper.h">
+      <Filter>AeroDyn_Interface</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <Library Include="..\AD_Interface_Wrapper_Test\Aerodyn_Interface_C_Win32_Debug_Double.lib">
+      <Filter>AeroDyn_Interface\AeroDyn_Interface_Libs</Filter>
+    </Library>
+    <Library Include="..\AD_Interface_Wrapper_Test\Aerodyn_Interface_C_Win32_Double.lib">
+      <Filter>AeroDyn_Interface\AeroDyn_Interface_Libs</Filter>
+    </Library>
+    <Library Include="..\AD_Interface_Wrapper_Test\Aerodyn_Interface_C_x64_Debug_Double.lib">
+      <Filter>AeroDyn_Interface\AeroDyn_Interface_Libs</Filter>
+    </Library>
+  </ItemGroup>
+  <ItemGroup>
+    <Filter Include="DriveTrain">
+      <UniqueIdentifier>{7c6deecf-aa64-4d0f-89c9-6611aee2afdb}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="AeroDyn_Interface">
+      <UniqueIdentifier>{dd412287-60f2-4747-9de7-96bb6e6b4f0a}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="AeroDyn_Interface\AeroDyn_Interface_Libs">
+      <UniqueIdentifier>{8e01cec1-f7e6-4eff-9c0e-8a68fc1fd5bb}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="GeneratorControl">
+      <UniqueIdentifier>{91f7ceee-f353-41f7-9996-a65903453cfa}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="GeneratorControl\LowPassFilter">
+      <UniqueIdentifier>{78ee4d2e-afda-434d-a962-b359eeb1d84b}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+</Project>

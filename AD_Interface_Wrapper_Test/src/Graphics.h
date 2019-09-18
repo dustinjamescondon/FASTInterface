@@ -1,6 +1,6 @@
 #pragma once
 #include <SFML/Graphics.hpp>
-#include "..\..\AD_Interface_Wrapper(ver2)\eigen\Eigen\Dense"
+#include "..\..\AeroDyn_Interface_Wrapper\eigen\Eigen\Dense"
 
 
 // Projects the node positions onto the yz plane and displays them on the screen as dots

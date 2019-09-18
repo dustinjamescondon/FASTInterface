@@ -150,17 +150,11 @@
     <ClCompile Include="src\wrap_test.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\AD_Interface_Wrapper(ver2)\src\PDS_OpenFAST_Wrapper.h" />
     <ClInclude Include="src\Driver.h" />
     <ClInclude Include="src\Graphics.h" />
   </ItemGroup>
   <ItemGroup>
-    <Library Include="..\Release\AD_Interface_Wrapper_Release.lib">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
-    </Library>
-    <Library Include="..\Win32\Debug\AD_Interface_Wrapper_Debug.lib">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
-    </Library>
+    <Library Include="..\Win32\Debug\FASTTurbine_Interface_Debug.lib" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

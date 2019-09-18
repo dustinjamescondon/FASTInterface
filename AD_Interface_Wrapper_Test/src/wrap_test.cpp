@@ -1,5 +1,5 @@
-#include "..\..\AD_Interface_Wrapper(ver2)\src\PDS_OpenFAST_Wrapper.h"
-#include "..\..\AD_Interface_Wrapper(ver2)\eigen\Eigen\Dense"
+#include "..\..\AeroDyn_Interface_Wrapper\src\AeroDyn_Interface_Wrapper.h"
+#include "..\..\AeroDyn_Interface_Wrapper\eigen\Eigen\Dense"
 #include <SFML/Graphics.hpp>
 #include <iostream>
 #include <vector>
@@ -30,7 +30,6 @@ int main()
 	double inflowSpeed = 10.0;    // in metres/sec
 	double fluidDensity = 1.225;
 	double kinematicFluidVisc = 1.4639e-05;
-	double hubRadius = 1.5;      // in metres (Not used right now)
 	//-------------------------
 	// Local variables
 	double time = 0.0;
@@ -61,11 +60,11 @@ int main()
 	// Initialization
 
 	// Create instance of the wrapper class
-	PDS_AD_Wrapper ad;
+	AeroDyn_Interface_Wrapper ad;
 
 	try {
 		ad.InitAerodyn("C:/Users/dusti/Documents/Work/PRIMED/inputfiles/ad_interface_example2.inp", fluidDensity, kinematicFluidVisc,
-			hubRadius, states.y.hubPos.data(), states.y.hubOri.data(), states.dydt.hubVel.data(),
+			states.y.hubPos.data(), states.y.hubOri.data(), states.dydt.hubVel.data(),
 			states.dydt.hubAngVel.data(), bladePitch);
 	}
 	catch (ADInputFileNotFound& e) {

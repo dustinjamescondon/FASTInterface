@@ -1,6 +1,6 @@
 #pragma once
-#include "..\..\AD_Interface_Wrapper(ver2)\eigen\Eigen\Dense"
-#include "..\..\AD_Interface_Wrapper(ver2)\src\PDS_OpenFAST_Wrapper.h"
+#include "..\..\AeroDyn_Interface_Wrapper\eigen\Eigen\Dense"
+#include "..\..\AeroDyn_Interface_Wrapper\src\AeroDyn_Interface_Wrapper.h"
 #include <vector>
 
 // states that are a derivative of time which we will be integrating
@@ -27,10 +27,10 @@ struct DriverStates {
 
 // Integrates hub velocity and rotational velocity using RK4
 DriverStates UpdateDriverStates(DriverStates states, std::vector<double>& bladeNodePos,
-	std::vector<double>& inflows, PDS_AD_Wrapper& ad, double time, double dt);
+	std::vector<double>& inflows, AeroDyn_Interface_Wrapper& ad, double time, double dt);
 
 // Uses Euler method to update states in time by dt, returning the results
-DriverStates EulerStep(DriverStates states, std::vector<double>& bladeNodePos, std::vector<double>& inflows, PDS_AD_Wrapper& ad, double time, double dt);
+DriverStates EulerStep(DriverStates states, std::vector<double>& bladeNodePos, std::vector<double>& inflows, AeroDyn_Interface_Wrapper& ad, double time, double dt);
 
 void GenerateInflowVelocities(const std::vector<double>& nodePositions, int totalNodes, double inflowSpeed, std::vector<double>& inflows);
 

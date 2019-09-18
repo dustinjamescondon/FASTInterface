@@ -1,5 +1,5 @@
 #include "Driver.h"
-#include "..\..\AD_Interface_Wrapper(ver2)\src\PDS_OpenFAST_Wrapper.h"
+#include "..\..\AeroDyn_Interface_Wrapper\src\AeroDyn_Interface_Wrapper.h"
 
 
 using namespace Eigen;
@@ -29,7 +29,7 @@ Vector3d RotateOrientation(Vector3d ori, Vector3d axis_angle) {
 
 
 // Returns the dydt states at time + dt
-States_dydt Calculate_dydt(DriverStates states, PDS_AD_Wrapper& ad, std::vector<double>& bladeNodePos,
+States_dydt Calculate_dydt(DriverStates states, AeroDyn_Interface_Wrapper& ad, std::vector<double>& bladeNodePos,
 	std::vector<double>& inflows, double time, double dt)
 {
 	// return early for debugging purposes
@@ -48,17 +48,19 @@ States_dydt Calculate_dydt(DriverStates states, PDS_AD_Wrapper& ad, std::vector<
 	result.y.hubOri = RotateOrientation(states.y.hubOri, states.dy.dHubAng);
 
 	// Now update the turbine's states (fakely)
-	ad.UpdateHubMotion(time + dt, result.y.hubPos.data(), result.y.hubOri.data(), result.dydt.hubVel.data(),
+	ad.SetHubMotion(time + dt, result.y.hubPos.data(), result.y.hubOri.data(), result.dydt.hubVel.data(),
 		result.dydt.hubAngVel.data(), 0.0, false);
 
 	ad.GetBladeNodePositions(bladeNodePos, false);
+
+	ad.SetInflowVelocities(inflows, false);
 
 	Vector3d force, moment;
 	double power, tsr;
 	double massMatrix[6][6];
 	double addedMassMatrix[6][6];
 
-	ad.Simulate(inflows, force.data(), moment.data(), &power, &tsr, massMatrix, addedMassMatrix,
+	ad.UpdateStates(force.data(), moment.data(), &power, &tsr, massMatrix, addedMassMatrix,
 		false);
 
 	// would do some dynamics calculations here to update dydt states based on loads/moments
@@ -85,7 +87,7 @@ States_dy CalcWeightedAvg(const DriverStates k[4])
 
 // Performs Runge-Kutta integration on dydt states
 DriverStates UpdateDriverStates(DriverStates states, std::vector<double>& bladeNodePos,
-	std::vector<double>& inflows, PDS_AD_Wrapper& ad, double time, double dt)
+	std::vector<double>& inflows, AeroDyn_Interface_Wrapper& ad, double time, double dt)
 {
 	// Uncomment this if we just want to use Euler's method
 	/*
@@ -153,22 +155,24 @@ DriverStates UpdateDriverStates(DriverStates states, std::vector<double>& bladeN
 	result.dydt.hubVel = states.dydt.hubVel;
 
 	// Use them to update AeroDyn's turbine states
-	ad.UpdateHubMotion(time + dt, result.y.hubPos.data(), result.y.hubOri.data(),
+	ad.SetHubMotion(time + dt, result.y.hubPos.data(), result.y.hubOri.data(),
 		result.dydt.hubVel.data(), result.dydt.hubAngVel.data(), 0.0, true);
 
 	ad.GetBladeNodePositions(bladeNodePos, true);
+
+	ad.SetInflowVelocities(inflows, true);
 
 	Vector3d force, moment;
 	double power, tsr;
 	double massMat[6][6];
 	double addedMassMat[6][6];
 
-	ad.Simulate(inflows, force.data(), moment.data(), &power, &tsr, massMat, addedMassMat, true);
+	ad.UpdateStates(force.data(), moment.data(), &power, &tsr, massMat, addedMassMat, true);
 
 	return result;
 }
 
-DriverStates EulerStep(DriverStates states, std::vector<double>& bladeNodePos, std::vector<double>& inflows, PDS_AD_Wrapper& ad, double time, double dt)
+DriverStates EulerStep(DriverStates states, std::vector<double>& bladeNodePos, std::vector<double>& inflows, AeroDyn_Interface_Wrapper& ad, double time, double dt)
 {
 	DriverStates result;
 
@@ -183,17 +187,19 @@ DriverStates EulerStep(DriverStates states, std::vector<double>& bladeNodePos, s
 	result.y.hubOri = RotateOrientation(states.y.hubOri, result.dy.dHubAng);
 
 	// Now update the turbine's states (fakely)
-	ad.UpdateHubMotion(time + dt, result.y.hubPos.data(), result.y.hubOri.data(), result.dydt.hubVel.data(),
+	ad.SetHubMotion(time + dt, result.y.hubPos.data(), result.y.hubOri.data(), result.dydt.hubVel.data(),
 		result.dydt.hubAngVel.data(), 0.0, false);
 
 	ad.GetBladeNodePositions(bladeNodePos, false);
+
+	ad.SetInflowVelocities(inflows, false);
 
 	Vector3d force, moment;
 	double power, tsr;
 	double massMatrix[6][6];
 	double addedMassMatrix[6][6];
 
-	ad.Simulate(inflows, force.data(), moment.data(), &power, &tsr, massMatrix, addedMassMatrix,
+	ad.UpdateStates(force.data(), moment.data(), &power, &tsr, massMatrix, addedMassMatrix,
 		false);
 
 	// would do some dynamics calculations here to update the hub state variables based on loads/moments
