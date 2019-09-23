@@ -1,12 +1,12 @@
-#include "..\..\AeroDyn_Interface_Wrapper\src\AeroDyn_Interface_Wrapper.h"
-#include "..\..\AeroDyn_Interface_Wrapper\eigen\Eigen\Dense"
+#include "..\..\AeroDyn_Interface_Wrapper\src\FASTTurbine_Interface.h"
+#include <Eigen/Dense>
 #include <SFML/Graphics.hpp>
 #include <iostream>
 #include <vector>
+#include "Driver.h"
 
 #define _USE_MATH_DEFINES
 #include <math.h>
-#include "Driver.h"
 #include "Graphics.h"
 
 // used to define vectors and matrices in this small example
@@ -21,28 +21,26 @@ int main()
 
 	//-------------------------
 	// Simulation parameters
-	double simulationTime = 30.0; // the amount of time to be simulated (in seconds)
-	double shaftSpeed = 1.183333233;     // in rads/sec
-	const int NumTimes = 16;
-	double time_array[] = { 0.0, 0.0001, 0.0006, 0.0031, 0.0156, 0.0781, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0};            // the time-step anagolous to what ProteusDS would be taking
-	//double time_array[] = { 0.0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0 };            // the time-step anagolous to what ProteusDS would be taking
-	double bladePitch = 0.0;
-	double inflowSpeed = 10.0;    // in metres/sec
-	double fluidDensity = 1.225;
-	double kinematicFluidVisc = 1.4639e-05;
+	static const double EndTime = 30.0;
+	static const double dt = 0.01;
+	static const int NSteps = (int)(EndTime / dt);
+
+	static const double InflowSpeed = 20.0;    // in metres/sec
+	static const double FluidDensity = 1.225;
+	static const double KinematicFluidVisc = 1.4639e-05;
+	static const double GearboxRatio = 97.0;
+	static const double InitialRotorSpeed = 5.233896;
+	static const double DriveTrainDamping = 6215000.0;
+	static const double DriveTrainStiffness = 867637000.0;
+	static const double RotorMOI = 115926.0;
+	static const double GenMOI = 534.116;
+	static const double LPFCornerFreq = 1.570796;
+
 	//-------------------------
 	// Local variables
 	double time = 0.0;
 
-	DriverStates states;
-	states.y.hubPos = Vector3d(0.0, 50.0, 50.0);
-	states.y.hubOri = Vector3d(0.0, 0.0, 0.0);
-	states.dydt.hubVel = Vector3d(0.0, 0.0, 0.0);
-
 	// create an axis-angle angular velocity using the x basis in global coordinate system
-	Matrix3d hubOriMatrix = EulerConstruct(states.y.hubOri);
-	states.dydt.hubAngVel = hubOriMatrix.row(0) * shaftSpeed; 
-
 	std::vector<double> inflows;
 	std::vector<double> bladeNodePositions;
 
@@ -50,6 +48,7 @@ int main()
 	//--------------------------
 	// Outputs from Aerodyn
 	Vector3d force, moment;
+	double bladePitch = 0.0;
 	double power;
 	double tsr;
 	double turbineDiameter;
@@ -60,30 +59,55 @@ int main()
 	// Initialization
 
 	// Create instance of the wrapper class
-	AeroDyn_Interface_Wrapper ad;
+	FASTTurbineModel turb;
+
+	turb.SetLPFCornerFreq(LPFCornerFreq);
+	turb.SetRotorMassMOI(RotorMOI);
+	turb.SetGenMassMOI(GenMOI);
+	turb.SetGearboxRatio(GearboxRatio);
+	turb.SetInitialRotorSpeed(InitialRotorSpeed);
+	turb.SetDriveTrainDamping(DriveTrainDamping);
+	turb.SetDriveTrainStiffness(DriveTrainStiffness);
+
+	// Initialize the nacelle state - it will be constant for this simulation test
+	FASTTurbineModel::NacelleState nstate;
+	nstate.angularVel[0] = 0.0;
+	nstate.angularVel[1] = 0.0;
+	nstate.angularVel[2] = 0.0;
+
+	nstate.eulerAngles[0] = nstate.eulerAngles[1] = 0.0;
+	nstate.eulerAngles[2] = 0.5;
+	nstate.position[0] = 0.0;
+	nstate.position[1] = nstate.position[2] = 50.0;
+	nstate.velocity[0] = nstate.velocity[1] = nstate.velocity[2] = 0.0;
+
 
 	try {
-		ad.InitAerodyn("C:/Users/dusti/Documents/Work/PRIMED/inputfiles/ad_interface_example2.inp", fluidDensity, kinematicFluidVisc,
-			states.y.hubPos.data(), states.y.hubOri.data(), states.dydt.hubVel.data(),
-			states.dydt.hubAngVel.data(), bladePitch);
+		turb.InitAeroDyn("C:/Users/dusti/Documents/Work/PRIMED/inputfiles/ad_interface_example2.inp", FluidDensity, KinematicFluidVisc,
+			nstate.position, nstate.eulerAngles, nstate.velocity,
+			nstate.angularVel, bladePitch);
+		
+		turb.InitGenController("GenControllerData.csv");
 	}
+
 	catch (ADInputFileNotFound& e) {
 		std::cout << "Input file couldn't be found" << std::endl;
 		std::cout << e.what();
 		return 0;
 	}
+
 	catch (ADInputFileContents& e) {
 		std::cout << "Input file has invalid contents" << std::endl;
 		std::cout << e.what();
 		return 0;
 	}
+
 	catch (ADError& e) {
 		std::cout << "An error occured in AeroDyn" << std::endl;
 		std::cout << e.what();
 	}
 
-	turbineDiameter = ad.GetTurbineDiameter();
-	totalNodes = ad.GetNumNodes();
+	totalNodes = turb.GetNumNodes();
 
 	// now we know the total number of nodes, so allocate accordingly
 	inflows.resize(totalNodes * 3, 0.0);
@@ -93,14 +117,13 @@ int main()
 
 	// But for this test, just have a constant inflow
 	// create a steady flow situation in +x direction
-	GenerateInflowVelocities(bladeNodePositions, totalNodes, inflowSpeed, inflows);
+	GenerateInflowVelocities(bladeNodePositions, totalNodes, InflowSpeed, inflows);
 
-	ad.InitInflows(inflows);
-	
-	double prev_time = 0.0f; // need this to calculate dt for the local UpdateHubMotion
+	turb.InitInflows(inflows);
+
 	//-------------------------------
 	// Simulation loop
-	for (int i = 0; i < NumTimes; i++)
+	for (int i = 0; i < NSteps; i++)
 	{
 		// visualization window event handling
 		sf::Event event;
@@ -109,13 +132,36 @@ int main()
 			if (event.type == sf::Event::Closed)
 				window.close();
 		}
-		double dt = time_array[i] - prev_time;
-		prev_time = time_array[i];
 
-		time = time_array[i];
-		states = UpdateDriverStates(states, bladeNodePositions, inflows, ad, time , dt);
+		FASTTurbineModel::NacelleReactionForces rf;
 
-		RenderBladeNodes(window, bladeNodePositions, states.y.hubPos, 7.0, totalNodes);
+		// This sets AeroDyn's hub state inputs according to nstate at t + dt/2
+		turb.K1(nstate, time, dt);
+		turb.GetBladeNodePositions(bladeNodePositions);
+		turb.SetInflowVelocities(inflows);
+		rf = turb.UpdateAeroDynStates();
+
+		turb.K2(nstate);
+		turb.GetBladeNodePositions(bladeNodePositions);
+		turb.SetInflowVelocities(inflows);
+		rf = turb.UpdateAeroDynStates();
+
+		turb.K3(nstate);
+		turb.GetBladeNodePositions(bladeNodePositions);
+		turb.SetInflowVelocities(inflows);
+		rf = turb.UpdateAeroDynStates();
+
+		turb.K4(nstate);
+
+		// would be passing the nacelle state determined by the weighted average of the K values
+		turb.K_Final(nstate);
+		turb.GetBladeNodePositions_Final(bladeNodePositions);
+		turb.SetInflowVelocities_Final(inflows);
+		rf = turb.UpdateAeroDynStates_Final(); // Perminantely updates AeroDyn's states from t to t
+
+		RenderBladeNodes(window, bladeNodePositions, Vector3d(nstate.position), 7.0, totalNodes);
+		
+		time += dt;
 	}
 
 	return 0;

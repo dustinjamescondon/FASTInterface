@@ -21,13 +21,6 @@ etc.
 
 #pragma once
 
-// Note, this is defined in the project preprocessor section
-#ifdef AD_INTERFACE_WRAPPER_EXPORTS  
-#define DECLDIR __declspec(dllexport)   
-#else  
-#define DECLDIR __declspec(dllimport)   
-#endif  
-
 #include <vector>
 #include <stdexcept>
 

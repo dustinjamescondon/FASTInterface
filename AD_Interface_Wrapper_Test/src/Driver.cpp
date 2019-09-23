@@ -1,5 +1,4 @@
 #include "Driver.h"
-#include "..\..\AeroDyn_Interface_Wrapper\src\AeroDyn_Interface_Wrapper.h"
 
 
 using namespace Eigen;
@@ -28,45 +27,6 @@ Vector3d RotateOrientation(Vector3d ori, Vector3d axis_angle) {
 
 
 
-// Returns the dydt states at time + dt
-States_dydt Calculate_dydt(DriverStates states, AeroDyn_Interface_Wrapper& ad, std::vector<double>& bladeNodePos,
-	std::vector<double>& inflows, double time, double dt)
-{
-	// return early for debugging purposes
-	return states.dydt;
-
-	DriverStates result;
-
-	// Update our states first, then send them as inputs for AD_Interface
-	result.dydt.hubVel = states.dydt.hubVel;
-	result.dydt.hubAngVel = states.dydt.hubAngVel;
-
-	result.dy.dHubPos = dt * states.dydt.hubVel;
-	result.dy.dHubAng = dt * states.dydt.hubAngVel;
-
-	result.y.hubPos = states.y.hubPos + result.dy.dHubPos;
-	result.y.hubOri = RotateOrientation(states.y.hubOri, states.dy.dHubAng);
-
-	// Now update the turbine's states (fakely)
-	ad.SetHubMotion(time + dt, result.y.hubPos.data(), result.y.hubOri.data(), result.dydt.hubVel.data(),
-		result.dydt.hubAngVel.data(), 0.0, false);
-
-	ad.GetBladeNodePositions(bladeNodePos, false);
-
-	ad.SetInflowVelocities(inflows, false);
-
-	Vector3d force, moment;
-	double power, tsr;
-	double massMatrix[6][6];
-	double addedMassMatrix[6][6];
-
-	ad.UpdateStates(force.data(), moment.data(), &power, &tsr, massMatrix, addedMassMatrix,
-		false);
-
-	// would do some dynamics calculations here to update dydt states based on loads/moments
-
-	return result.dydt;
-}
 
 States_dy CalcWeightedAvg(const DriverStates k[4])
 {
@@ -85,127 +45,6 @@ States_dy CalcWeightedAvg(const DriverStates k[4])
 
 
 
-// Performs Runge-Kutta integration on dydt states
-DriverStates UpdateDriverStates(DriverStates states, std::vector<double>& bladeNodePos,
-	std::vector<double>& inflows, AeroDyn_Interface_Wrapper& ad, double time, double dt)
-{
-	// Uncomment this if we just want to use Euler's method
-	/*
-	DriverStates r = states;
-	r.y.hubPos += r.dydt.hubVel * dt;
-	r.dy.dHubAng = r.dydt.hubAngVel * dt;
-	r.y.hubOri = RotateOrientation(r.y.hubOri, r.dy.dHubAng);
-
-	ad.UpdateHubMotion(time + dt, r.y.hubPos.data(), r.y.hubOri.data(), r.dydt.hubVel.data(),
-		r.dydt.hubAngVel.data(), 0.0, true);
-
-	ad.GetBladeNodePositions(bladeNodePos, true);
-
-	Vector3d force, moment;
-	double power, tsr;
-	double massMat[6][6];
-	double addedMassMat[6][6];
-
-	ad.Simulate(inflows, force.data(), moment.data(), &power, &tsr, massMat, addedMassMat, true);
-
-	return r;
-	*/
-
-	// Implements something similar to the Runge-Kutta method
-	//----------------------------------------
-	DriverStates k[4];
-	DriverStates states_tmp;
-
-	// k[0] - evaluate f(t,y)... the contents of states.dydt is the answer
-	// step over h
-	k[0] = EulerStep(states, bladeNodePos, inflows, ad, time, dt);
-
-	// k[1] - evaluate f(t + dt/2, y + k1/2)
-	states_tmp.y = states.y;
-	states_tmp.dydt = states.dydt;
-	states_tmp.dydt = Calculate_dydt(states_tmp, ad, bladeNodePos, inflows, time, 0.5 * dt);
-
-	// and step over dt
-	k[1] = EulerStep(states_tmp, bladeNodePos, inflows, ad, time, dt);
-
-	// k[2] - evaluate f(t + dt/2, y + k2/2)
-	states_tmp.y = states.y;
-	states_tmp.dydt = states.dydt /* not sure */;
-	states_tmp.dydt = Calculate_dydt(states_tmp, ad, bladeNodePos, inflows, time, 0.5 * dt);
-
-	// and step over dt
-	k[2] = EulerStep(states_tmp, bladeNodePos, inflows, ad, time, dt);
-
-	// k[3] - evaluate f(t + dt, y + k3)
-	states_tmp.y = states.y;
-	states_tmp.dydt = states.dydt/* not sure */;
-	states_tmp.dydt = Calculate_dydt(states_tmp, ad, bladeNodePos, inflows, time, dt);
-
-	// and step over dt
-	k[3] = EulerStep(states_tmp, bladeNodePos, inflows, ad, time, dt);
-
-	// calculate the weighted average of the dy values	
-	DriverStates  result;
-	result.dy = CalcWeightedAvg(k);
-
-	// Update driver states
-	result.y.hubPos = states.y.hubPos + result.dy.dHubPos;
-	result.dydt.hubAngVel = states.dydt.hubAngVel;
-	result.y.hubOri = RotateOrientation(states.y.hubOri, result.dy.dHubAng);
-	result.dydt.hubVel = states.dydt.hubVel;
-
-	// Use them to update AeroDyn's turbine states
-	ad.SetHubMotion(time + dt, result.y.hubPos.data(), result.y.hubOri.data(),
-		result.dydt.hubVel.data(), result.dydt.hubAngVel.data(), 0.0, true);
-
-	ad.GetBladeNodePositions(bladeNodePos, true);
-
-	ad.SetInflowVelocities(inflows, true);
-
-	Vector3d force, moment;
-	double power, tsr;
-	double massMat[6][6];
-	double addedMassMat[6][6];
-
-	ad.UpdateStates(force.data(), moment.data(), &power, &tsr, massMat, addedMassMat, true);
-
-	return result;
-}
-
-DriverStates EulerStep(DriverStates states, std::vector<double>& bladeNodePos, std::vector<double>& inflows, AeroDyn_Interface_Wrapper& ad, double time, double dt)
-{
-	DriverStates result;
-
-	// Update our states first, then send them as inputs for AD_Interface
-	result.dydt.hubVel = states.dydt.hubVel;
-	result.dydt.hubAngVel = states.dydt.hubAngVel;
-
-	result.dy.dHubPos = dt * states.dydt.hubVel;
-	result.dy.dHubAng = dt * states.dydt.hubAngVel;
-
-	result.y.hubPos = states.y.hubPos + result.dy.dHubPos;
-	result.y.hubOri = RotateOrientation(states.y.hubOri, result.dy.dHubAng);
-
-	// Now update the turbine's states (fakely)
-	ad.SetHubMotion(time + dt, result.y.hubPos.data(), result.y.hubOri.data(), result.dydt.hubVel.data(),
-		result.dydt.hubAngVel.data(), 0.0, false);
-
-	ad.GetBladeNodePositions(bladeNodePos, false);
-
-	ad.SetInflowVelocities(inflows, false);
-
-	Vector3d force, moment;
-	double power, tsr;
-	double massMatrix[6][6];
-	double addedMassMatrix[6][6];
-
-	ad.UpdateStates(force.data(), moment.data(), &power, &tsr, massMatrix, addedMassMatrix,
-		false);
-
-	// would do some dynamics calculations here to update the hub state variables based on loads/moments
-
-	return result;
-}
 
 void GenerateInflowVelocities(const std::vector<double>& nodePositions, int totalNodes, double inflowSpeed, std::vector<double>& inflows)
 {

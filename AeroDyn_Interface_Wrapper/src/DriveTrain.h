@@ -24,6 +24,7 @@ public:
 	};
 
 	DriveTrain();
+	DriveTrain(double initialRotorSpeed, double gearboxratio);
 
 	// updates states from previous time to "time" using results of previous calls to the RK4 step functions
 	ModelStates UpdateStates();
@@ -44,7 +45,8 @@ public:
 	// Pass torques at time + dt   ; returns temporary states at time + dt
 	ModelStates K4(double dt, double rotorTorque, double genTorque);  
 
-
+	void SetInitialRotorSpeed(double);
+	void SetInitialGenSpeed(double);
 	void SetDampingCoeff(double);
 	void SetStiffnessCoeff(double);
 	void SetGenMassMomentOfInertia(double);

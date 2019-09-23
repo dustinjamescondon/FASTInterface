@@ -4,6 +4,14 @@
 #include "GenController.h"
 #include "LowPassFilter.h"
 
+
+// Note, this is defined in the project preprocessor section
+#ifdef FASTTURBINE_INTERFACE_EXPORTS  
+#define DECLDIR __declspec(dllexport)   
+#else  
+#define DECLDIR __declspec(dllimport)   
+#endif  
+
 // includes drivetrain model and external generator and pitch controller
 class FASTTurbineModel
 {
@@ -20,9 +28,13 @@ public:
 		double angularVel[3];
 	};
 
-	FASTTurbineModel();
+	DECLDIR FASTTurbineModel();
 
-	void InitAeroDyn(const char* inputFilename,
+	DECLDIR ~FASTTurbineModel();
+
+	DECLDIR void InitGenController(const char*);
+
+	DECLDIR void InitAeroDyn(const char* inputFilename,
 		double fluidDensity,
 		double kinematicFluidVisc,
 		const double hubPosition[3],
@@ -31,32 +43,40 @@ public:
 		const double hubAngularVelocity[3],
 		double bladePitch);
 
-	void SetDriveTrainDamping(double);
-	void SetDriveTrainStiffness(double);
-	void SetRotorMassMOI(double);
-	void SetGenMassMOI(double);
+	DECLDIR void InitInflows(const std::vector<double>&);
+
+	DECLDIR void SetLPFCornerFreq(double);
+	DECLDIR void SetDriveTrainDamping(double);
+	DECLDIR void SetDriveTrainStiffness(double);
+	DECLDIR void SetRotorMassMOI(double);
+	DECLDIR void SetGenMassMOI(double);
+	DECLDIR void SetGearboxRatio(double);
+	DECLDIR void SetInitialRotorSpeed(double);
 
 	// Pass the nacelle state at t + dt/2; returns temporary nacelle reaction forces at t + dt/2
-	void K1(const NacelleState&, double time, double dt);
+	DECLDIR void K1(const NacelleState&, double time, double dt);
 	// Pass the nacelle state at t + dt/2; returns temporary nacelle reaction forces at t + dt/2
-	void K2(const NacelleState&);
+	DECLDIR void K2(const NacelleState&);
 	// Pass the nacelle state at t + dt  ; returns temporary nacelle reaction forces at t + dt
-	void K3(const NacelleState&);
+	DECLDIR void K3(const NacelleState&);
 	// Pass the actual nacelle state at t + dt  
-	void K4(const NacelleState&);
+	DECLDIR void K4(const NacelleState&);
 
 	// Call these after each call to a K_()
-	void GetBladeNodePositions(std::vector<double>& inflows);
-	void SetInflowVelocities(const std::vector<double>&);
-	NacelleReactionForces UpdateAeroDynStates();
+	DECLDIR void GetBladeNodePositions(std::vector<double>&);
+	DECLDIR void SetInflowVelocities(const std::vector<double>&);
+	DECLDIR NacelleReactionForces UpdateAeroDynStates();
 
 	// Final update function (rename them because the names are horrible)
-	void K_Final(const NacelleState& s);
-	void GetBladeNodePositions_Final(std::vector<double>&);
-	void SetInflowVelocities_Final(const std::vector<double>&);
-	NacelleReactionForces UpdateAeroDynStates_Final();
+	DECLDIR void K_Final(const NacelleState& s);
+	DECLDIR void GetBladeNodePositions_Final(std::vector<double>&);
+	DECLDIR void SetInflowVelocities_Final(const std::vector<double>&);
+	DECLDIR NacelleReactionForces UpdateAeroDynStates_Final();
+
+	DECLDIR int GetNumNodes() const;
 
 private:
+
 	double time, dt; // dt of the current round of calling k_(...) functions
 	AeroDyn_Interface_Wrapper aerodyn;
 	DriveTrain				  drivetrain;

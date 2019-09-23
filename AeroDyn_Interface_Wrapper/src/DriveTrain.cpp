@@ -1,5 +1,11 @@
 #include "DriveTrain.h"
 
+DriveTrain::DriveTrain(double rs, double gbr) {
+	states.rotor.vel = rs;
+	states.gen.vel = rs * gbr;
+	gearbox_ratio = gbr;
+}
+
 DriveTrain::DriveTrain() {
   states.rotor.acc = 0.0;
   states.rotor.vel = 0.0;
@@ -9,6 +15,10 @@ DriveTrain::DriveTrain() {
   states.gen.vel = 0.0;
   states.gen.theta = 0.0;
 	
+  gearbox_ratio = 1.0;
+  gen_moi = 1.0;
+  rotor_moi = 1.0;
+
   time = 0.0;
 }
 
@@ -145,6 +155,19 @@ DriveTrain::ModelStates DriveTrain::UpdateStates(double dt, double rotor_torque,
   UpdateStates();
   
   return states;
+}
+
+// assumes gearbox ratio has already been set and is non-zero
+void DriveTrain::SetInitialGenSpeed(double s)
+{
+	states.gen.vel = s;
+	states.rotor.vel = s / gearbox_ratio;
+}
+
+void DriveTrain::SetInitialRotorSpeed(double s)
+{
+	states.rotor.vel = s;
+	states.gen.vel = s * gearbox_ratio;
 }
 
 void DriveTrain::SetDampingCoeff(double x)
