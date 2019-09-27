@@ -84,7 +84,7 @@ private:
 	};
 
 	// returns the accelerations of both shafts given the states
-	ModelStateDeriv CalcStateDeriv(const ModelStates& states, double torque_rotor, double torque_gen) const;
+	ModelStateDeriv CalcAccelerations(const ModelStates& states, double torque_rotor, double torque_gen) const;
 	
 	// The core code of each K function with parameters for their differences
 	ModelStates K(int i, double dt, double dState_coeff, const ModelStates& _states, double rotor_torque, double gen_torque);

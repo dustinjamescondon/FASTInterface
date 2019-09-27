@@ -17,6 +17,15 @@
     <ClCompile Include="src\LowPassFilter.cpp">
       <Filter>GeneratorControl\LowPassFilter</Filter>
     </ClCompile>
+    <ClCompile Include="src\PitchController.cpp">
+      <Filter>PitchControl</Filter>
+    </ClCompile>
+    <ClCompile Include="src\InputFile.cpp">
+      <Filter>Input</Filter>
+    </ClCompile>
+    <ClCompile Include="src\BladedInterface.cpp">
+      <Filter>BladedInterface</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\FASTTurbine_Interface.h" />
@@ -37,6 +46,15 @@
     </ClInclude>
     <ClInclude Include="src\AeroDyn_Interface_Wrapper.h">
       <Filter>AeroDyn_Interface</Filter>
+    </ClInclude>
+    <ClInclude Include="src\PitchController.h">
+      <Filter>PitchControl</Filter>
+    </ClInclude>
+    <ClInclude Include="src\InputFile.h">
+      <Filter>Input</Filter>
+    </ClInclude>
+    <ClInclude Include="src\BladedInterface.h">
+      <Filter>BladedInterface</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -65,6 +83,15 @@
     </Filter>
     <Filter Include="GeneratorControl\LowPassFilter">
       <UniqueIdentifier>{78ee4d2e-afda-434d-a962-b359eeb1d84b}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="PitchControl">
+      <UniqueIdentifier>{0614e7a2-77e4-441b-b6a9-1dcd989e1bcc}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Input">
+      <UniqueIdentifier>{22fc2d59-2a00-441c-9e48-8867946ae3c5}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="BladedInterface">
+      <UniqueIdentifier>{24e1056d-8773-4535-a0a4-a98e73011299}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
 </Project>

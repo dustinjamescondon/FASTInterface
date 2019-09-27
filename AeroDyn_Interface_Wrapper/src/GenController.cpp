@@ -7,7 +7,7 @@ VS_Slope15((VS_Rgn2K* VS_Rgn2Sp* VS_Rgn2Sp) / (VS_Rgn2Sp - VS_CtInSp)),
 VS_Slope25((VS_RtPwr / VS_RtGnSp) / (VS_RtGnSp - VS_SySp)),
 VS_TrGnSp((VS_Slope25 - sqrt(VS_Slope25 * (VS_Slope25 - 4.0 * VS_Rgn2K * VS_SySp))) / (2.0 * VS_Rgn2K))
 {
-	LoadCSVFile(filename);
+	ReadCSVFile(filename);
 }
 
 GenController::GenController() noexcept :
@@ -19,13 +19,21 @@ GenController::GenController() noexcept :
 	maxRatedTorque = 0.0;
 }
 
-void GenController::LoadCSVFile(const char* filename)
+void GenController::ReadCSVFile(const char* filename)
 {
 	torqueFunc.loadCSVFile(filename);
 
 	// the max rated torque is the last entry in the CSV table, so use the biggest rotor speed
 	// entry to lookup the last torque.
 	maxRatedTorque = torqueFunc.F(torqueFunc.getMaxSpecX());
+}
+
+void GenController::ReadParameters(const char* fname)
+{
+	LoadFile(fname);
+	VS_RtGnSp = ReadDouble("VS_RtGenSp");
+
+
 }
 
 double GenController::GetTorque(double genSpeed) const

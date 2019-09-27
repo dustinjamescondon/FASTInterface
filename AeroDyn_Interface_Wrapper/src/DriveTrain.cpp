@@ -23,7 +23,7 @@ DriveTrain::DriveTrain() {
 }
 
 // Calculates the accelerations given the states s
-DriveTrain::ModelStateDeriv DriveTrain::CalcStateDeriv(const ModelStates& s, double torque_rotor, double torque_gen) const
+DriveTrain::ModelStateDeriv DriveTrain::CalcAccelerations(const ModelStates& s, double torque_rotor, double torque_gen) const
 {
   DriveTrain::ModelStateDeriv result;
 
@@ -50,7 +50,7 @@ DriveTrain::ModelStateDeriv DriveTrain::CalcStateDeriv(const ModelStates& s, dou
 // Base states are the states for which the accelerations are calculated
 DriveTrain::ModelStates DriveTrain::K(int i, double dt, double dState_coeff, const ModelStates& base_states, double rotor_torque, double gen_torque) 
 {
-  ModelStateDeriv deriv = CalcStateDeriv(base_states, rotor_torque, gen_torque);
+  ModelStateDeriv deriv = CalcAccelerations(base_states, rotor_torque, gen_torque);
 
   ModelStates result;
 
@@ -146,7 +146,7 @@ DriveTrain::ModelStates DriveTrain::UpdateStates(double dt, double rotor_torque,
 
   // If the torque isn't going to change through the whole step, then this isn't any different than the broken
   // down version with K 1 through 4.
-  ModelStateDeriv deriv = CalcStateDeriv(states, rotor_torque, gen_torque);
+  ModelStateDeriv deriv = CalcAccelerations(states, rotor_torque, gen_torque);
 
   K1(dt, rotor_torque, gen_torque);
   K2(dt, rotor_torque, gen_torque);

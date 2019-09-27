@@ -1,120 +1,77 @@
 #include "FASTTurbine_Interface.h"
 #include <Eigen/Dense>
+//#include <windows.h>
 
 using namespace Eigen;
 Matrix3d EulerConstruct(const Vector3d& theta);
 Vector3d EulerExtract(const Matrix3d& m);
 
-// Stores the results from ProcessNacelleEulerAnglesForAeroDyn(...)
-struct EulerAngleProcessingResults
-{
-	Vector3d hubEulerAngles;
-	Vector3d hubRotationAxis;
-};
-
-struct NacelleMotion {
-	Vector3d pos, vel, eulerAngles, angVel;
-};
-
 struct HubMotion {
-	Vector3d pos, vel, eulerAngles, angVel;
+	Vector3d position, velocity, orientation, angularVel;
 };
-
-// v is vector to be rotated around e by theta radians (right-hand rule applies)
-// Implements Rodrigues' rotation formula
-Vector3d axisAngleRotation(const Vector3d& v, const Vector3d& e, double theta)
-{
-	Vector3d result = cos(theta) * v + sin(theta) * e.cross(v) + (1 - cos(theta)) * e.dot(v) * e;
-
-	return result;
-}
-
-EulerAngleProcessingResults ProcessNacelleEulerAnglesForAeroDyn(const Vector3d& nacelleEulerAngles, const DriveTrain::States& rotorStates)
-{
-	
-	// Use Nacelle orientation and rotor.theta to update hub orientation for AeroDyn
-	Matrix3d nacelleOrientation = EulerConstruct(nacelleEulerAngles);
-
-	// Create rotation matrix for the rotor angle
-	Matrix3d rotorRotation = EulerConstruct(Vector3d(rotorStates.theta, 0.0, 0.0));
-
-	// Combine the two rotation matrices
-	Matrix3d hubOrientation = rotorRotation * nacelleOrientation;
-
-	// Calculate the Euler angles for this final orientation matrix for the hub
-	Vector3d hubEulerAngles = EulerExtract(hubOrientation);
-
-	EulerAngleProcessingResults r;
-	r.hubEulerAngles = hubEulerAngles;
-	r.hubRotationAxis = hubOrientation.row(0); // rotation axis in the global coordinate system
-
-	return r;
-}
 
 FASTTurbineModel::FASTTurbineModel() : genSpeedLPF()
 {
 	// Set this here for now, but probably will have it set elsewhere later
 	drivetrain.SetInitialRotorSpeed(0.01);
+	//bladed.Init("Discon.dll", 3);
 }
 
 FASTTurbineModel::~FASTTurbineModel()
 {
 }
 
-void FASTTurbineModel::InitGenController(const char *fname)
+void FASTTurbineModel::InitGenController()
 {
-	gencont.LoadCSVFile(fname);
+	//gencont.LoadCSVFile(fname);
 }
 
 // Calculates the appropriate hub motion according to the nacelle motion and rotor motion
-HubMotion CalculateHubMotion(const NacelleMotion& nm, const DriveTrain::States& rs)
+HubMotion FASTTurbineModel::CalculateHubMotion(const NacelleMotion& nm, const DriveTrain::States& rs)
 {
 	HubMotion hm;
 
-	hm.pos = nm.pos;
-	hm.vel = nm.vel;
+	hm.position = Vector3d(nm.position);
+	hm.velocity = Vector3d(nm.velocity);
 	
 	// Use Nacelle orientation and rotor.theta to update hub orientation for AeroDyn
-	Matrix3d nacelleOrientation = EulerConstruct(nm.eulerAngles);
+	Matrix3d nacelleOrientation = EulerConstruct(Vector3d(nm.eulerAngles));
 
 	// Create rotation matrix for the rotor angle
 	Matrix3d rotorRotation = EulerConstruct(Vector3d(rs.theta, 0.0, 0.0));
 
 	// Combine the two rotation matrices
-	Matrix3d hubOrientation = nacelleOrientation * rotorRotation;
+	Matrix3d hubOrientation = rotorRotation * nacelleOrientation;
 
-	hm.eulerAngles = EulerExtract(hubOrientation);
+	hm.orientation = EulerExtract(hubOrientation);
 
-	hm.angVel = rs.vel * hubOrientation.row(0); // rotation axis in the global coordinate system
+	hm.angularVel = rs.vel * hubOrientation.row(0); // rotation axis in the global coordinate system
 
 	return hm;
+}
+
+void FASTTurbineModel::InitPitchController(const char* fname)
+{
+	pitchcont.ReadParameters(fname);
 }
 
 void FASTTurbineModel::InitAeroDyn(const char* inputFilename,
 	double fluidDensity,
 	double kinematicFluidVisc,
-	const double nacellePosition[3],
-	const double nacelleOrientation[3],
-	const double nacelleVelocity[3],
-	const double nacelleAngularVelocity[3],
+	const NacelleMotion& nm,
 	double bladePitch)
 {
-	NacelleMotion nm;
-	nm.pos = Vector3d(nacellePosition);
-	nm.vel = Vector3d(nacelleVelocity);
-	nm.angVel = Vector3d(nacelleAngularVelocity);
-	nm.eulerAngles = Vector3d(nacelleOrientation);
-
 	// Process the nacelle motions to find the hub motions
-	HubMotion hm = CalculateHubMotion(nm, drivetrain.GetRotorStates());
+	DriveTrain::States rotorState = drivetrain.GetRotorStates();
+	HubMotion hm = CalculateHubMotion(nm, rotorState);
 
 	aerodyn.InitAerodyn(inputFilename,
 		fluidDensity,
 		kinematicFluidVisc,
-		hm.pos.data(),
-		hm.eulerAngles.data(),
-		hm.vel.data(),
-		hm.angVel.data(),
+		hm.position.data(),
+		hm.orientation.data(),
+		hm.velocity.data(),
+		hm.angularVel.data(),
 		bladePitch);
 }
 
@@ -163,10 +120,8 @@ void FASTTurbineModel::SetInitialRotorSpeed(double s)
 }
 
 // Pass the nacelle state at t + dt/2; begins calculation of temporary states at t + dt/2
-void FASTTurbineModel::K1(const FASTTurbineModel::NacelleState& s, double time, double dt)
+void FASTTurbineModel::K1(const FASTTurbineModel::NacelleMotion& s, double time, double dt)
 {
-	static const double bladePitch = 0.0f;
-
 	// Save the current time and the total time-step length for use in the proceeding K functions
 	this->time = time;
 	this->dt = dt;
@@ -180,56 +135,47 @@ void FASTTurbineModel::K1(const FASTTurbineModel::NacelleState& s, double time, 
 	// Temporary generator speed at time + dt/2
 	// Have to save this for the input of the next call to K2
 	dt_resultStates = drivetrain.K1(dt, aerodyn.GetTorque(), gencont.GetTorque(filteredGenSpeed));
-	
-	// Calculate the Euler angles for this final orientation matrix of the hub
-	EulerAngleProcessingResults r = ProcessNacelleEulerAnglesForAeroDyn(Vector3d(s.eulerAngles), drivetrain_states.rotor);
-	
-	// Calulate the axis-angle vector for the hub angular velocity
-	Vector3d hubAngVel = drivetrain.GetRotorShaftSpeed() * r.hubRotationAxis;
+
+	HubMotion hm = CalculateHubMotion(s, dt_resultStates.rotor);
 	
 	// Temporary update to the hub motion in AeroDyn
-	aerodyn.SetHubMotion(time + 0.5 * dt, s.position, r.hubEulerAngles.data(), s.velocity, 
-		hubAngVel.data(), bladePitch, false);
+	double bladePitch = pitchcont.GetPitch();
+	aerodyn.SetHubMotion(time + 0.5 * dt, hm.position.data(), hm.orientation.data(), hm.velocity.data(), 
+		hm.angularVel.data(), bladePitch, false);
 }
 
 // Pass nacelle state at t + dt/2; begins calculation of temporary states at t + dt/2
-void FASTTurbineModel::K2(const FASTTurbineModel::NacelleState& s)
+void FASTTurbineModel::K2(const FASTTurbineModel::NacelleMotion& s)
 {
-	static const double bladePitch = 0.0f;
-
 	// Using the temporary generator speed at t + dt/2
 	double filteredGenSpeed = genSpeedLPF.CalcEstimation(dt_resultStates.gen.vel, 0.5 * dt);
 
 	// Save drivetrain states for call to K3
 	dt_resultStates = drivetrain.K2(dt, aerodyn.GetTorque(), gencont.GetTorque(filteredGenSpeed));
 
-	EulerAngleProcessingResults r = ProcessNacelleEulerAnglesForAeroDyn(Vector3d(s.eulerAngles), dt_resultStates.rotor);
+	HubMotion hm = CalculateHubMotion(s, dt_resultStates.rotor);
 
-	Vector3d hubAngVel = dt_resultStates.rotor.vel * r.hubRotationAxis;
-
-	aerodyn.SetHubMotion(time + 0.5 * dt, s.position, r.hubEulerAngles.data(), s.velocity,
-		hubAngVel.data(), bladePitch, false);
+	double bladePitch = pitchcont.GetPitch();
+	aerodyn.SetHubMotion(time + 0.5 * dt, hm.position.data(), hm.orientation.data(), hm.velocity.data(),
+		hm.angularVel.data(), bladePitch, false);
 }
 
 // Pass nacelle state at t + dt; begins calculation of temporary states at t + dt
-void FASTTurbineModel::K3(const FASTTurbineModel::NacelleState& s)
+void FASTTurbineModel::K3(const FASTTurbineModel::NacelleMotion& s)
 {
-	static const double bladePitch = 0.0f;
-
 	double filteredGenSpeed = genSpeedLPF.CalcEstimation(dt_resultStates.gen.vel, 0.5 * dt);
 
 	dt_resultStates = drivetrain.K3(dt, aerodyn.GetTorque(), gencont.GetTorque(filteredGenSpeed));
 
-	EulerAngleProcessingResults r = ProcessNacelleEulerAnglesForAeroDyn(Vector3d(s.eulerAngles), dt_resultStates.rotor);
+	HubMotion hm = CalculateHubMotion(s, dt_resultStates.rotor);
 
-	Vector3d hubAngVel = dt_resultStates.rotor.vel * r.hubRotationAxis;
-
-	aerodyn.SetHubMotion(time + dt, s.position, r.hubEulerAngles.data(), s.velocity,
-		hubAngVel.data(), bladePitch, false);
+	double bladePitch = pitchcont.GetPitch();
+	aerodyn.SetHubMotion(time + dt, hm.position.data(), hm.orientation.data(), hm.velocity.data(),
+		hm.angularVel.data(), bladePitch, false);
 }
 
 // Pass nacelle state at 
-void FASTTurbineModel::K4(const FASTTurbineModel::NacelleState& s)
+void FASTTurbineModel::K4(const FASTTurbineModel::NacelleMotion& s)
 {
 	static const double bladePitch = 0.0f;
 
@@ -241,22 +187,17 @@ void FASTTurbineModel::K4(const FASTTurbineModel::NacelleState& s)
 }
 
 // Pass actual nacelle states at t + dt
-void FASTTurbineModel::K_Final(const FASTTurbineModel::NacelleState& nac_states)
+void FASTTurbineModel::K_Final(const FASTTurbineModel::NacelleMotion& nac_states)
 {
-	static const double bladePitch = 0.0;
 	// Calculate final drive train states, saving them
 	DriveTrain::ModelStates dt_states = drivetrain.UpdateStates();
 
 	// --Use both nacelle states and drivetrain states to update AeroDyn--
+	HubMotion hm = CalculateHubMotion(nac_states, dt_states.rotor);
 
-	EulerAngleProcessingResults r = ProcessNacelleEulerAnglesForAeroDyn(Vector3d(nac_states.eulerAngles), dt_states.rotor);
-
-	// Note, currently this doesn't include any angular velocity of the nacelle 
-	// TODO implement this inclusion
-	Vector3d hubAngVel = dt_states.rotor.vel * r.hubRotationAxis;
-
-	aerodyn.SetHubMotion(time + dt, nac_states.position, r.hubEulerAngles.data(), nac_states.velocity, 
-		hubAngVel.data(), bladePitch, true);
+	double bladePitch = pitchcont.CalcPitch(time, genSpeedLPF.GetCurrEstimatedValue());
+	aerodyn.SetHubMotion(time + dt, hm.position.data(), hm.orientation.data(), hm.velocity.data(), 
+		hm.angularVel.data(), bladePitch, true);
 }
 
 void FASTTurbineModel::GetBladeNodePositions_Final(std::vector<double>& p)

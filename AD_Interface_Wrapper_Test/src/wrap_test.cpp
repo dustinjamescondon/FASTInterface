@@ -4,6 +4,7 @@
 #include <iostream>
 #include <vector>
 #include "Driver.h"
+#include <Windows.h>
 
 #define _USE_MATH_DEFINES
 #include <math.h>
@@ -21,7 +22,7 @@ int main()
 
 	//-------------------------
 	// Simulation parameters
-	static const double EndTime = 30.0;
+	static const double EndTime = 40.0;
 	static const double dt = 0.01;
 	static const int NSteps = (int)(EndTime / dt);
 
@@ -29,10 +30,10 @@ int main()
 	static const double FluidDensity = 1.225;
 	static const double KinematicFluidVisc = 1.4639e-05;
 	static const double GearboxRatio = 97.0;
-	static const double InitialRotorSpeed = 5.233896;
+	static const double InitialRotorSpeed = 1.0;
 	static const double DriveTrainDamping = 6215000.0;
 	static const double DriveTrainStiffness = 867637000.0;
-	static const double RotorMOI = 115926.0;
+	static const double RotorMOI = 38829739.1; //Used parallel axis theorem to calculate this using NREL's specification of MOI relative to root//115926.0;
 	static const double GenMOI = 534.116;
 	static const double LPFCornerFreq = 1.570796;
 
@@ -46,7 +47,7 @@ int main()
 
 	int totalNodes = 0;
 	//--------------------------
-	// Outputs from Aerodyn
+	// Outputs from turbine
 	Vector3d force, moment;
 	double bladePitch = 0.0;
 	double power;
@@ -60,6 +61,7 @@ int main()
 
 	// Create instance of the wrapper class
 	FASTTurbineModel turb;
+	turb.InitPitchController("PitchControllerParameters.inp");
 
 	turb.SetLPFCornerFreq(LPFCornerFreq);
 	turb.SetRotorMassMOI(RotorMOI);
@@ -70,24 +72,23 @@ int main()
 	turb.SetDriveTrainStiffness(DriveTrainStiffness);
 
 	// Initialize the nacelle state - it will be constant for this simulation test
-	FASTTurbineModel::NacelleState nstate;
+	FASTTurbineModel::NacelleMotion nstate;
 	nstate.angularVel[0] = 0.0;
 	nstate.angularVel[1] = 0.0;
 	nstate.angularVel[2] = 0.0;
 
 	nstate.eulerAngles[0] = nstate.eulerAngles[1] = 0.0;
-	nstate.eulerAngles[2] = 0.5;
+	nstate.eulerAngles[2] = 0.0;;
 	nstate.position[0] = 0.0;
-	nstate.position[1] = nstate.position[2] = 50.0;
+	nstate.position[1] = nstate.position[2] = 75.0;
 	nstate.velocity[0] = nstate.velocity[1] = nstate.velocity[2] = 0.0;
 
 
 	try {
 		turb.InitAeroDyn("C:/Users/dusti/Documents/Work/PRIMED/inputfiles/ad_interface_example2.inp", FluidDensity, KinematicFluidVisc,
-			nstate.position, nstate.eulerAngles, nstate.velocity,
-			nstate.angularVel, bladePitch);
+			nstate, bladePitch);
 		
-		turb.InitGenController("GenControllerData.csv");
+		turb.InitGenController();
 	}
 
 	catch (ADInputFileNotFound& e) {
@@ -129,8 +130,10 @@ int main()
 		sf::Event event;
 		while (window.pollEvent(event))
 		{
-			if (event.type == sf::Event::Closed)
+			if (event.type == sf::Event::Closed) {
 				window.close();
+				return 0;
+			}
 		}
 
 		FASTTurbineModel::NacelleReactionForces rf;
@@ -159,7 +162,7 @@ int main()
 		turb.SetInflowVelocities_Final(inflows);
 		rf = turb.UpdateAeroDynStates_Final(); // Perminantely updates AeroDyn's states from t to t
 
-		RenderBladeNodes(window, bladeNodePositions, Vector3d(nstate.position), 7.0, totalNodes);
+		RenderBladeNodes(window, bladeNodePositions, Vector3d(nstate.position), 5.0, totalNodes);
 		
 		time += dt;
 	}

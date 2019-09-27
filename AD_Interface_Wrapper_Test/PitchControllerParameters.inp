@@ -1,0 +1,9 @@
+! Parameters for the pitch controller following variable names from NREL's Bladed-style DISCON.f90
+DT=0.0001225
+KI=0.008068634
+KK=0.1099965
+KP=0.01882681
+RefSpd=122.9096
+MaxPit=1.570796
+MinPit=0.0
+MaxRat=0.1396263

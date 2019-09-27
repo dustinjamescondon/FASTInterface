@@ -20,11 +20,14 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\AeroDyn_Interface_Wrapper.cpp" />
+    <ClCompile Include="src\BladedInterface.cpp" />
     <ClCompile Include="src\CSVSpecFunction.cpp" />
     <ClCompile Include="src\DriveTrain.cpp" />
     <ClCompile Include="src\FASTTurbine_Interface.cpp" />
+    <ClCompile Include="src\InputFile.cpp" />
     <ClCompile Include="src\GenController.cpp" />
     <ClCompile Include="src\LowPassFilter.cpp" />
+    <ClCompile Include="src\PitchController.cpp" />
   </ItemGroup>
   <ItemGroup>
     <Library Include="..\AD_Interface_Wrapper_Test\Aerodyn_Interface_C_Win32_Debug_Double.lib">
@@ -42,12 +45,15 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\AeroDyn_Interface_Wrapper.h" />
+    <ClInclude Include="src\BladedInterface.h" />
     <ClInclude Include="src\ControllerExceptions.h" />
     <ClInclude Include="src\CSVSpecFunction.h" />
     <ClInclude Include="src\DriveTrain.h" />
     <ClInclude Include="src\FASTTurbine_Interface.h" />
     <ClInclude Include="src\GenController.h" />
+    <ClInclude Include="src\InputFile.h" />
     <ClInclude Include="src\LowPassFilter.h" />
+    <ClInclude Include="src\PitchController.h" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>16.0</VCProjectVersion>
@@ -126,11 +132,11 @@
       <Optimization>Disabled</Optimization>
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>WIN32;_DEBUG;FASTTURBINE_INTERFACE_EXPORTS;_WINDOWS;_USRDLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <ConformanceMode>true</ConformanceMode>
+      <ConformanceMode>false</ConformanceMode>
       <PrecompiledHeaderFile>
       </PrecompiledHeaderFile>
       <LanguageStandard>stdcpp14</LanguageStandard>
-      <AdditionalIncludeDirectories>C:\Users\dusti\Documents\prog\libs\eigen-eigen-323c052e1731;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>C:\ProgramData\boost\boost_1_71_0;C:\ProgramData\Eigen\eigen-eigen-323c052e1731</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -149,7 +155,7 @@
       <PrecompiledHeaderFile>
       </PrecompiledHeaderFile>
       <LanguageStandard>stdcpp14</LanguageStandard>
-      <AdditionalIncludeDirectories>C:\Users\dusti\Documents\prog\libs\eigen-eigen-323c052e1731;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>C:\ProgramData\boost\boost_1_71_0;C:\ProgramData\Eigen\eigen-eigen-323c052e1731</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -166,11 +172,11 @@
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>WIN32;NDEBUG;AD_INTERFACE_WRAPPER_EXPORTS;_WINDOWS;_USRDLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <ConformanceMode>true</ConformanceMode>
+      <ConformanceMode>false</ConformanceMode>
       <PrecompiledHeaderFile>
       </PrecompiledHeaderFile>
       <LanguageStandard>stdcpp14</LanguageStandard>
-      <AdditionalIncludeDirectories>C:\Users\dusti\Documents\prog\libs\eigen-eigen-323c052e1731;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>C:\ProgramData\boost\boost_1_71_0;C:\ProgramData\Eigen\eigen-eigen-323c052e1731</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -192,7 +198,7 @@
       <ConformanceMode>true</ConformanceMode>
       <PrecompiledHeaderFile>
       </PrecompiledHeaderFile>
-      <AdditionalIncludeDirectories>C:\Users\dusti\Documents\prog\libs\eigen-eigen-323c052e1731;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>C:\ProgramData\boost\boost_1_71_0;C:\ProgramData\Eigen\eigen-eigen-323c052e1731</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
