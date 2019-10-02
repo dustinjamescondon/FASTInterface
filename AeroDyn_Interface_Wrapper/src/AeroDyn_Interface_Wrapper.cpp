@@ -184,6 +184,9 @@ void AeroDyn_Interface_Wrapper::InitAerodyn(
 	aerodynInflows.resize(totalNodes * 3);
 
 	logInput(-1.0, hubPosition, hubOrientation, hubVelocity, hubRotationalVelocity, bladePitch);
+
+	// Save the pitch at this time for later
+	pitch = bladePitch;
 }
 
 // Transform each inflow from PDS' coordinate system (positive-down) to AD's (positive-up), and send them 
@@ -233,6 +236,7 @@ void AeroDyn_Interface_Wrapper::SetHubMotion(double time,
 	}
 
 	logInput(time, hubPosition, hubOrientation, hubVelocity, hubRotationalVelocity, bladePitch);
+	pitch = bladePitch;
 }
 
 void AeroDyn_Interface_Wrapper::SetInflowVelocities(const std::vector<double>& inflows, bool isRealStep)
@@ -312,6 +316,11 @@ int AeroDyn_Interface_Wrapper::GetNumBlades() const
 int AeroDyn_Interface_Wrapper::GetNumNodes() const
 {
 	return totalNodes;
+}
+
+double AeroDyn_Interface_Wrapper::GetBladePitch() const
+{
+	return pitch;
 }
 
 double AeroDyn_Interface_Wrapper::GetTurbineDiameter() const

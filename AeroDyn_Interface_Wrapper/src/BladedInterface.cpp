@@ -1,9 +1,11 @@
 #include "BladedInterface.h"
 #include <iostream>
 
-BladedInterface::BladedInterface()
+BladedInterface::BladedInterface() 
 {
-
+	iStatus = 0;
+	bladePitchCommand = 0.0;
+	genTorqueCommand = 0.0;
 }
 
 BladedInterface::~BladedInterface()
@@ -12,11 +14,8 @@ BladedInterface::~BladedInterface()
 }
 
 
-void BladedInterface::Init(const char* fname, int numBlades)
+void BladedInterface::Init(const char* fname)
 {
-	
-	numBl = numBlades;
-
 	// Link to the DLL
 	hInstance = LoadLibraryA(fname);
 
@@ -33,14 +32,14 @@ void BladedInterface::Init(const char* fname, int numBlades)
 	}
 }
 
-float BladedInterface::GetBlPitchDemand() const
+float BladedInterface::GetBlPitchCommand() const
 {
-	return blPitchDmd;
+	return bladePitchCommand;
 }
 
-float BladedInterface::GetGenTorqueDemand() const
+float BladedInterface::GetGenTorqueCommand() const
 {
-	return genTrqDmd;
+	return genTorqueCommand;
 }
 
 void BladedInterface::UpdateController(double time, float BlPitch1, float BlPitch2, float BlPitch3, float GenSp, float HorWindV)
@@ -52,13 +51,16 @@ void BladedInterface::UpdateController(double time, float BlPitch1, float BlPitc
 	swap[SwapIndex::BlPitch3] = BlPitch3;
 	swap[SwapIndex::GenSp] = GenSp;
 	swap[SwapIndex::HorWindV] = HorWindV;
-	swap[SwapIndex::NumBl] = (float)numBl;
+	swap[SwapIndex::IStatus] = (float)iStatus;
 
 	fail = 0;
 	// Call the DLL
 	DISCON(swap, &fail, accINFILE.c_str(), avcOUTNAME.c_str(), avcMSG.c_str());
 
+	// Change this variable to 1 to signify we are no longer on the first call to the DLL
+	iStatus = 1;
+
 	// Get output from swap array
-	blPitchDmd = swap[SwapIndex::PitCom];
-	genTrqDmd = swap[SwapIndex::GenTrqDem];
+	bladePitchCommand = swap[SwapIndex::PitCom];
+	genTorqueCommand = swap[SwapIndex::GenTrqDem];
 }

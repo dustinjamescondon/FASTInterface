@@ -11,6 +11,7 @@ public:
 	void CloseFile();
 
 	double ReadDouble(const char* label);
+	double ReadDouble(std::ifstream& fin, const char* label);
 
 private:
 	std::string GetNextNonCommentLine();

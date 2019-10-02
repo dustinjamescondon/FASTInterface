@@ -9,22 +9,25 @@
       <Filter>AeroDyn_Interface</Filter>
     </ClCompile>
     <ClCompile Include="src\CSVSpecFunction.cpp">
-      <Filter>GeneratorControl</Filter>
+      <Filter>MasterController\GeneratorControl</Filter>
     </ClCompile>
     <ClCompile Include="src\GenController.cpp">
-      <Filter>GeneratorControl</Filter>
+      <Filter>MasterController\GeneratorControl</Filter>
     </ClCompile>
     <ClCompile Include="src\LowPassFilter.cpp">
-      <Filter>GeneratorControl\LowPassFilter</Filter>
+      <Filter>MasterController\GeneratorControl\LowPassFilter</Filter>
     </ClCompile>
     <ClCompile Include="src\PitchController.cpp">
-      <Filter>PitchControl</Filter>
+      <Filter>MasterController\PitchControl</Filter>
     </ClCompile>
     <ClCompile Include="src\InputFile.cpp">
       <Filter>Input</Filter>
     </ClCompile>
     <ClCompile Include="src\BladedInterface.cpp">
-      <Filter>BladedInterface</Filter>
+      <Filter>MasterController\BladedInterface</Filter>
+    </ClCompile>
+    <ClCompile Include="src\MasterController.cpp">
+      <Filter>MasterController</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -33,28 +36,31 @@
       <Filter>DriveTrain</Filter>
     </ClInclude>
     <ClInclude Include="src\ControllerExceptions.h">
-      <Filter>GeneratorControl</Filter>
+      <Filter>MasterController\GeneratorControl</Filter>
     </ClInclude>
     <ClInclude Include="src\CSVSpecFunction.h">
-      <Filter>GeneratorControl</Filter>
+      <Filter>MasterController\GeneratorControl</Filter>
     </ClInclude>
     <ClInclude Include="src\GenController.h">
-      <Filter>GeneratorControl</Filter>
+      <Filter>MasterController\GeneratorControl</Filter>
     </ClInclude>
     <ClInclude Include="src\LowPassFilter.h">
-      <Filter>GeneratorControl\LowPassFilter</Filter>
+      <Filter>MasterController\GeneratorControl\LowPassFilter</Filter>
     </ClInclude>
     <ClInclude Include="src\AeroDyn_Interface_Wrapper.h">
       <Filter>AeroDyn_Interface</Filter>
     </ClInclude>
     <ClInclude Include="src\PitchController.h">
-      <Filter>PitchControl</Filter>
+      <Filter>MasterController\PitchControl</Filter>
     </ClInclude>
     <ClInclude Include="src\InputFile.h">
       <Filter>Input</Filter>
     </ClInclude>
     <ClInclude Include="src\BladedInterface.h">
-      <Filter>BladedInterface</Filter>
+      <Filter>MasterController\BladedInterface</Filter>
+    </ClInclude>
+    <ClInclude Include="src\MasterController.h">
+      <Filter>MasterController</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -78,19 +84,22 @@
     <Filter Include="AeroDyn_Interface\AeroDyn_Interface_Libs">
       <UniqueIdentifier>{8e01cec1-f7e6-4eff-9c0e-8a68fc1fd5bb}</UniqueIdentifier>
     </Filter>
-    <Filter Include="GeneratorControl">
-      <UniqueIdentifier>{91f7ceee-f353-41f7-9996-a65903453cfa}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="GeneratorControl\LowPassFilter">
-      <UniqueIdentifier>{78ee4d2e-afda-434d-a962-b359eeb1d84b}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="PitchControl">
-      <UniqueIdentifier>{0614e7a2-77e4-441b-b6a9-1dcd989e1bcc}</UniqueIdentifier>
-    </Filter>
     <Filter Include="Input">
       <UniqueIdentifier>{22fc2d59-2a00-441c-9e48-8867946ae3c5}</UniqueIdentifier>
     </Filter>
-    <Filter Include="BladedInterface">
+    <Filter Include="MasterController">
+      <UniqueIdentifier>{ba390f5a-b6e6-4a92-90e8-007ee3a88bfd}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="MasterController\PitchControl">
+      <UniqueIdentifier>{0614e7a2-77e4-441b-b6a9-1dcd989e1bcc}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="MasterController\GeneratorControl">
+      <UniqueIdentifier>{91f7ceee-f353-41f7-9996-a65903453cfa}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="MasterController\GeneratorControl\LowPassFilter">
+      <UniqueIdentifier>{78ee4d2e-afda-434d-a962-b359eeb1d84b}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="MasterController\BladedInterface">
       <UniqueIdentifier>{24e1056d-8773-4535-a0a4-a98e73011299}</UniqueIdentifier>
     </Filter>
   </ItemGroup>

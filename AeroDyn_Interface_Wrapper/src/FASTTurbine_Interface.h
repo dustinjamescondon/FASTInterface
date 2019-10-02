@@ -1,10 +1,9 @@
 #pragma once
 #include "AeroDyn_Interface_Wrapper.h"
 #include "DriveTrain.h"
-#include "GenController.h"
-#include "LowPassFilter.h"
-#include "PitchController.h"
+#include "MasterController.h"
 #include "BladedInterface.h"
+#include <memory>
 
 // Note, this is defined in the project preprocessor section
 #ifdef FASTTURBINE_INTERFACE_EXPORTS  
@@ -19,9 +18,12 @@ struct HubMotion;
 class FASTTurbineModel
 {
 public:
+
 	struct NacelleReactionForces {
 		double force[3];
 		double moment[3];
+		double tsr;
+		double power;
 	};
 
 	struct NacelleMotion {
@@ -35,31 +37,33 @@ public:
 
 	DECLDIR ~FASTTurbineModel();
 
-	DECLDIR void InitGenController();
+	// Must call this one first
+	DECLDIR void InitDriveTrain(double rotorMOI, double genMOI, double stiffness, double damping, double gearboxRatio, double initRotorVel);
 
-	DECLDIR void InitAeroDyn(const char* inputFilename,
+	// Must call second
+	// Bladed-style controller initialization
+	DECLDIR void InitControllers(const char* blade_dll_fname);
+
+	// Input file specified generator and pitch controllers
+	DECLDIR void InitControllers(const char* gen_csv, const char* pit_fname, double lpfCornerFreq);
+
+	// Must call last
+	DECLDIR void InitAeroDyn(
+		const char* inputFilename,
 		double fluidDensity,
 		double kinematicFluidVisc,
-		const NacelleMotion&,
-		double bladePitch);
-
-	DECLDIR void InitPitchController(const char*);
+		const NacelleMotion&);
 
 	DECLDIR void InitInflows(const std::vector<double>&);
 
-	DECLDIR void SetLPFCornerFreq(double);
-	DECLDIR void SetDriveTrainDamping(double);
-	DECLDIR void SetDriveTrainStiffness(double);
-	DECLDIR void SetRotorMassMOI(double);
-	DECLDIR void SetGenMassMOI(double);
-	DECLDIR void SetGearboxRatio(double);
-	DECLDIR void SetInitialRotorSpeed(double);
+	// Set the corner frequency parameters for the generator speed low-pass filter. See 
+	// NREL's paper: Definition of a 5-MW Reference Wind Turbine for Offshore System Development
 
-	// Pass the nacelle state at t + dt/2; returns temporary nacelle reaction forces at t + dt/2
+	// Pass the nacelle state at t + dt/2; begins process which will evenetually return temporary nacelle reaction forces at t + dt/2
 	DECLDIR void K1(const NacelleMotion&, double time, double dt);
-	// Pass the nacelle state at t + dt/2; returns temporary nacelle reaction forces at t + dt/2
+	// Pass the nacelle state at t + dt/2; begins process which will evenetually return temporary nacelle reaction forces at t + dt/2
 	DECLDIR void K2(const NacelleMotion&);
-	// Pass the nacelle state at t + dt  ; returns temporary nacelle reaction forces at t + dt
+	// Pass the nacelle state at t + dt  ; begins process which will evenetually return temporary nacelle reaction forces at t + dt
 	DECLDIR void K3(const NacelleMotion&);
 	// Pass the actual nacelle state at t + dt  
 	DECLDIR void K4(const NacelleMotion&);
@@ -69,25 +73,30 @@ public:
 	DECLDIR void SetInflowVelocities(const std::vector<double>&);
 	DECLDIR NacelleReactionForces UpdateAeroDynStates();
 
-	// Final update function (rename them because the names are horrible)
+	// Final update functions
 	DECLDIR void K_Final(const NacelleMotion& s);
 	DECLDIR void GetBladeNodePositions_Final(std::vector<double>&);
 	DECLDIR void SetInflowVelocities_Final(const std::vector<double>&);
 	DECLDIR NacelleReactionForces UpdateAeroDynStates_Final();
 
 	DECLDIR int GetNumNodes() const;
+	DECLDIR int GetNumBlades() const;
+	DECLDIR double GetBladePitch() const;
+	DECLDIR double GetGeneratorTorque() const;
+	DECLDIR double GetGeneratorSpeed() const;
+	DECLDIR double GetRotorSpeed() const;
 
 private:
-
+	class PImp;
+	std::unique_ptr<PImp> p_imp;
+	// 
 	HubMotion CalculateHubMotion(const NacelleMotion&, const DriveTrain::States&);
+	NacelleReactionForces TransferReactionForces(const double force[3], const double moment[3]);
 
 	double time, dt; // dt of the current round of calling k_(...) functions
 	AeroDyn_Interface_Wrapper aerodyn;
 	DriveTrain				  drivetrain;
 	DriveTrain::ModelStates   dt_resultStates;
-	GenController			  gencont;
-	LowPassFilter			  genSpeedLPF;
-	PitchController           pitchcont;
-	BladedInterface           bladed;
+	MasterController		  mcont;
 };
 

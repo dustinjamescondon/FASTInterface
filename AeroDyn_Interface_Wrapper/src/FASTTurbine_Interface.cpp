@@ -1,6 +1,5 @@
 #include "FASTTurbine_Interface.h"
 #include <Eigen/Dense>
-//#include <windows.h>
 
 using namespace Eigen;
 Matrix3d EulerConstruct(const Vector3d& theta);
@@ -10,20 +9,12 @@ struct HubMotion {
 	Vector3d position, velocity, orientation, angularVel;
 };
 
-FASTTurbineModel::FASTTurbineModel() : genSpeedLPF()
+FASTTurbineModel::FASTTurbineModel()
 {
-	// Set this here for now, but probably will have it set elsewhere later
-	drivetrain.SetInitialRotorSpeed(0.01);
-	//bladed.Init("Discon.dll", 3);
 }
 
 FASTTurbineModel::~FASTTurbineModel()
 {
-}
-
-void FASTTurbineModel::InitGenController()
-{
-	//gencont.LoadCSVFile(fname);
 }
 
 // Calculates the appropriate hub motion according to the nacelle motion and rotor motion
@@ -50,16 +41,30 @@ HubMotion FASTTurbineModel::CalculateHubMotion(const NacelleMotion& nm, const Dr
 	return hm;
 }
 
-void FASTTurbineModel::InitPitchController(const char* fname)
+void FASTTurbineModel::InitDriveTrain(double rotorMOI, double genMOI, double stiffness, double damping, double gearboxRatio, double initialRotorVel)
 {
-	pitchcont.ReadParameters(fname);
+	drivetrain.SetGearboxRatio(gearboxRatio);
+	drivetrain.SetRotorMassMomentOfInertia(rotorMOI);
+	drivetrain.SetGenMassMomentOfInertia(genMOI);
+	drivetrain.SetStiffnessCoeff(stiffness);
+	drivetrain.SetDampingCoeff(damping);
+	drivetrain.SetInitialRotorSpeed(initialRotorVel);
+}
+
+void FASTTurbineModel::InitControllers(const char* bladed_dll_fname)
+{
+	mcont.Init(bladed_dll_fname);
+}
+
+void FASTTurbineModel::InitControllers(const char* gen_fname, const char* pitch_fname, double cornerFreq)
+{
+	mcont.Init(gen_fname, pitch_fname, cornerFreq, drivetrain.GetGenShaftSpeed());
 }
 
 void FASTTurbineModel::InitAeroDyn(const char* inputFilename,
 	double fluidDensity,
 	double kinematicFluidVisc,
-	const NacelleMotion& nm,
-	double bladePitch)
+	const NacelleMotion& nm)
 {
 	// Process the nacelle motions to find the hub motions
 	DriveTrain::States rotorState = drivetrain.GetRotorStates();
@@ -72,51 +77,12 @@ void FASTTurbineModel::InitAeroDyn(const char* inputFilename,
 		hm.orientation.data(),
 		hm.velocity.data(),
 		hm.angularVel.data(),
-		bladePitch);
+		mcont.GetBladePitchCommand());
 }
 
 void FASTTurbineModel::InitInflows(const std::vector<double>& inflows)
 {
 	aerodyn.InitInflows(inflows);
-}
-
-void FASTTurbineModel::SetLPFCornerFreq(double c) {
-	genSpeedLPF.SetCornerFreq(c);
-}
-
-void FASTTurbineModel::SetDriveTrainDamping(double c)
-{
-	drivetrain.SetDampingCoeff(c);
-}
-
-void FASTTurbineModel::SetDriveTrainStiffness(double c)
-{
-	drivetrain.SetStiffnessCoeff(c);
-}
-
-void FASTTurbineModel::SetRotorMassMOI(double m)
-{
-	drivetrain.SetRotorMassMomentOfInertia(m);
-}
-
-void FASTTurbineModel::SetGenMassMOI(double m)
-{
-	drivetrain.SetGenMassMomentOfInertia(m);
-}
-
-void FASTTurbineModel::SetGearboxRatio(double r)
-{
-	drivetrain.SetGearboxRatio(r);
-}
-
-void FASTTurbineModel::SetInitialRotorSpeed(double s)
-{
-	// Set the drive train's rotor speed, which will accordingly set the generator speed based 
-	// on the gearbox ratio
-	drivetrain.SetInitialRotorSpeed(s);
-
-	// Initialize low pass filter to have this value as well
-	genSpeedLPF.InitFilterVal(drivetrain.GetGenShaftSpeed());
 }
 
 // Pass the nacelle state at t + dt/2; begins calculation of temporary states at t + dt/2
@@ -129,17 +95,18 @@ void FASTTurbineModel::K1(const FASTTurbineModel::NacelleMotion& s, double time,
 	// Get the state of the drivetrain at current time
 	DriveTrain::ModelStates drivetrain_states = drivetrain.GetModelStates();
 
-	// dt as the difference from last call the filter.
-	double filteredGenSpeed = genSpeedLPF.UpdateEstimate(drivetrain_states.gen.vel, dt);
+	// Update the pitch and generator controllers
+	mcont.UpdateController(time, drivetrain_states.gen.vel, aerodyn.GetBladePitch());
+	double genTorque = mcont.GetGeneratorTorqueCommand();
+	double bladePitch = mcont.GetBladePitchCommand();
 
 	// Temporary generator speed at time + dt/2
 	// Have to save this for the input of the next call to K2
-	dt_resultStates = drivetrain.K1(dt, aerodyn.GetTorque(), gencont.GetTorque(filteredGenSpeed));
+	dt_resultStates = drivetrain.K1(dt, aerodyn.GetTorque(), genTorque);
 
 	HubMotion hm = CalculateHubMotion(s, dt_resultStates.rotor);
-	
+
 	// Temporary update to the hub motion in AeroDyn
-	double bladePitch = pitchcont.GetPitch();
 	aerodyn.SetHubMotion(time + 0.5 * dt, hm.position.data(), hm.orientation.data(), hm.velocity.data(), 
 		hm.angularVel.data(), bladePitch, false);
 }
@@ -147,15 +114,14 @@ void FASTTurbineModel::K1(const FASTTurbineModel::NacelleMotion& s, double time,
 // Pass nacelle state at t + dt/2; begins calculation of temporary states at t + dt/2
 void FASTTurbineModel::K2(const FASTTurbineModel::NacelleMotion& s)
 {
-	// Using the temporary generator speed at t + dt/2
-	double filteredGenSpeed = genSpeedLPF.CalcEstimation(dt_resultStates.gen.vel, 0.5 * dt);
+	double bladePitch = mcont.GetBladePitchCommand();
+	double genTorque = mcont.GetGeneratorTorqueCommand();
 
 	// Save drivetrain states for call to K3
-	dt_resultStates = drivetrain.K2(dt, aerodyn.GetTorque(), gencont.GetTorque(filteredGenSpeed));
+	dt_resultStates = drivetrain.K2(dt, aerodyn.GetTorque(), genTorque);
 
 	HubMotion hm = CalculateHubMotion(s, dt_resultStates.rotor);
 
-	double bladePitch = pitchcont.GetPitch();
 	aerodyn.SetHubMotion(time + 0.5 * dt, hm.position.data(), hm.orientation.data(), hm.velocity.data(),
 		hm.angularVel.data(), bladePitch, false);
 }
@@ -163,13 +129,15 @@ void FASTTurbineModel::K2(const FASTTurbineModel::NacelleMotion& s)
 // Pass nacelle state at t + dt; begins calculation of temporary states at t + dt
 void FASTTurbineModel::K3(const FASTTurbineModel::NacelleMotion& s)
 {
-	double filteredGenSpeed = genSpeedLPF.CalcEstimation(dt_resultStates.gen.vel, 0.5 * dt);
+	//double filteredGenSpeed = genSpeedLPF.CalcEstimation(dt_resultStates.gen.vel, 0.5 * dt);
 
-	dt_resultStates = drivetrain.K3(dt, aerodyn.GetTorque(), gencont.GetTorque(filteredGenSpeed));
+	double bladePitch = mcont.GetBladePitchCommand();
+	double genTorque = mcont.GetGeneratorTorqueCommand();
+
+	dt_resultStates = drivetrain.K3(dt, aerodyn.GetTorque(), genTorque);
 
 	HubMotion hm = CalculateHubMotion(s, dt_resultStates.rotor);
 
-	double bladePitch = pitchcont.GetPitch();
 	aerodyn.SetHubMotion(time + dt, hm.position.data(), hm.orientation.data(), hm.velocity.data(),
 		hm.angularVel.data(), bladePitch, false);
 }
@@ -177,11 +145,11 @@ void FASTTurbineModel::K3(const FASTTurbineModel::NacelleMotion& s)
 // Pass nacelle state at 
 void FASTTurbineModel::K4(const FASTTurbineModel::NacelleMotion& s)
 {
-	static const double bladePitch = 0.0f;
+	//double filteredGenSpeed = genSpeedLPF.CalcEstimation(dt_resultStates.gen.vel, dt);
 
-	double filteredGenSpeed = genSpeedLPF.CalcEstimation(dt_resultStates.gen.vel, dt);
+	double genTorque = mcont.GetGeneratorTorqueCommand();
 
-	dt_resultStates = drivetrain.K4(dt, aerodyn.GetTorque(), gencont.GetTorque(filteredGenSpeed));
+	dt_resultStates = drivetrain.K4(dt, aerodyn.GetTorque(), genTorque);
 
 	// Don't need to UpdateStates in AeroDyn... ( I don't think so right now at least )
 }
@@ -195,7 +163,8 @@ void FASTTurbineModel::K_Final(const FASTTurbineModel::NacelleMotion& nac_states
 	// --Use both nacelle states and drivetrain states to update AeroDyn--
 	HubMotion hm = CalculateHubMotion(nac_states, dt_states.rotor);
 
-	double bladePitch = pitchcont.CalcPitch(time, genSpeedLPF.GetCurrEstimatedValue());
+	double bladePitch = mcont.GetBladePitchCommand();
+
 	aerodyn.SetHubMotion(time + dt, hm.position.data(), hm.orientation.data(), hm.velocity.data(), 
 		hm.angularVel.data(), bladePitch, true);
 }
@@ -223,40 +192,92 @@ void FASTTurbineModel::SetInflowVelocities(const std::vector<double>& inflows)
 // this will return the forces and moments from AeroDyn 
 FASTTurbineModel::NacelleReactionForces FASTTurbineModel::UpdateAeroDynStates()
 {
-	NacelleReactionForces r;
-
+	double force[3];
+	double moment[3];
 	double power;
 	double tsr;
 	double massMat[6][6];
 	double addedMassMat[6][6];
 
-	aerodyn.UpdateStates(r.force, r.moment, &power, &tsr, massMat, addedMassMat, false);
+	aerodyn.UpdateStates(force, moment, &power, &tsr, massMat, addedMassMat, false);
 
 	// For now just return the force and moment as is without doing any other calculations
 	// Note these forces are therefore in the hub coordinate system.
+
+	NacelleReactionForces r = TransferReactionForces(force, moment);
+
+	r.power = power;
+	r.tsr = tsr;
+
 	return r;
 }
 
 // Updates AeroDyn's state up to time + dt and will return the forces and moments at that time
 FASTTurbineModel::NacelleReactionForces FASTTurbineModel::UpdateAeroDynStates_Final()
 {
-	NacelleReactionForces r;
-
+	double force[3];
+	double moment[3];
 	double power;
 	double tsr;
 	double massMat[6][6];
 	double addedMassMat[6][6];
 
-	aerodyn.UpdateStates(r.force, r.moment, &power, &tsr, massMat, addedMassMat, true);
+	aerodyn.UpdateStates(force, moment, &power, &tsr, massMat, addedMassMat, true);
 
 	// For now just return the force and moment as is without doing any other calculations
 	// Note these forces are therefore in the hub coordinate system.
+
+	NacelleReactionForces r = TransferReactionForces(force, moment);
+
+	r.power = power;
+	r.tsr = tsr;
+
 	return r;
 }
 
 int FASTTurbineModel::GetNumNodes() const
 {
 	return aerodyn.GetNumNodes();
+}
+
+int FASTTurbineModel::GetNumBlades() const
+{
+	return aerodyn.GetNumBlades();
+}
+
+double FASTTurbineModel::GetBladePitch() const
+{
+	return aerodyn.GetBladePitch();
+}
+
+double FASTTurbineModel::GetGeneratorTorque() const
+{
+	return mcont.GetGeneratorTorqueCommand();
+}
+
+double FASTTurbineModel::GetGeneratorSpeed() const
+{
+	return drivetrain.GetGenShaftSpeed();
+}
+
+double FASTTurbineModel::GetRotorSpeed() const
+{
+	return drivetrain.GetRotorShaftSpeed();
+}
+
+FASTTurbineModel::NacelleReactionForces FASTTurbineModel::TransferReactionForces(const double force[3], const double moment[3])
+{
+	NacelleReactionForces r;
+
+	r.force[0] = force[0];
+	r.force[1] = force[1];
+	r.force[2] = force[2];
+
+	r.moment[0] = moment[0];
+	r.moment[1] = moment[1];
+	r.moment[2] = moment[2];
+	
+	return r;
 }
 
 // taken from Aerodyn's subroutine of the same name

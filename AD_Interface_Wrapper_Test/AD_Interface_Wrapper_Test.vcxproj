@@ -148,11 +148,13 @@
   <ItemGroup>
     <ClCompile Include="src\Driver.cpp" />
     <ClCompile Include="src\Graphics.cpp" />
+    <ClCompile Include="src\TimePlot.cpp" />
     <ClCompile Include="src\wrap_test.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\Driver.h" />
     <ClInclude Include="src\Graphics.h" />
+    <ClInclude Include="src\TimePlot.h" />
   </ItemGroup>
   <ItemGroup>
     <Library Include="..\Win32\Debug\FASTTurbine_Interface_Debug.lib" />

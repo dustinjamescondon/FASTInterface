@@ -3,6 +3,7 @@
 
 using namespace Eigen;
 
+
 void RenderBladeNodes(sf::RenderWindow& wnd, const std::vector<double>& bladeNodePositions, const Vector3d& hubPos, double pixelsPerMeter, int nNodes)
 {
 
@@ -46,5 +47,4 @@ void RenderBladeNodes(sf::RenderWindow& wnd, const std::vector<double>& bladeNod
 		wnd.draw(shape);
 	}
 
-	wnd.display();
 }

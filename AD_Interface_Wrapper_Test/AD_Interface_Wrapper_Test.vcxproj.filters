@@ -25,6 +25,9 @@
     <ClCompile Include="src\Driver.cpp">
       <Filter>Driver</Filter>
     </ClCompile>
+    <ClCompile Include="src\TimePlot.cpp">
+      <Filter>Graphics</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\Graphics.h">
@@ -32,6 +35,9 @@
     </ClInclude>
     <ClInclude Include="src\Driver.h">
       <Filter>Driver</Filter>
+    </ClInclude>
+    <ClInclude Include="src\TimePlot.h">
+      <Filter>Graphics</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

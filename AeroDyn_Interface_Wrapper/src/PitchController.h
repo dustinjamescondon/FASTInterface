@@ -1,8 +1,51 @@
 #pragma once
 
-#include <float.h>
-#include "InputFile.h"
+#include "CSVSpecFunction.h"
+#include "ControllerExceptions.h"
 
+class PitchController
+{
+public:
+	PitchController(const char* filename, double initial_pitch);
+	PitchController();
+
+	void LoadInputFile(const char* filename, double initial_pitch);
+
+	double Calculate(double time, double genSpeed);
+	double GetLastPitchCommand() const;
+
+private:
+	// Reads in the value for p_gain, i_gain, and the function defining p_gain_coeff from a CSV table
+	// contained within the file.
+	void ReadInputFile(const char*);
+
+	// Reads the next non-comment line of the input file, makes sure it matches the label,
+	// and if so return the value. Throws an exception if the label is incorrect, or the 
+	// value is invalidly formatted.
+	double ReadDouble(std::ifstream&, const char* label) const;
+
+	// 
+	std::string GetNextNonCommentLine(std::ifstream& fin) const;
+
+	// Checks if the string can be converted to a double (doesn't check for scientific notation)
+	bool isNumber(const std::string& s) const;
+
+	bool engaged;
+	double lastTime;
+	double prevTime;              // holds the previous time passed to calculate(...)
+	double bias;				  // should be the value of the pitch angle before controller was turned on
+	double targetGenSpeed;
+	double lastPitchCommand;      // the current blade pitch
+	double p_gain;				  // proportion gain
+	double i_gain;				  // integral gain
+	CSVSpecFunction p_gain_coeff; // proportion gain coefficient, which is a function of blade pitch
+
+	double integral_term;
+};
+
+
+
+/*
 class PitchController : private InputFile
 {
 public:
@@ -53,4 +96,5 @@ private:
 	double LastTime;
 	double LastBlPitch;
 };
+*/
 

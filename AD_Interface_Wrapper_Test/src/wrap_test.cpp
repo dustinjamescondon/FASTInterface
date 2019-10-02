@@ -4,6 +4,7 @@
 #include <iostream>
 #include <vector>
 #include "Driver.h"
+#include "TimePlot.h"
 #include <Windows.h>
 
 #define _USE_MATH_DEFINES
@@ -26,11 +27,11 @@ int main()
 	static const double dt = 0.01;
 	static const int NSteps = (int)(EndTime / dt);
 
-	static const double InflowSpeed = 20.0;    // in metres/sec
+	static const double InflowSpeed = 30.0;    // in metres/sec
 	static const double FluidDensity = 1.225;
 	static const double KinematicFluidVisc = 1.4639e-05;
 	static const double GearboxRatio = 97.0;
-	static const double InitialRotorSpeed = 1.0;
+	static const double InitialRotorSpeed = 0.1;
 	static const double DriveTrainDamping = 6215000.0;
 	static const double DriveTrainStiffness = 867637000.0;
 	static const double RotorMOI = 38829739.1; //Used parallel axis theorem to calculate this using NREL's specification of MOI relative to root//115926.0;
@@ -59,17 +60,12 @@ int main()
 	//--------------------------
 	// Initialization
 
-	// Create instance of the wrapper class
-	FASTTurbineModel turb;
-	turb.InitPitchController("PitchControllerParameters.inp");
+	TimePlot pitchPlot(0, 0, 200, 100, 0.0, 2.0);
+	TimePlot genPlot(0, 102, 200, 100, 0.0, 47402.91);
+	TimePlot genSpeedPlot(0, 204, 200, 100, 0.0, 300.0);
 
-	turb.SetLPFCornerFreq(LPFCornerFreq);
-	turb.SetRotorMassMOI(RotorMOI);
-	turb.SetGenMassMOI(GenMOI);
-	turb.SetGearboxRatio(GearboxRatio);
-	turb.SetInitialRotorSpeed(InitialRotorSpeed);
-	turb.SetDriveTrainDamping(DriveTrainDamping);
-	turb.SetDriveTrainStiffness(DriveTrainStiffness);
+	// Initialize the turbine with an external Bladed-styel DLL as the controller
+	FASTTurbineModel turb;
 
 	// Initialize the nacelle state - it will be constant for this simulation test
 	FASTTurbineModel::NacelleMotion nstate;
@@ -78,19 +74,19 @@ int main()
 	nstate.angularVel[2] = 0.0;
 
 	nstate.eulerAngles[0] = nstate.eulerAngles[1] = 0.0;
-	nstate.eulerAngles[2] = 0.0;;
+	nstate.eulerAngles[2] = 0.5;
+
 	nstate.position[0] = 0.0;
 	nstate.position[1] = nstate.position[2] = 75.0;
+
 	nstate.velocity[0] = nstate.velocity[1] = nstate.velocity[2] = 0.0;
 
-
 	try {
+		turb.InitDriveTrain(RotorMOI, GenMOI, DriveTrainStiffness, DriveTrainDamping, GearboxRatio, InitialRotorSpeed);
+		turb.InitControllers("Discon.dll");
 		turb.InitAeroDyn("C:/Users/dusti/Documents/Work/PRIMED/inputfiles/ad_interface_example2.inp", FluidDensity, KinematicFluidVisc,
-			nstate, bladePitch);
-		
-		turb.InitGenController();
+			nstate);
 	}
-
 	catch (ADInputFileNotFound& e) {
 		std::cout << "Input file couldn't be found" << std::endl;
 		std::cout << e.what();
@@ -164,12 +160,20 @@ int main()
 
 		RenderBladeNodes(window, bladeNodePositions, Vector3d(nstate.position), 5.0, totalNodes);
 		
+		pitchPlot.plot(0.0, turb.GetBladePitch());
+		pitchPlot.draw(window);
+
+		genPlot.plot(0.0, turb.GetGeneratorTorque());
+		genPlot.draw(window);
+
+		genSpeedPlot.plot(0.0, turb.GetGeneratorSpeed());
+		genSpeedPlot.draw(window);
+
+		window.display();
+
+
 		time += dt;
 	}
 
 	return 0;
 }
-
-//-----------------------------
-// Function definitions
-//-----------------------------

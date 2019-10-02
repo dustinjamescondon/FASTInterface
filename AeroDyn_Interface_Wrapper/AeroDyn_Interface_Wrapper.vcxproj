@@ -27,6 +27,7 @@
     <ClCompile Include="src\InputFile.cpp" />
     <ClCompile Include="src\GenController.cpp" />
     <ClCompile Include="src\LowPassFilter.cpp" />
+    <ClCompile Include="src\MasterController.cpp" />
     <ClCompile Include="src\PitchController.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -53,6 +54,7 @@
     <ClInclude Include="src\GenController.h" />
     <ClInclude Include="src\InputFile.h" />
     <ClInclude Include="src\LowPassFilter.h" />
+    <ClInclude Include="src\MasterController.h" />
     <ClInclude Include="src\PitchController.h" />
   </ItemGroup>
   <PropertyGroup Label="Globals">

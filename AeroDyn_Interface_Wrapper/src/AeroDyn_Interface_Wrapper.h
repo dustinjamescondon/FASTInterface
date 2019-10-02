@@ -113,6 +113,7 @@ public:
 	double GetTorque() const; // Returns the torque resulting from the last call to UpdateStates
 	void GetForce(double[3]) const; 
 	void GetMoment(double[3]) const;
+	double GetBladePitch() const; // Returns the last actual pitch value (ones that have been assigned via isRealStep == true).
 
 private:
 	// updates aerodynInflows with transformed pdsInflows
@@ -125,6 +126,7 @@ private:
 	double turbineDiameter;
 	double force[3];
 	double moment[3];
+	double pitch;
 	int totalNodes;
 	int nBlades;
 	int nNodes; // number of nodes per blade
