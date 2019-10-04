@@ -4,6 +4,9 @@
 #include "MasterController.h"
 #include "BladedInterface.h"
 #include <memory>
+#include <Eigen/Dense>
+
+using namespace Eigen;
 
 // Note, this is defined in the project preprocessor section
 #ifdef FASTTURBINE_INTERFACE_EXPORTS  
@@ -40,10 +43,9 @@ public:
 	// Must call this one first
 	DECLDIR void InitDriveTrain(double rotorMOI, double genMOI, double stiffness, double damping, double gearboxRatio, double initRotorVel);
 
-	// Must call second
+	// Must call one of these second
 	// Bladed-style controller initialization
 	DECLDIR void InitControllers(const char* blade_dll_fname);
-
 	// Input file specified generator and pitch controllers
 	DECLDIR void InitControllers(const char* gen_csv, const char* pit_fname, double lpfCornerFreq);
 
@@ -55,9 +57,6 @@ public:
 		const NacelleMotion&);
 
 	DECLDIR void InitInflows(const std::vector<double>&);
-
-	// Set the corner frequency parameters for the generator speed low-pass filter. See 
-	// NREL's paper: Definition of a 5-MW Reference Wind Turbine for Offshore System Development
 
 	// Pass the nacelle state at t + dt/2; begins process which will evenetually return temporary nacelle reaction forces at t + dt/2
 	DECLDIR void K1(const NacelleMotion&, double time, double dt);
@@ -87,16 +86,22 @@ public:
 	DECLDIR double GetRotorSpeed() const;
 
 private:
+	// Pointer to implementation class to hide implemenation
 	class PImp;
 	std::unique_ptr<PImp> p_imp;
+
 	// 
+	/*
 	HubMotion CalculateHubMotion(const NacelleMotion&, const DriveTrain::States&);
-	NacelleReactionForces TransferReactionForces(const double force[3], const double moment[3]);
+	NacelleReactionForces TransferReactionForces(const double force[3], const double moment[3],
+		const Matrix3d& nacelleOrienation, const Matrix3d& hubOrientation);
+	Vector3d TransformHubToNacelle(const Vector3d& v, const Matrix3d& nacelleOrienation, const Matrix3d& hubOrienation);
 
 	double time, dt; // dt of the current round of calling k_(...) functions
+	Matrix3d nacelleOrient, hubOrient;
 	AeroDyn_Interface_Wrapper aerodyn;
 	DriveTrain				  drivetrain;
 	DriveTrain::ModelStates   dt_resultStates;
 	MasterController		  mcont;
+	*/
 };
-

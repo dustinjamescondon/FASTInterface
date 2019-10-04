@@ -24,7 +24,7 @@ int main()
 	//-------------------------
 	// Simulation parameters
 	static const double EndTime = 40.0;
-	static const double dt = 0.01;
+	static const double dt = 0.02;
 	static const int NSteps = (int)(EndTime / dt);
 
 	static const double InflowSpeed = 30.0;    // in metres/sec
@@ -74,7 +74,7 @@ int main()
 	nstate.angularVel[2] = 0.0;
 
 	nstate.eulerAngles[0] = nstate.eulerAngles[1] = 0.0;
-	nstate.eulerAngles[2] = 0.5;
+	nstate.eulerAngles[2] = 0.0;
 
 	nstate.position[0] = 0.0;
 	nstate.position[1] = nstate.position[2] = 75.0;

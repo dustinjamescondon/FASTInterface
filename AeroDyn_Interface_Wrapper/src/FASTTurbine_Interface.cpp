@@ -5,9 +5,27 @@ using namespace Eigen;
 Matrix3d EulerConstruct(const Vector3d& theta);
 Vector3d EulerExtract(const Matrix3d& m);
 
-struct HubMotion {
-	Vector3d position, velocity, orientation, angularVel;
+
+class FASTTurbineModel::PImp
+{
+public:
+	struct HubMotion {
+		Vector3d position, velocity, orientation, angularVel;
+	};
+
+	HubMotion CalculateHubMotion(const NacelleMotion&, const DriveTrain::States&);
+	Vector3d TransformHubToNacelle(const Vector3d& v, const Matrix3d& nacelleOrienation, const Matrix3d& hubOrienation);
+
+	double time, dt; // dt of the current round of calling k_(...) functions
+	Matrix3d nacelleOrient, hubOrient;
+	AeroDyn_Interface_Wrapper aerodyn;
+	DriveTrain				  drivetrain;
+	DriveTrain::ModelStates   dt_resultStates;
+	MasterController		  mcont;
 };
+
+
+
 
 FASTTurbineModel::FASTTurbineModel()
 {
@@ -26,17 +44,17 @@ HubMotion FASTTurbineModel::CalculateHubMotion(const NacelleMotion& nm, const Dr
 	hm.velocity = Vector3d(nm.velocity);
 	
 	// Use Nacelle orientation and rotor.theta to update hub orientation for AeroDyn
-	Matrix3d nacelleOrientation = EulerConstruct(Vector3d(nm.eulerAngles));
+	nacelleOrient = EulerConstruct(Vector3d(nm.eulerAngles));
 
 	// Create rotation matrix for the rotor angle
 	Matrix3d rotorRotation = EulerConstruct(Vector3d(rs.theta, 0.0, 0.0));
 
-	// Combine the two rotation matrices
-	Matrix3d hubOrientation = rotorRotation * nacelleOrientation;
+	// Combine the two rotation matrices (this is kinda indirect - maybe rewrite it to be clearer)
+	hubOrient = rotorRotation * nacelleOrient;
 
-	hm.orientation = EulerExtract(hubOrientation);
+	hm.orientation = EulerExtract(hubOrient);
 
-	hm.angularVel = rs.vel * hubOrientation.row(0); // rotation axis in the global coordinate system
+	hm.angularVel = rs.vel * hubOrient.row(0); // rotation axis in the global coordinate system
 
 	return hm;
 }
@@ -204,10 +222,17 @@ FASTTurbineModel::NacelleReactionForces FASTTurbineModel::UpdateAeroDynStates()
 	// For now just return the force and moment as is without doing any other calculations
 	// Note these forces are therefore in the hub coordinate system.
 
-	NacelleReactionForces r = TransferReactionForces(force, moment);
+	Vector3d force_vec(force);
+	Vector3d moment_vec(moment);
 
+	Vector3d trans_force_vec = TransformHubToNacelle(force_vec, nacelleOrient, hubOrient);
+	Vector3d trans_moment_vec = TransformHubToNacelle(moment_vec, nacelleOrient, hubOrient);
+
+	NacelleReactionForces r;
 	r.power = power;
 	r.tsr = tsr;
+	memcpy(r.force, trans_force_vec.data(), 3 * sizeof(double));
+	memcpy(r.moment, trans_moment_vec.data(), 3 * sizeof(double));	
 
 	return r;
 }
@@ -227,10 +252,17 @@ FASTTurbineModel::NacelleReactionForces FASTTurbineModel::UpdateAeroDynStates_Fi
 	// For now just return the force and moment as is without doing any other calculations
 	// Note these forces are therefore in the hub coordinate system.
 
-	NacelleReactionForces r = TransferReactionForces(force, moment);
+	Vector3d force_vec(force);
+	Vector3d moment_vec(moment);
 
+	Vector3d trans_force_vec = TransformHubToNacelle(force_vec, nacelleOrient, hubOrient);
+	Vector3d trans_moment_vec = TransformHubToNacelle(moment_vec, nacelleOrient, hubOrient);
+
+	NacelleReactionForces r;
 	r.power = power;
 	r.tsr = tsr;
+	memcpy(r.force, trans_force_vec.data(), 3 * sizeof(double));
+	memcpy(r.moment, trans_moment_vec.data(), 3 * sizeof(double));
 
 	return r;
 }
@@ -265,19 +297,10 @@ double FASTTurbineModel::GetRotorSpeed() const
 	return drivetrain.GetRotorShaftSpeed();
 }
 
-FASTTurbineModel::NacelleReactionForces FASTTurbineModel::TransferReactionForces(const double force[3], const double moment[3])
+Vector3d FASTTurbineModel::TransformHubToNacelle(const Vector3d& v, const Matrix3d& nacelleOri,
+	const Matrix3d& hubOri)
 {
-	NacelleReactionForces r;
-
-	r.force[0] = force[0];
-	r.force[1] = force[1];
-	r.force[2] = force[2];
-
-	r.moment[0] = moment[0];
-	r.moment[1] = moment[1];
-	r.moment[2] = moment[2];
-	
-	return r;
+	return nacelleOri * hubOri.transpose() * v;
 }
 
 // taken from Aerodyn's subroutine of the same name

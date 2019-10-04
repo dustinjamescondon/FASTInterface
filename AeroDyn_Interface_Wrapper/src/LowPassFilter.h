@@ -6,6 +6,8 @@ public:
 	LowPassFilter();
 	LowPassFilter(double correctingFactor);
 
+	// Set the corner frequency parameters for the generator speed low-pass filter. See 
+	// NREL's paper: Definition of a 5-MW Reference Wind Turbine for Offshore System Development
 	void SetCornerFreq(double c);
 
 	void InitFilterVal(double);
