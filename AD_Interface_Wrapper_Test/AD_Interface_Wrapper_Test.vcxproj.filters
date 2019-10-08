@@ -47,6 +47,5 @@
     <None Include="PitchControllerParameters.inp">
       <Filter>Input Files</Filter>
     </None>
-    <None Include="GeneratorControllerParameters.inp" />
   </ItemGroup>
 </Project>

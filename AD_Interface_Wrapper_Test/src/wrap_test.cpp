@@ -24,19 +24,20 @@ int main()
 	//-------------------------
 	// Simulation parameters
 	static const double EndTime = 40.0;
-	static const double dt = 0.02;
+	static const double dt = 0.01;
 	static const int NSteps = (int)(EndTime / dt);
 
-	static const double InflowSpeed = 30.0;    // in metres/sec
+	static const double InflowSpeed = 10.0;    // in metres/sec
 	static const double FluidDensity = 1.225;
 	static const double KinematicFluidVisc = 1.4639e-05;
-	static const double GearboxRatio = 97.0;
-	static const double InitialRotorSpeed = 0.1;
-	static const double DriveTrainDamping = 6215000.0;
-	static const double DriveTrainStiffness = 867637000.0;
-	static const double RotorMOI = 38829739.1; //Used parallel axis theorem to calculate this using NREL's specification of MOI relative to root//115926.0;
-	static const double GenMOI = 534.116;
-	static const double LPFCornerFreq = 1.570796;
+	static const double InitialRotorSpeed = 1.183333233;
+	static const double GearboxRatio = 97.0;				// From NREL's OC3 report
+	static const double DriveTrainDamping = 6215000.0;      // "
+	static const double DriveTrainStiffness = 867637000.0;  // "
+	static const double GenMOI = 534.116;					// "
+	static const double LPFCornerFreq = 1.570796;			// "
+	static const double RotorMOI = 38829739.1;				// Used parallel axis theorem to calculate this using NREL's specification of MOI relative to root.
+
 
 	//-------------------------
 	// Local variables
@@ -54,17 +55,16 @@ int main()
 	double power;
 	double tsr;
 	double turbineDiameter;
-	double massMatrix[6][6];
-	double addedMassMatrix[6][6];
 
 	//--------------------------
 	// Initialization
 
+	// Simple real-time visualizations of simulation values
 	TimePlot pitchPlot(0, 0, 200, 100, 0.0, 2.0);
 	TimePlot genPlot(0, 102, 200, 100, 0.0, 47402.91);
 	TimePlot genSpeedPlot(0, 204, 200, 100, 0.0, 300.0);
+	TimePlot rotorSpeedPlot(0, 306, 200, 100, 0.0, 2);
 
-	// Initialize the turbine with an external Bladed-styel DLL as the controller
 	FASTTurbineModel turb;
 
 	// Initialize the nacelle state - it will be constant for this simulation test
@@ -84,24 +84,33 @@ int main()
 	try {
 		turb.InitDriveTrain(RotorMOI, GenMOI, DriveTrainStiffness, DriveTrainDamping, GearboxRatio, InitialRotorSpeed);
 		turb.InitControllers("Discon.dll");
+		//turb.InitWithConstantRotorSpeedAndPitch(InitialRotorSpeed, 0.0);
 		turb.InitAeroDyn("C:/Users/dusti/Documents/Work/PRIMED/inputfiles/ad_interface_example2.inp", FluidDensity, KinematicFluidVisc,
 			nstate);
 	}
-	catch (ADInputFileNotFound& e) {
+	catch (ADInputFileNotFoundException& e) {
 		std::cout << "Input file couldn't be found" << std::endl;
 		std::cout << e.what();
 		return 0;
 	}
 
-	catch (ADInputFileContents& e) {
+	catch (ADInputFileContentsException& e) {
 		std::cout << "Input file has invalid contents" << std::endl;
 		std::cout << e.what();
 		return 0;
 	}
 
-	catch (ADError& e) {
+	catch (ADErrorException& e) {
 		std::cout << "An error occured in AeroDyn" << std::endl;
 		std::cout << e.what();
+		return 0;
+	}
+
+	catch (std::runtime_error& e)
+	{
+		std::cout << "An error occured" << std::endl;
+		std::cout << e.what();
+		return 0;
 	}
 
 	totalNodes = turb.GetNumNodes();
@@ -131,32 +140,45 @@ int main()
 				return 0;
 			}
 		}
-
+		// The reaction forces structure
 		FASTTurbineModel::NacelleReactionForces rf;
 
-		// This sets AeroDyn's hub state inputs according to nstate at t + dt/2
-		turb.K1(nstate, time, dt);
+		//---------------------------------------------------------------------
+		// Pass temporary nacelle state at t + dt/2
+		turb.Step1(nstate, time, dt);
+		turb.GetBladeNodePositions_Tmp(bladeNodePositions);
+		turb.SetInflowVelocities_Tmp(inflows);
+		// Temporarily update AeroDyn's state to t + dt/2; return reaction forces at t + dt/2
+		rf = turb.UpdateAeroDynStates_Tmp();
+		//---------------------------------------------------------------------
+
+		// Pass temporary nacelle state at t + dt/2
+		turb.Step2(nstate);
+		turb.GetBladeNodePositions_Tmp(bladeNodePositions);
+		turb.SetInflowVelocities_Tmp(inflows);
+		// Temporarily update AeroDyn's states to t + dt/2; return reaction forces at t + dt/2
+		rf = turb.UpdateAeroDynStates_Tmp();
+		//---------------------------------------------------------------------
+
+		// Pass temporary nacelle state at t + dt
+		turb.Step3(nstate);
+		turb.GetBladeNodePositions_Tmp(bladeNodePositions);
+		turb.SetInflowVelocities_Tmp(inflows);
+		// Temporarily update AeroDyn's states to t + dt; return reaction forces at t + dt
+		rf = turb.UpdateAeroDynStates_Tmp();
+		//---------------------------------------------------------------------
+
+		// Pass the temporary nacelle state at t + dt ?
+		turb.Step4(nstate);
+		//---------------------------------------------------------------------
+
+		// Pass actual nacelle state at t + dt
+		turb.CompleteStep(nstate);
 		turb.GetBladeNodePositions(bladeNodePositions);
 		turb.SetInflowVelocities(inflows);
-		rf = turb.UpdateAeroDynStates();
-
-		turb.K2(nstate);
-		turb.GetBladeNodePositions(bladeNodePositions);
-		turb.SetInflowVelocities(inflows);
-		rf = turb.UpdateAeroDynStates();
-
-		turb.K3(nstate);
-		turb.GetBladeNodePositions(bladeNodePositions);
-		turb.SetInflowVelocities(inflows);
-		rf = turb.UpdateAeroDynStates();
-
-		turb.K4(nstate);
-
-		// would be passing the nacelle state determined by the weighted average of the K values
-		turb.K_Final(nstate);
-		turb.GetBladeNodePositions_Final(bladeNodePositions);
-		turb.SetInflowVelocities_Final(inflows);
-		rf = turb.UpdateAeroDynStates_Final(); // Perminantely updates AeroDyn's states from t to t
+		// Return reaction forces at t + dt
+		rf = turb.UpdateAeroDynStates(); // Perminantely updates AeroDyn's states from t to t
+		//---------------------------------------------------------------------
 
 		RenderBladeNodes(window, bladeNodePositions, Vector3d(nstate.position), 5.0, totalNodes);
 		
@@ -169,8 +191,10 @@ int main()
 		genSpeedPlot.plot(0.0, turb.GetGeneratorSpeed());
 		genSpeedPlot.draw(window);
 
-		window.display();
+		rotorSpeedPlot.plot(0.0, turb.GetRotorSpeed());
+		rotorSpeedPlot.draw(window);
 
+		window.display();
 
 		time += dt;
 	}

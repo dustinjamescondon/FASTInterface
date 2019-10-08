@@ -50,6 +50,7 @@
     <ClInclude Include="src\ControllerExceptions.h" />
     <ClInclude Include="src\CSVSpecFunction.h" />
     <ClInclude Include="src\DriveTrain.h" />
+    <ClInclude Include="src\FASTTurbineExceptions.h" />
     <ClInclude Include="src\FASTTurbine_Interface.h" />
     <ClInclude Include="src\GenController.h" />
     <ClInclude Include="src\InputFile.h" />

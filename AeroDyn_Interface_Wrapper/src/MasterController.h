@@ -16,8 +16,12 @@ class MasterController
 {
 public:
 	MasterController();
+	MasterController(double bladePitch);
 	MasterController(const char* bladed_dll_fname);
 	MasterController(const char* gen_csv, const char* pitch_param_csv, double cornerFreq, double initGenSpeed);
+
+	// Initialize the controller with a constant rotor speed and blade pitch
+	void Init(double bladePitch);
 
 	// Initialization function for the controllers when using a Bladed-style DLL
 	void Init(const char* bladed_dll_fname);
@@ -30,9 +34,10 @@ public:
 	double GetGeneratorTorqueCommand() const;
 	double GetBladePitchCommand() const;
 private:
-	enum ControllerMode { BLADED_DLL, CSV_TABLES };
+	enum ControllerMode { BLADED_DLL, CSV_TABLES, CONSTANT_SPEED };
 	ControllerMode controlMode;
 
+	double constantBladePitch;
 	LowPassFilter genSpeedLPF;
 	PitchController pitcont;
 	GenController   gencont;

@@ -5,6 +5,11 @@ MasterController::MasterController()
 
 }
 
+MasterController::MasterController(double bladePitch)
+{
+	Init(bladePitch);
+}
+
 MasterController::MasterController(const char* bladed_dll_fname)
 {
 	Init(bladed_dll_fname);
@@ -13,6 +18,13 @@ MasterController::MasterController(const char* bladed_dll_fname)
 MasterController::MasterController(const char* gen_csv_fname, const char* pitch_param_csv_fname, double cornerFreq, double initGenSpeed) 
 {
 	Init(gen_csv_fname, pitch_param_csv_fname, cornerFreq, initGenSpeed);
+}
+
+void MasterController::Init(double bladePitch)
+{
+	controlMode = CONSTANT_SPEED;
+	
+	constantBladePitch = bladePitch;
 }
 
 void MasterController::Init(const char* fname)
@@ -34,43 +46,53 @@ void MasterController::Init(const char* gen_csv, const char* pit_param, double c
 
 void MasterController::UpdateController(double time, double genSpeed, double currBladePitch)
 {
-	if (controlMode == BLADED_DLL)
+	double genSpeedF;
+	switch (controlMode)
 	{
+	case BLADED_DLL:
 		bladedcont.UpdateController(time, currBladePitch, currBladePitch, currBladePitch, genSpeed, 0.0);
-	}
-	else
-	{
+		break;
+	case CSV_TABLES:
 		// Update the Low-Pass Filter
-		double genSpeedF = genSpeedLPF.UpdateEstimate(time, genSpeed);
+		genSpeedF = genSpeedLPF.UpdateEstimate(time, genSpeed);
 
 		// Update the pitch controller 
 		pitcont.Calculate(time, genSpeedF);
 
 		// Don't need to update the gen controller because it doesn't have any internal states
 		// to update; it's just a lookup table
+		break;
+	default:
+		// Nothing to do in this case
+		break;
 	}
 }
 
 double MasterController::GetBladePitchCommand() const
 {
-	if (controlMode == BLADED_DLL)
-	{
+	switch (controlMode) {
+	case BLADED_DLL:
 		return bladedcont.GetBlPitchCommand();
-	}
-	else
-	{
+		break;
+	case CSV_TABLES:
 		return pitcont.GetLastPitchCommand();
+		break;
+	default:
+		return constantBladePitch;
 	}
 }
 
 double MasterController::GetGeneratorTorqueCommand() const
 {
-	if (controlMode == BLADED_DLL)
+	switch (controlMode)
 	{
+	case BLADED_DLL:
 		return bladedcont.GetGenTorqueCommand();
-	}
-	else
-	{
+		break;
+	case CSV_TABLES:
 		return gencont.GetTorque(genSpeedLPF.GetCurrEstimatedValue());
+		break;
+	default:
+		return 0.0;
 	}
 }

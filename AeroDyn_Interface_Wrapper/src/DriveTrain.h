@@ -24,7 +24,12 @@ public:
 	};
 
 	DriveTrain();
+	DriveTrain(double constantRotorSpeed);
 	DriveTrain(double initialRotorSpeed, double gearboxratio);
+
+	void Init(double constantRotorSpeed);
+	void Init(double initialRotorSpeed, double gearboxRatio, double dampingCoeff, double stiffnessCoeff,
+		double rotorMassMOI, double generatorMassMOI);
 
 	// updates states from previous time to "time" using results of previous calls to the RK4 step functions
 	ModelStates UpdateStates();
@@ -45,6 +50,7 @@ public:
 	// Pass torques at time + dt   ; returns temporary states at time + dt
 	ModelStates K4(double dt, double rotorTorque, double genTorque);  
 
+	void SetConstantRotorSpeed(double);
 	void SetInitialRotorSpeed(double);
 	void SetInitialGenSpeed(double);
 	void SetDampingCoeff(double);
@@ -82,6 +88,10 @@ private:
 	struct ModelDStates {
 		DStates gen, rotor;
 	};
+
+	// Dynamic is using ODEs; Constant is just using a constant rotor speed
+	enum Mode { DYNAMIC, CONSTANT };
+	Mode mode;
 
 	// returns the accelerations of both shafts given the states
 	ModelStateDeriv CalcAccelerations(const ModelStates& states, double torque_rotor, double torque_gen) const;

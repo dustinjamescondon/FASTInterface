@@ -22,25 +22,7 @@ etc.
 #pragma once
 
 #include <vector>
-#include <stdexcept>
-
-// exception class for any other AeroDyn error
-class ADError : public std::runtime_error {
-public:
-	inline ADError(const char* errMsg) : std::runtime_error(errMsg) {}
-};
-
-// exception class for when the AeroDyn input file cannot be found
-class ADInputFileNotFound : public std::runtime_error {
-public: 
-	inline ADInputFileNotFound(const char* errMsg) : std::runtime_error(errMsg) {}
-};
-
-// exception class for when the AeroDyn input file has invalid contents
-class ADInputFileContents : public std::runtime_error {
-public:
-	inline ADInputFileContents(const char* errMsg) : std::runtime_error(errMsg) {}
-};
+#include "FASTTurbineExceptions.h"
 
 class AeroDyn_Interface_Wrapper {
 public:

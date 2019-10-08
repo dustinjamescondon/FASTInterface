@@ -160,7 +160,6 @@
     <Library Include="..\Win32\Debug\FASTTurbine_Interface_Debug.lib" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="GeneratorControllerParameters.inp" />
     <None Include="PitchControllerParameters.inp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

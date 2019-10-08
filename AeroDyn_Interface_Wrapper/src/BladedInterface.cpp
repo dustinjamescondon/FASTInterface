@@ -1,5 +1,6 @@
 #include "BladedInterface.h"
 #include <iostream>
+#include "FASTTurbineExceptions.h"
 
 BladedInterface::BladedInterface() 
 {
@@ -10,7 +11,8 @@ BladedInterface::BladedInterface()
 
 BladedInterface::~BladedInterface()
 {
-	FreeLibrary(hInstance);
+	if(hInstance)
+		FreeLibrary(hInstance);
 }
 
 
@@ -19,16 +21,19 @@ void BladedInterface::Init(const char* fname)
 	// Link to the DLL
 	hInstance = LoadLibraryA(fname);
 
-	if (!hInstance)
-	{
-		std::cout << "Couldn't read file" << std::endl;
-		exit(1);
+	if (!hInstance) {
+		// Throw exception
+		std::string errMsg;
+		errMsg = "Could not load DLL file, " + std::string(fname);
+		throw BladedDLLNotFoundException(errMsg.c_str());
 	}
 
+	// Get function address
 	DISCON = (f_ptr)GetProcAddress(hInstance, "DISCON");
 
 	if (!DISCON) {
-		std::cout << "Couldn't find function" << std::endl;
+		// Throw exception
+		throw BladedDLLProcedureNotFoundException("Could not load the DISCON procedure from the controller DLL");
 	}
 }
 
