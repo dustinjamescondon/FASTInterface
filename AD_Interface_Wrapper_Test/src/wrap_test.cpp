@@ -145,39 +145,37 @@ int main()
 
 		//---------------------------------------------------------------------
 		// Pass temporary nacelle state at t + dt/2
-		turb.Step1(nstate, time, dt);
-		turb.GetBladeNodePositions_Tmp(bladeNodePositions);
-		turb.SetInflowVelocities_Tmp(inflows);
+		turb.Step1_Begin(nstate, time, dt);
+		turb.GetBladeNodePositions(bladeNodePositions);
+		turb.SetInflowVelocities(inflows);
 		// Temporarily update AeroDyn's state to t + dt/2; return reaction forces at t + dt/2
-		rf = turb.UpdateAeroDynStates_Tmp();
+		rf = turb.Step1_End();
 		//---------------------------------------------------------------------
 
 		// Pass temporary nacelle state at t + dt/2
-		turb.Step2(nstate);
-		turb.GetBladeNodePositions_Tmp(bladeNodePositions);
-		turb.SetInflowVelocities_Tmp(inflows);
+		turb.Step2_Begin(nstate);
+		turb.GetBladeNodePositions(bladeNodePositions);
+		turb.SetInflowVelocities(inflows);
 		// Temporarily update AeroDyn's states to t + dt/2; return reaction forces at t + dt/2
-		rf = turb.UpdateAeroDynStates_Tmp();
+		rf = turb.Step2_End();
 		//---------------------------------------------------------------------
 
 		// Pass temporary nacelle state at t + dt
-		turb.Step3(nstate);
-		turb.GetBladeNodePositions_Tmp(bladeNodePositions);
-		turb.SetInflowVelocities_Tmp(inflows);
+		turb.Step3_Begin(nstate);
+		turb.GetBladeNodePositions(bladeNodePositions);
+		turb.SetInflowVelocities(inflows);
 		// Temporarily update AeroDyn's states to t + dt; return reaction forces at t + dt
-		rf = turb.UpdateAeroDynStates_Tmp();
+		rf = turb.Step3_End();
 		//---------------------------------------------------------------------
 
-		// Pass the temporary nacelle state at t + dt ?
-		turb.Step4(nstate);
-		//---------------------------------------------------------------------
-
-		// Pass actual nacelle state at t + dt
-		turb.CompleteStep(nstate);
+		// Pass the actual nacelle motion at t + dt
+		turb.Step4_Begin(nstate);
 		turb.GetBladeNodePositions(bladeNodePositions);
 		turb.SetInflowVelocities(inflows);
 		// Return reaction forces at t + dt
-		rf = turb.UpdateAeroDynStates(); // Perminantely updates AeroDyn's states from t to t
+		rf = turb.Step4_End(); // Perminantely updates AeroDyn's states from t to t
+
+		turb.GetForce(force.data());
 		//---------------------------------------------------------------------
 
 		RenderBladeNodes(window, bladeNodePositions, Vector3d(nstate.position), 5.0, totalNodes);
@@ -195,6 +193,8 @@ int main()
 		rotorSpeedPlot.draw(window);
 
 		window.display();
+
+		std::cout << force[2] << std::endl;
 
 		time += dt;
 	}

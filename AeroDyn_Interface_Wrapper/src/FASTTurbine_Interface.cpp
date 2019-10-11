@@ -21,6 +21,9 @@ public:
 		Vector3d position, velocity, orientation, angularVel;
 	};
 
+	PImp();
+	NacelleReactionForces UpdateAeroDynStates();
+	NacelleReactionForces UpdateAeroDynStates_Tmp();
 	HubMotion CalculateHubMotion(const NacelleMotion&, const DriveTrain::States&);
 	Vector3d TransformHubToNacelle(const Vector3d& v, const Matrix3d& nacelleOrienation, const Matrix3d& hubOrienation);
 
@@ -31,8 +34,14 @@ public:
 	DriveTrain				  drivetrain;
 	DriveTrain::ModelStates   dt_resultStates;
 	MasterController		  mcont;
-	bool usingConstantRotorVel;
+	int currentStep;
 };
+
+FASTTurbineModel::PImp::PImp()
+{
+	time = dt = 0.0;
+	currentStep = 0;
+}
 
 FASTTurbineModel::FASTTurbineModel() : p_imp(new PImp)
 {
@@ -116,8 +125,10 @@ void FASTTurbineModel::InitInflows(const std::vector<double>& inflows)
 }
 
 // Pass the nacelle state at t + dt/2; begins calculation of temporary states at t + dt/2
-void FASTTurbineModel::Step1(const FASTTurbineModel::NacelleMotion& s, double time, double dt)
+void FASTTurbineModel::Step1_Begin(const FASTTurbineModel::NacelleMotion& s, double time, double dt)
 {
+	p_imp->currentStep = 1;
+
 	// Save the current time and the total time-step length for use in the proceeding K functions
 	p_imp->time = time;
 	p_imp->dt = dt;
@@ -141,13 +152,20 @@ void FASTTurbineModel::Step1(const FASTTurbineModel::NacelleMotion& s, double ti
 		hm.angularVel.data(), bladePitch, false);
 }
 
-// Pass nacelle state at t + dt/2; begins calculation of temporary states at t + dt/2
-void FASTTurbineModel::Step2(const FASTTurbineModel::NacelleMotion& s)
+FASTTurbineModel::NacelleReactionForces FASTTurbineModel::Step1_End()
 {
+	return p_imp->UpdateAeroDynStates_Tmp();
+}
+
+// Pass the nacelle state x + (1/2)*f(x + K1/2)*dt; begins process which will eventually return temporary nacelle reaction forces at t + dt/2
+void FASTTurbineModel::Step2_Begin(const FASTTurbineModel::NacelleMotion& s)
+{
+	p_imp->currentStep = 2;
+
 	double bladePitch = p_imp->mcont.GetBladePitchCommand();
 	double genTorque = p_imp->mcont.GetGeneratorTorqueCommand();
 
-	// Save drivetrain states for call to K3
+	// Save drivetrain states for call to 
 	p_imp->dt_resultStates = p_imp->drivetrain.K2(p_imp->dt, p_imp->aerodyn.GetTorque(), genTorque);
 
 	FASTTurbineModel::PImp::HubMotion hm = p_imp->CalculateHubMotion(s, p_imp->dt_resultStates.rotor);
@@ -156,10 +174,16 @@ void FASTTurbineModel::Step2(const FASTTurbineModel::NacelleMotion& s)
 		hm.angularVel.data(), bladePitch, false);
 }
 
-// Pass nacelle state at t + dt; begins calculation of temporary states at t + dt
-void FASTTurbineModel::Step3(const FASTTurbineModel::NacelleMotion& s)
+
+FASTTurbineModel::NacelleReactionForces FASTTurbineModel::Step2_End()
 {
-	//double filteredGenSpeed = genSpeedLPF.CalcEstimation(dt_resultStates.gen.vel, 0.5 * dt);
+	return p_imp->UpdateAeroDynStates_Tmp();
+}
+
+// Pass nacelle state at t + dt; begins calculation of temporary states at t + dt
+void FASTTurbineModel::Step3_Begin(const FASTTurbineModel::NacelleMotion& s)
+{
+	p_imp->currentStep = 3;
 
 	double bladePitch = p_imp->mcont.GetBladePitchCommand();
 	double genTorque = p_imp->mcont.GetGeneratorTorqueCommand();
@@ -172,54 +196,68 @@ void FASTTurbineModel::Step3(const FASTTurbineModel::NacelleMotion& s)
 		hm.angularVel.data(), bladePitch, false);
 }
 
-// Pass nacelle state at
-void FASTTurbineModel::Step4(const FASTTurbineModel::NacelleMotion& s)
+// Returns temporary nacelle reaction forces at t + dt
+FASTTurbineModel::NacelleReactionForces FASTTurbineModel::Step3_End()
 {
-	double genTorque = p_imp->mcont.GetGeneratorTorqueCommand();
-
-	p_imp->dt_resultStates = p_imp->drivetrain.K4(p_imp->dt, p_imp->aerodyn.GetTorque(), genTorque);
-
-	// Don't need to UpdateStates in AeroDyn... ( I don't think so right now at least )
+	return p_imp->UpdateAeroDynStates_Tmp();
 }
 
-// Pass actual nacelle states at t + dt
-void FASTTurbineModel::CompleteStep(const FASTTurbineModel::NacelleMotion& nac_states)
+// Pass nacelle motion at t + dt
+void FASTTurbineModel::Step4_Begin(const FASTTurbineModel::NacelleMotion& s)
 {
+	p_imp->currentStep = 4;
+
+	double bladePitch = p_imp->mcont.GetBladePitchCommand();
+	double genTorque = p_imp->mcont.GetGeneratorTorqueCommand();
+
+	// Could call this in the last line of Step4_End(); which place would be better?
+	p_imp->drivetrain.K4(p_imp->dt, p_imp->aerodyn.GetTorque(), genTorque);
+	
 	// Calculate final drive train states, saving them
 	DriveTrain::ModelStates dt_states = p_imp->drivetrain.UpdateStates();
 
 	// --Use both nacelle states and drivetrain states to update AeroDyn--
-	FASTTurbineModel::PImp::HubMotion hm = p_imp->CalculateHubMotion(nac_states, dt_states.rotor);
-
-	double bladePitch = p_imp->mcont.GetBladePitchCommand();
+	FASTTurbineModel::PImp::HubMotion hm = p_imp->CalculateHubMotion(s, dt_states.rotor);
 
 	p_imp->aerodyn.SetHubMotion(p_imp->time + p_imp->dt, hm.position.data(), hm.orientation.data(), hm.velocity.data(),
 		hm.angularVel.data(), bladePitch, true);
 }
 
-void FASTTurbineModel::GetBladeNodePositions(std::vector<double>& p)
+// 
+FASTTurbineModel::NacelleReactionForces FASTTurbineModel::Step4_End()
 {
-	p_imp->aerodyn.GetBladeNodePositions(p, true);
+	return p_imp->UpdateAeroDynStates();
 }
 
-void FASTTurbineModel::GetBladeNodePositions_Tmp(std::vector<double>& p)
+void FASTTurbineModel::GetBladeNodePositions(std::vector<double>& p)
 {
-	p_imp->aerodyn.GetBladeNodePositions(p, false);
+	// If current step is 0, then we've just initialized, so report the node positions
+	// from the true AeroDyn states
+	// If current step is 4, then we're at  the final step, so perform real states update in 
+	// AeroDyn
+	if (p_imp->currentStep == 4 || p_imp->currentStep == 0) { 
+		p_imp->aerodyn.GetBladeNodePositions(p, true);
+	}
+	// If we aren't at step 4, then we are doing temporary updates to AeroDyn,
+	// to coordinate with the RK4 integration of the drive train states.
+	if (p_imp->currentStep < 4) {
+		p_imp->aerodyn.GetBladeNodePositions(p, false);
+	}
 }
 
 void FASTTurbineModel::SetInflowVelocities(const std::vector<double>& inflows)
-{
-	p_imp->aerodyn.SetInflowVelocities(inflows, true);
-}
-
-void FASTTurbineModel::SetInflowVelocities_Tmp(const std::vector<double>& inflows)
-{
-	p_imp->aerodyn.SetInflowVelocities(inflows, false);
+{ 
+	if (p_imp->currentStep == 4 || p_imp->currentStep == 0) {
+		p_imp->aerodyn.SetInflowVelocities(inflows, true);
+	}
+	if (p_imp->currentStep < 4) {
+		p_imp->aerodyn.SetInflowVelocities(inflows, false);
+	}
 }
 
 // This temporarily updates AeroDyn's states and returns the reaction forces and other results from the 
 // step.
-FASTTurbineModel::NacelleReactionForces FASTTurbineModel::UpdateAeroDynStates_Tmp()
+FASTTurbineModel::NacelleReactionForces FASTTurbineModel::PImp::UpdateAeroDynStates_Tmp()
 {
 	double force[3];
 	double moment[3];
@@ -228,15 +266,15 @@ FASTTurbineModel::NacelleReactionForces FASTTurbineModel::UpdateAeroDynStates_Tm
 	double massMat[6][6];
 	double addedMassMat[6][6];
 
-	p_imp->aerodyn.UpdateStates(force, moment, &power, &tsr, massMat, addedMassMat, false);
+	aerodyn.UpdateStates(force, moment, &power, &tsr, massMat, addedMassMat, false);
 
 	// the force and moment in the hub coordinate system
 	Vector3d force_vec(force);
 	Vector3d moment_vec(moment);
 
 	// the force and moment in the nacelle coordinate system
-	Vector3d trans_force_vec = p_imp->TransformHubToNacelle(force_vec, p_imp->nacelleOrient, p_imp->hubOrient);
-	Vector3d trans_moment_vec = p_imp->TransformHubToNacelle(moment_vec, p_imp->nacelleOrient, p_imp->hubOrient);
+	Vector3d trans_force_vec = TransformHubToNacelle(force_vec, nacelleOrient, hubOrient);
+	Vector3d trans_moment_vec = TransformHubToNacelle(moment_vec, nacelleOrient, hubOrient);
 
 	NacelleReactionForces r;
 	r.power = power;
@@ -248,7 +286,7 @@ FASTTurbineModel::NacelleReactionForces FASTTurbineModel::UpdateAeroDynStates_Tm
 }
 
 // Updates AeroDyn's state up to time + dt and will return the forces and moments at that time
-FASTTurbineModel::NacelleReactionForces FASTTurbineModel::UpdateAeroDynStates()
+FASTTurbineModel::NacelleReactionForces FASTTurbineModel::PImp::UpdateAeroDynStates()
 {
 	double force[3];
 	double moment[3];
@@ -257,7 +295,7 @@ FASTTurbineModel::NacelleReactionForces FASTTurbineModel::UpdateAeroDynStates()
 	double massMat[6][6];
 	double addedMassMat[6][6];
 
-	p_imp->aerodyn.UpdateStates(force, moment, &power, &tsr, massMat, addedMassMat, true);
+	aerodyn.UpdateStates(force, moment, &power, &tsr, massMat, addedMassMat, true);
 
 	// For now just return the force and moment as is without doing any other calculations
 	// Note these forces are therefore in the hub coordinate system.
@@ -265,8 +303,8 @@ FASTTurbineModel::NacelleReactionForces FASTTurbineModel::UpdateAeroDynStates()
 	Vector3d force_vec(force);
 	Vector3d moment_vec(moment);
 
-	Vector3d trans_force_vec = p_imp->TransformHubToNacelle(force_vec, p_imp->nacelleOrient, p_imp->hubOrient);
-	Vector3d trans_moment_vec = p_imp->TransformHubToNacelle(moment_vec, p_imp->nacelleOrient, p_imp->hubOrient);
+	Vector3d trans_force_vec = TransformHubToNacelle(force_vec, nacelleOrient, hubOrient);
+	Vector3d trans_moment_vec = TransformHubToNacelle(moment_vec, nacelleOrient, hubOrient);
 
 	NacelleReactionForces r;
 	r.power = power;
@@ -307,6 +345,10 @@ double FASTTurbineModel::GetRotorSpeed() const
 	return p_imp->drivetrain.GetRotorShaftSpeed();
 }
 
+// All three of GetForce, GetMoment, and GetAerodynamicTorque get their values from member
+// variables in AeroDyn_Interface. The value returned is the last value 
+// returned by AeroDyn, whether it be from a real step or a temporary step for the RK4 
+// integration.
 double FASTTurbineModel::GetAerodynamicTorque() const
 {
 	return p_imp->aerodyn.GetTorque();
@@ -317,10 +359,12 @@ void FASTTurbineModel::GetForce(double v[3]) const
 	memcpy(v, p_imp->nacelleForce.data(), 3 * sizeof(double));
 }
 
+// The x component of the moment is equal to the aerodynamic torque
 void FASTTurbineModel::GetMoment(double v[3]) const
 {
 	memcpy(v, p_imp->nacelleMoment.data(), 3 * sizeof(double));
 }
+
 
 Vector3d FASTTurbineModel::PImp::TransformHubToNacelle(const Vector3d& v, const Matrix3d& nacelleOri,
 	const Matrix3d& hubOri)

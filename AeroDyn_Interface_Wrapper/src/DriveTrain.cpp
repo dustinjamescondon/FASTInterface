@@ -125,9 +125,9 @@ DriveTrain::ModelStates DriveTrain::K3(double dt, double rotor_torque, double ge
 }
 
 // input torques at t + dt; returns temporary states at t + dt (not really needed)
-DriveTrain::ModelStates DriveTrain::K4(double dt, double rotor_torque, double gen_torque)
+void DriveTrain::K4(double dt, double rotor_torque, double gen_torque)
 {
-	return K(3, dt, 1.0, result_k[2], rotor_torque, gen_torque);
+	K(3, dt, 1.0, result_k[2], rotor_torque, gen_torque);
 }
 
 // Call this only after all K functions have been called in order

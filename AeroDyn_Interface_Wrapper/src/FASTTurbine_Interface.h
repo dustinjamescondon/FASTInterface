@@ -60,30 +60,26 @@ public:
 
 	DECLDIR void InitInflows(const std::vector<double>&);
 
-	// Pass the nacelle state at t + dt/2; begins process which will eventually return temporary nacelle reaction forces at t + dt/2
-	DECLDIR void Step1(const NacelleMotion&, double time, double dt);
-	// Pass the nacelle state at t + dt/2; begins process which will eventually return temporary nacelle reaction forces at t + dt/2
-	DECLDIR void Step2(const NacelleMotion&);
-	// Pass the nacelle state at t + dt  ; begins process which will eventually return temporary nacelle reaction forces at t + dt
-	DECLDIR void Step3(const NacelleMotion&);
-	// Pass the actual nacelle state at t + dt  
-	DECLDIR void Step4(const NacelleMotion&);
+	// Pass the nacelle state x + (1/2)*f(x)*dt; begins process which will eventually return temporary nacelle reaction forces at t + dt/2
+	DECLDIR void Step1_Begin(const NacelleMotion&, double time, double dt);
+	DECLDIR NacelleReactionForces Step1_End();
 
-	// Call these after each call to a K 1, 2, 3, & 4
-	DECLDIR void GetBladeNodePositions_Tmp(std::vector<double>&);
-	DECLDIR void SetInflowVelocities_Tmp(const std::vector<double>&);
-	DECLDIR NacelleReactionForces UpdateAeroDynStates_Tmp();
+	// Pass the nacelle state x + (1/2)*f(x + K1/2)*dt; begins process which will eventually return temporary nacelle reaction forces at t + dt/2
+	DECLDIR void Step2_Begin(const NacelleMotion&);
+	DECLDIR NacelleReactionForces Step2_End();
 
-	// Final update functions
-	// Pass the actual nacelle state at t + dt
-	DECLDIR void CompleteStep(const NacelleMotion& s);
+	// Pass the nacelle state x + f(x + K2/2)*dt; begins process which will eventually return temporary nacelle reaction forces at t + dt
+	DECLDIR void Step3_Begin(const NacelleMotion&);
+	DECLDIR NacelleReactionForces Step3_End();
+
+	// Pass the nacelle motion at t + dt;   
+	DECLDIR void Step4_Begin(const NacelleMotion&);
+	DECLDIR NacelleReactionForces Step4_End();
+
 	// Sets the pass-by-reference parameters with the blade node positions
 	DECLDIR void GetBladeNodePositions(std::vector<double>&);
-	// Sets sets the actual inflow velocities at t + dt
+	// Sets sets the inflow velocities at t + dt
 	DECLDIR void SetInflowVelocities(const std::vector<double>&);
-	// Permanently updates AeroDyn's states from t to t + dt, returning the reaction forces
-	// and other results in the nacelle coordinate system
-	DECLDIR NacelleReactionForces UpdateAeroDynStates();
 
 	// Returns the total number of nodes 
 	DECLDIR int GetNumNodes() const;

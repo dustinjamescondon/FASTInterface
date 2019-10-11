@@ -48,7 +48,7 @@ public:
 	ModelStates K3(double dt, double rotorTorque, double genTorque);
 
 	// Pass torques at time + dt   ; returns temporary states at time + dt
-	ModelStates K4(double dt, double rotorTorque, double genTorque);  
+	void K4(double dt, double rotorTorque, double genTorque);  
 
 	void SetConstantRotorSpeed(double);
 	void SetInitialRotorSpeed(double);
