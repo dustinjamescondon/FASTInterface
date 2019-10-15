@@ -254,8 +254,8 @@ void AeroDyn_Interface_Wrapper::SetInflowVelocities(const std::vector<double>& i
 }
 
 void AeroDyn_Interface_Wrapper::UpdateStates(
-	double force_out[3],
-	double moment_out[3],
+	double* force_out,
+	double* moment_out,
 	double* power_out,
 	double* tsr_out,
 	double massMatrix_out[6][6],

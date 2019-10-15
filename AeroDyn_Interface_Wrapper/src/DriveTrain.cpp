@@ -50,7 +50,7 @@ void DriveTrain::Init(double initialRotorSpeed, double gbr, double damping, doub
 }
 
 // Calculates the accelerations given the states s
-DriveTrain::ModelStateDeriv DriveTrain::CalcAccelerations(const ModelStates& s, double torque_rotor, double torque_gen) const
+DriveTrain::ModelStateDeriv DriveTrain::CalcDeriv(const ModelStates& s, double torque_rotor, double torque_gen) const
 {
 	DriveTrain::ModelStateDeriv result;
 
@@ -75,15 +75,23 @@ DriveTrain::ModelStateDeriv DriveTrain::CalcAccelerations(const ModelStates& s, 
 		result.genAcc /= gen_moi;  // all over gen_moi
 	}
 
-
 	return result;
 }
 
+void DriveTrain::SetStates(const DriveTrain::ModelStates& s)
+{
+	states = s;
+}
+
+DriveTrain::ModelStates DriveTrain::GetStates() const
+{
+	return states;
+}
 
 // Base states are the states for which the accelerations are calculated
 DriveTrain::ModelStates DriveTrain::K(int i, double dt, double dState_coeff, const ModelStates& base_states, double rotor_torque, double gen_torque)
 {
-	ModelStateDeriv deriv = CalcAccelerations(base_states, rotor_torque, gen_torque);
+	ModelStateDeriv deriv = CalcDeriv(base_states, rotor_torque, gen_torque);
 	ModelStates result;
 
 	/* calculate rotor shaft states */
@@ -178,7 +186,7 @@ DriveTrain::ModelStates DriveTrain::UpdateStates(double dt, double rotor_torque,
 
 	// If the torque isn't going to change through the whole step, then this isn't any different than the broken
 	// down version with K 1 through 4.
-	ModelStateDeriv deriv = CalcAccelerations(states, rotor_torque, gen_torque);
+	ModelStateDeriv deriv = CalcDeriv(states, rotor_torque, gen_torque);
 
 	K1(dt, rotor_torque, gen_torque);
 	K2(dt, rotor_torque, gen_torque);

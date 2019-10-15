@@ -24,7 +24,7 @@ int main()
 	//-------------------------
 	// Simulation parameters
 	static const double EndTime = 40.0;
-	static const double dt = 0.01;
+	static const double dt = 0.0015;
 	static const int NSteps = (int)(EndTime / dt);
 
 	static const double InflowSpeed = 10.0;    // in metres/sec
@@ -36,7 +36,7 @@ int main()
 	static const double DriveTrainStiffness = 867637000.0;  // "
 	static const double GenMOI = 534.116;					// "
 	static const double LPFCornerFreq = 1.570796;			// "
-	static const double RotorMOI = 38829739.1;				// Used parallel axis theorem to calculate this using NREL's specification of MOI relative to root.
+	static const double RotorMOI = 38829739.1;				// " (Used parallel axis theorem to calculate this using NREL's specification of MOI relative to root)
 
 
 	//-------------------------
@@ -144,38 +144,10 @@ int main()
 		FASTTurbineModel::NacelleReactionForces rf;
 
 		//---------------------------------------------------------------------
-		// Pass temporary nacelle state at t + dt/2
-		turb.Step1_Begin(nstate, time, dt);
+		turb.SetNacelleStates(time, nstate, true);
 		turb.GetBladeNodePositions(bladeNodePositions);
 		turb.SetInflowVelocities(inflows);
-		// Temporarily update AeroDyn's state to t + dt/2; return reaction forces at t + dt/2
-		rf = turb.Step1_End();
-		//---------------------------------------------------------------------
-
-		// Pass temporary nacelle state at t + dt/2
-		turb.Step2_Begin(nstate);
-		turb.GetBladeNodePositions(bladeNodePositions);
-		turb.SetInflowVelocities(inflows);
-		// Temporarily update AeroDyn's states to t + dt/2; return reaction forces at t + dt/2
-		rf = turb.Step2_End();
-		//---------------------------------------------------------------------
-
-		// Pass temporary nacelle state at t + dt
-		turb.Step3_Begin(nstate);
-		turb.GetBladeNodePositions(bladeNodePositions);
-		turb.SetInflowVelocities(inflows);
-		// Temporarily update AeroDyn's states to t + dt; return reaction forces at t + dt
-		rf = turb.Step3_End();
-		//---------------------------------------------------------------------
-
-		// Pass the actual nacelle motion at t + dt
-		turb.Step4_Begin(nstate);
-		turb.GetBladeNodePositions(bladeNodePositions);
-		turb.SetInflowVelocities(inflows);
-		// Return reaction forces at t + dt
-		rf = turb.Step4_End(); // Perminantely updates AeroDyn's states from t to t
-
-		turb.GetForce(force.data());
+		rf = turb.UpdateStates();
 		//---------------------------------------------------------------------
 
 		RenderBladeNodes(window, bladeNodePositions, Vector3d(nstate.position), 5.0, totalNodes);
@@ -193,8 +165,6 @@ int main()
 		rotorSpeedPlot.draw(window);
 
 		window.display();
-
-		std::cout << force[2] << std::endl;
 
 		time += dt;
 	}

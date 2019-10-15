@@ -11,7 +11,7 @@
 
 struct HubMotion;
 
-// includes drivetrain model and external generator and pitch controller
+// Includes drivetrain model and external generator and pitch controller
 class FASTTurbineModel
 {
 public:
@@ -45,9 +45,13 @@ public:
 
 	// Must initialize one of the controller types second
 	// (Bladed-style DLL controller initialization)
-	DECLDIR void InitControllers(const char* blade_dll_fname);
+	// \bladed_dll_fname: the filename and path to the bladed-style DLL
+	DECLDIR void InitControllers(const char* bladed_dll_fname);
 
 	// (Input file specified generator and pitch controllers)
+	// \gen_csv: filename and path to the csv data file that defines the generator controller
+	// \pit_fname:  the filename for the pitch controller input file
+	// \lpfCornerFreq: the constant for the low-pass filter 
 	DECLDIR void InitControllers(const char* gen_csv, const char* pit_fname, double lpfCornerFreq);
 
 	// Must initialize AeroDyn last. This is becaues AeroDyn's initialization requires the rotor speed 
@@ -60,43 +64,47 @@ public:
 
 	DECLDIR void InitInflows(const std::vector<double>&);
 
-	// Pass the nacelle state x + (1/2)*f(x)*dt; begins process which will eventually return temporary nacelle reaction forces at t + dt/2
-	DECLDIR void Step1_Begin(const NacelleMotion&, double time, double dt);
-	DECLDIR NacelleReactionForces Step1_End();
-
-	// Pass the nacelle state x + (1/2)*f(x + K1/2)*dt; begins process which will eventually return temporary nacelle reaction forces at t + dt/2
-	DECLDIR void Step2_Begin(const NacelleMotion&);
-	DECLDIR NacelleReactionForces Step2_End();
-
-	// Pass the nacelle state x + f(x + K2/2)*dt; begins process which will eventually return temporary nacelle reaction forces at t + dt
-	DECLDIR void Step3_Begin(const NacelleMotion&);
-	DECLDIR NacelleReactionForces Step3_End();
-
-	// Pass the nacelle motion at t + dt;   
-	DECLDIR void Step4_Begin(const NacelleMotion&);
-	DECLDIR NacelleReactionForces Step4_End();
+	// Begin a simulation step up to time
+	// \time: the time to update to
+	// \nacelleMotion: the state of the nacelle at \time
+	// \isRealStep: if true, the turbines states will be permanently updated to \time; if false, 
+	//              the turbines states will only be temporarily updated to \time so the reaction forces
+	//              at \time can be reported
+	DECLDIR void SetNacelleStates(double time, const NacelleMotion&, bool isRealStep = true);
 
 	// Sets the pass-by-reference parameters with the blade node positions
 	DECLDIR void GetBladeNodePositions(std::vector<double>&);
+
 	// Sets sets the inflow velocities at t + dt
 	DECLDIR void SetInflowVelocities(const std::vector<double>&);
 
+	// If isRealStep was true for SetNacelleStates, then this doesn't update states permanently
+	DECLDIR NacelleReactionForces UpdateStates();
+
+	// Returns these values based on the last call to UpdateStates
+	DECLDIR double GetAerodynamicTorque() const;
+
+	DECLDIR void GetForce(double[3]) const;
+
+	DECLDIR void GetMoment(double[3]) const;
+
 	// Returns the total number of nodes 
 	DECLDIR int GetNumNodes() const;
+
 	// Returns the number of blades for the turbine loaded from the AeroDyn input file
 	DECLDIR int GetNumBlades() const;
+
 	// Returns the current blade pitch
 	DECLDIR double GetBladePitch() const;
+
 	// Returns the current generator torque
 	DECLDIR double GetGeneratorTorque() const;
+
 	// Returns the current generator shaft speed from the drive train
 	DECLDIR double GetGeneratorSpeed() const;
+
 	// Returns the current rotor shaft speed from the drive train
 	DECLDIR double GetRotorSpeed() const;
-	
-	DECLDIR double GetAerodynamicTorque() const;
-	DECLDIR void GetForce(double[3]) const;
-	DECLDIR void GetMoment(double[3]) const;
 
 private:
 	// Pointer to implementation class to hide implementation

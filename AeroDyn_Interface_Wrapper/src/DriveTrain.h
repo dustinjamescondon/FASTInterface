@@ -23,6 +23,11 @@ public:
 		States rotor, gen;
 	};
 
+	struct ModelStateDeriv {
+		double rotorAcc;
+		double genAcc;
+	};
+
 	DriveTrain();
 	DriveTrain(double constantRotorSpeed);
 	DriveTrain(double initialRotorSpeed, double gearboxratio);
@@ -34,9 +39,20 @@ public:
 	// updates states from previous time to "time" using results of previous calls to the RK4 step functions
 	ModelStates UpdateStates();
 
-	// Updates states from previous time to "time" using RK4 method without using results from RK4 step functions
+	// Loose coupling function which updates states from previous time to "time" using RK4 method without using results from RK4 step functions
 	// Assumes that the torques are constant for the whole time-step
 	ModelStates UpdateStates(double dt, double rotor_torque, double generator_torque);
+
+	ModelStates UpdateStates(double dt, double rotor_torque, double generator_torque, bool isRealStep);
+
+	// returns the current states
+	ModelStates GetStates() const;
+
+	void SetStates(const ModelStates&);
+
+	// returns the accelerations of both shafts given the states
+	ModelStateDeriv CalcDeriv(const ModelStates& states, double torque_rotor, double torque_gen) const;
+
 
 	// Pass torques at current time; returns temporary states at time + dt/2
 	ModelStates K1(double dt, double rotorTorque, double genTorque);
@@ -61,6 +77,7 @@ public:
 
 	ModelStates GetModelStates() const;
 
+
 	States GetRotorStates() const;
 	double GetRotorShaftSpeed() const;  // radians/sec
 	double GetRotorShaftTheta() const;  // radians
@@ -72,11 +89,6 @@ public:
 	double GetGenShaftAcc()   const;    // radians/sec^2
 
 private:
-
-	struct ModelStateDeriv {
-	  double rotorAcc;
-	  double genAcc;
-	};
 
 	// By D I mean the different between the value at t and t + dt for some dt
 	// Holds the increment in each value for the final RK4 average
@@ -93,9 +105,6 @@ private:
 	enum Mode { DYNAMIC, CONSTANT };
 	Mode mode;
 
-	// returns the accelerations of both shafts given the states
-	ModelStateDeriv CalcAccelerations(const ModelStates& states, double torque_rotor, double torque_gen) const;
-	
 	// The core code of each K function with parameters for their differences
 	ModelStates K(int i, double dt, double dState_coeff, const ModelStates& _states, double rotor_torque, double gen_torque);
 	
