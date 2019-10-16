@@ -24,7 +24,7 @@ int main()
 	//-------------------------
 	// Simulation parameters
 	static const double EndTime = 40.0;
-	static const double dt = 0.0015;
+	static const double dt = 0.015;
 	static const int NSteps = (int)(EndTime / dt);
 
 	static const double InflowSpeed = 10.0;    // in metres/sec
@@ -43,18 +43,13 @@ int main()
 	// Local variables
 	double time = 0.0;
 
-	// create an axis-angle angular velocity using the x basis in global coordinate system
 	std::vector<double> inflows;
 	std::vector<double> bladeNodePositions;
 
 	int totalNodes = 0;
 	//--------------------------
 	// Outputs from turbine
-	Vector3d force, moment;
-	double bladePitch = 0.0;
-	double power;
-	double tsr;
-	double turbineDiameter;
+	FASTTurbineModel::NacelleReactionForces rf;
 
 	//--------------------------
 	// Initialization
@@ -73,8 +68,9 @@ int main()
 	nstate.angularVel[1] = 0.0;
 	nstate.angularVel[2] = 0.0;
 
-	nstate.eulerAngles[0] = nstate.eulerAngles[1] = 0.0;
-	nstate.eulerAngles[2] = 0.0;
+	nstate.eulerAngles[0] = 0.0;
+	nstate.eulerAngles[1] = 0.0;
+	nstate.eulerAngles[2] = M_PI_4;
 
 	nstate.position[0] = 0.0;
 	nstate.position[1] = nstate.position[2] = 75.0;
@@ -82,9 +78,9 @@ int main()
 	nstate.velocity[0] = nstate.velocity[1] = nstate.velocity[2] = 0.0;
 
 	try {
-		turb.InitDriveTrain(RotorMOI, GenMOI, DriveTrainStiffness, DriveTrainDamping, GearboxRatio, InitialRotorSpeed);
-		turb.InitControllers("Discon.dll");
-		//turb.InitWithConstantRotorSpeedAndPitch(InitialRotorSpeed, 0.0);
+		//turb.InitDriveTrain(RotorMOI, GenMOI, DriveTrainStiffness, DriveTrainDamping, GearboxRatio, InitialRotorSpeed);
+		//turb.InitControllers("Discon.dll");
+		turb.InitWithConstantRotorSpeedAndPitch(InitialRotorSpeed, 0.0);
 		turb.InitAeroDyn("C:/Users/dusti/Documents/Work/PRIMED/inputfiles/ad_interface_example2.inp", FluidDensity, KinematicFluidVisc,
 			nstate);
 	}
@@ -113,6 +109,8 @@ int main()
 		return 0;
 	}
 
+	double turbineDiam = turb.GetTurbineDiameter();
+
 	totalNodes = turb.GetNumNodes();
 
 	// now we know the total number of nodes, so allocate accordingly
@@ -122,7 +120,7 @@ int main()
 	// get hub positions from AD and then use then to find new inflows
 
 	// But for this test, just have a constant inflow
-	// create a steady flow situation in +x direction
+	// create a steady flow in +x direction
 	GenerateInflowVelocities(bladeNodePositions, totalNodes, InflowSpeed, inflows);
 
 	turb.InitInflows(inflows);
@@ -140,8 +138,6 @@ int main()
 				return 0;
 			}
 		}
-		// The reaction forces structure
-		FASTTurbineModel::NacelleReactionForces rf;
 
 		//---------------------------------------------------------------------
 		turb.SetNacelleStates(time, nstate, true);

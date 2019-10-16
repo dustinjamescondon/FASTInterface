@@ -157,7 +157,12 @@
     <ClInclude Include="src\TimePlot.h" />
   </ItemGroup>
   <ItemGroup>
-    <Library Include="..\Win32\Debug\FASTTurbine_Interface_Debug.lib" />
+    <Library Include="..\Release\FASTTurbine_Interface_Release.lib">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+    </Library>
+    <Library Include="..\Win32\Debug\FASTTurbine_Interface_Debug.lib">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+    </Library>
   </ItemGroup>
   <ItemGroup>
     <None Include="PitchControllerParameters.inp" />

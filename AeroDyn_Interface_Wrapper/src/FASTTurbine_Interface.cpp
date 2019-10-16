@@ -70,7 +70,7 @@ FASTTurbineModel::PImp::HubMotion FASTTurbineModel::PImp::CalculateHubMotion(con
 	// Create rotation matrix for the rotor angle
 	Matrix3d rotorRotation = EulerConstruct(Vector3d(rs.theta, 0.0, 0.0));
 
-	// Combine the two rotation matrices (this is kinda indirect - maybe rewrite it to be clearer)
+	// Combine the two rotation matrices
 	hubOrient = rotorRotation * nacelleOrient;
 
 	hm.orientation = EulerExtract(hubOrient);
@@ -343,12 +343,10 @@ FASTTurbineModel::NacelleReactionForces FASTTurbineModel::PImp::UpdateAeroDynSta
 
 	aerodyn.UpdateStates(force, moment, &power, &tsr, massMat, addedMassMat, isRealStep);
 
-	// For now just return the force and moment as is without doing any other calculations
-	// Note these forces are therefore in the hub coordinate system.
-
 	Vector3d force_vec(force);
 	Vector3d moment_vec(moment);
 
+	// Transform the force and moment in from the hub coordinate system to the nacelle coordinate system
 	Vector3d trans_force_vec = TransformHubToNacelle(force_vec, nacelleOrient, hubOrient);
 	Vector3d trans_moment_vec = TransformHubToNacelle(moment_vec, nacelleOrient, hubOrient);
 
@@ -372,6 +370,11 @@ int FASTTurbineModel::GetNumNodes() const
 int FASTTurbineModel::GetNumBlades() const
 {
 	return p_imp->aerodyn.GetNumBlades();
+}
+
+double FASTTurbineModel::GetTurbineDiameter() const
+{
+	return p_imp->aerodyn.GetTurbineDiameter();
 }
 
 double FASTTurbineModel::GetBladePitch() const
@@ -398,6 +401,7 @@ double FASTTurbineModel::GetRotorSpeed() const
 // variables in AeroDyn_Interface. The value returned is the last value 
 // returned by AeroDyn, whether it be from a real step or a temporary step for the RK4 
 // integration.
+
 double FASTTurbineModel::GetAerodynamicTorque() const
 {
 	return p_imp->aerodyn.GetTorque();

@@ -42,6 +42,7 @@
   </ItemGroup>
   <ItemGroup>
     <Library Include="..\Win32\Debug\FASTTurbine_Interface_Debug.lib" />
+    <Library Include="..\Release\FASTTurbine_Interface_Release.lib" />
   </ItemGroup>
   <ItemGroup>
     <None Include="PitchControllerParameters.inp">

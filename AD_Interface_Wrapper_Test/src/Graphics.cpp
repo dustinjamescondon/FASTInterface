@@ -28,15 +28,15 @@ void RenderBladeNodes(sf::RenderWindow& wnd, const std::vector<double>& bladeNod
 
 		sf::Color clr;
 
-		if (deltax > 0) {
+		if (deltax < 0) {
 			// make it blue
-			unsigned int val = unsigned int(255.0 * (1.0 - exp(-deltax * 0.1)));
+			unsigned int val = unsigned int(255.0 * (1.0 - exp(deltax * 0.1)));
 
 			clr = sf::Color(255 - val, 255 - val, 255);
 		}
 		else {
 			// make it red
-			unsigned int val = unsigned int(255.0 * (1.0 - exp(deltax * 0.1)));
+			unsigned int val = unsigned int(255.0 * (1.0 - exp(-deltax * 0.1)));
 
 			clr = sf::Color(255, 255 - val, 255 - val);
 		}

@@ -281,6 +281,8 @@ void AeroDyn_Interface_Wrapper::UpdateStates(
 	}
 
 	// Save the resulting forces and moments
+	Transform_ADtoPDS(force_out);
+	Transform_ADtoPDS(moment_out);
 	memcpy(force, force_out, VectorSize);
 	memcpy(moment, moment_out, VectorSize);
 }
