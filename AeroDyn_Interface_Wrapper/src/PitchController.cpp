@@ -63,7 +63,7 @@ void PitchController::ReadInputFile(const char* filename)
 
 	if (!fin.is_open()) {
 		std::string errMsg = std::string("Couldn't open PI Controller input file: ") + std::string(filename);
-		throw FileNotFoundException(errMsg);
+		throw FileNotFoundException(errMsg.c_str());
 	}
 
 	// Throws exception if input file doesn't contain this entry at this point
@@ -101,14 +101,14 @@ double PitchController::ReadDouble(std::ifstream& fin, const char* label) const
 	if (token != label) {
 		std::string errMsg = std::string("Expected ") + std::string(label) +
 			std::string(" in input file but got ") + std::string(token);
-		throw FileContentsException(errMsg);
+		throw FileContentsException(errMsg.c_str());
 	}
 
 	// get RHS of assignment
 	std::getline(linestream, token);
 	if (!isNumber(token)) {
 		std::string errMsg = ("Expected a decimal number but got ") + std::string(token);
-		throw FileContentsException(errMsg);
+		throw FileContentsException(errMsg.c_str());
 	}
 
 	return std::stod(token.c_str());

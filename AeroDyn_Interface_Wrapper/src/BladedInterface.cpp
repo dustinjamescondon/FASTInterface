@@ -25,7 +25,7 @@ void BladedInterface::Init(const char* fname)
 		// Throw exception
 		std::string errMsg;
 		errMsg = "Could not load DLL file, " + std::string(fname);
-		throw BladedDLLNotFoundException(errMsg.c_str());
+		throw FileNotFoundException(errMsg.c_str());
 	}
 
 	// Get function address
@@ -33,7 +33,7 @@ void BladedInterface::Init(const char* fname)
 
 	if (!DISCON) {
 		// Throw exception
-		throw BladedDLLProcedureNotFoundException("Could not load the DISCON procedure from the controller DLL");
+		throw FileContentsException("Could not load the DISCON procedure from the controller DLL");
 	}
 }
 

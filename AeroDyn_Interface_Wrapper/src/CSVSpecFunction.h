@@ -11,7 +11,7 @@
 
 #include <vector>
 #include <fstream>
-#include "ControllerExceptions.h"
+#include "FASTTurbineExceptions.h"
 
 class CSVSpecFunction
 {

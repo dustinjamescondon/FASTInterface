@@ -34,9 +34,6 @@
     <ClInclude Include="src\DriveTrain.h">
       <Filter>DriveTrain</Filter>
     </ClInclude>
-    <ClInclude Include="src\ControllerExceptions.h">
-      <Filter>MasterController\GeneratorControl</Filter>
-    </ClInclude>
     <ClInclude Include="src\CSVSpecFunction.h">
       <Filter>MasterController\GeneratorControl</Filter>
     </ClInclude>

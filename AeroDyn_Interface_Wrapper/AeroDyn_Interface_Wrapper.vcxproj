@@ -47,7 +47,6 @@
   <ItemGroup>
     <ClInclude Include="src\AeroDyn_Interface_Wrapper.h" />
     <ClInclude Include="src\BladedInterface.h" />
-    <ClInclude Include="src\ControllerExceptions.h" />
     <ClInclude Include="src\CSVSpecFunction.h" />
     <ClInclude Include="src\DriveTrain.h" />
     <ClInclude Include="src\FASTTurbineExceptions.h" />

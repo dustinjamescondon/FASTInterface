@@ -84,13 +84,13 @@ int main()
 		turb.InitAeroDyn("C:/Users/dusti/Documents/Work/PRIMED/inputfiles/ad_interface_example2.inp", FluidDensity, KinematicFluidVisc,
 			nstate);
 	}
-	catch (ADInputFileNotFoundException& e) {
+	catch (FileNotFoundException& e) {
 		std::cout << "Input file couldn't be found" << std::endl;
 		std::cout << e.what();
 		return 0;
 	}
 
-	catch (ADInputFileContentsException& e) {
+	catch (FileContentsException& e) {
 		std::cout << "Input file has invalid contents" << std::endl;
 		std::cout << e.what();
 		return 0;

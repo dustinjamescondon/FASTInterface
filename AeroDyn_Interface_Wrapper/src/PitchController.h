@@ -1,7 +1,7 @@
 #pragma once
 
 #include "CSVSpecFunction.h"
-#include "ControllerExceptions.h"
+#include "FASTTurbineExceptions.h"
 
 class PitchController
 {

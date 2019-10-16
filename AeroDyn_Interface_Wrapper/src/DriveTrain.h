@@ -66,7 +66,6 @@ public:
 	// Pass torques at time + dt   ; returns temporary states at time + dt
 	void K4(double dt, double rotorTorque, double genTorque);  
 
-	void SetConstantRotorSpeed(double);
 	void SetInitialRotorSpeed(double);
 	void SetInitialGenSpeed(double);
 	void SetDampingCoeff(double);

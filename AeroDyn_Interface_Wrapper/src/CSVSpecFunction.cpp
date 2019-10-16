@@ -4,7 +4,7 @@
 #include <iostream>
 #include <assert.h>
 #include <math.h>
-#include "ControllerExceptions.h"
+#include "FASTTurbineExceptions.h"
 
 CSVSpecFunction::CSVSpecFunction(const char* filename)
 {
@@ -39,7 +39,7 @@ void CSVSpecFunction::loadCSVFile(const char* filename) {
   else {
     // error
     std::string errorMsg = std::string("Couldn't open CSV file: ") + std::string(filename);
-    throw FileNotFoundException(errorMsg);
+    throw FileNotFoundException(errorMsg.c_str());
   }
 }
 
@@ -95,7 +95,7 @@ void CSVSpecFunction::validateInput() {
 
   if (pairs.size() <= 1) {
     std::string errMsg("The table has less than two sample points.");
-    throw FileContentsException(errMsg);
+    throw FileContentsException(errMsg.c_str());
   }
 }
 

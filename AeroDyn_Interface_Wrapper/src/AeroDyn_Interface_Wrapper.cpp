@@ -171,10 +171,10 @@ void AeroDyn_Interface_Wrapper::InitAerodyn(
 		throw ADErrorException(errMsg);
 	}
 	if (errStat == 5) {
-		throw ADInputFileNotFoundException(errMsg);
+		throw FileNotFoundException(errMsg);
 	} 
 	else if (errStat == 6) {
-		throw ADInputFileContentsException(errMsg);
+		throw FileContentsException(errMsg);
 	}
 
 	// return the total amount of nodes used in the simulation
