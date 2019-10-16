@@ -1,4 +1,4 @@
-#include "..\..\AeroDyn_Interface_Wrapper\src\FASTTurbine_Interface.h"
+#include "..\..\AeroDyn_Interface_Wrapper\src\FASTTurbineModel.h"
 #include <Eigen/Dense>
 #include <SFML/Graphics.hpp>
 #include <iostream>
@@ -70,7 +70,7 @@ int main()
 
 	nstate.eulerAngles[0] = 0.0;
 	nstate.eulerAngles[1] = 0.0;
-	nstate.eulerAngles[2] = M_PI_4;
+	nstate.eulerAngles[2] = 0.0;
 
 	nstate.position[0] = 0.0;
 	nstate.position[1] = nstate.position[2] = 75.0;
@@ -140,12 +140,21 @@ int main()
 		}
 
 		//---------------------------------------------------------------------
+		// Using the FASTTurbine
+
+		// Begin a simulation update to time by passing nacelle state at time
 		turb.SetNacelleStates(time, nstate, true);
+
+		// Now the rotor orientation has been set, so Aerodyn can report where the node positions are
 		turb.GetBladeNodePositions(bladeNodePositions);
+
+		// Set the inflows at those positions
 		turb.SetInflowVelocities(inflows);
+
+		// And update the states to time, returning the nacelle reaction forces
 		rf = turb.UpdateStates();
 		//---------------------------------------------------------------------
-
+		// Value visualization code
 		RenderBladeNodes(window, bladeNodePositions, Vector3d(nstate.position), 5.0, totalNodes);
 		
 		pitchPlot.plot(0.0, turb.GetBladePitch());

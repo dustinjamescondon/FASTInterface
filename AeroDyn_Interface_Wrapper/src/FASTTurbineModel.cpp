@@ -1,4 +1,4 @@
-#include "FASTTurbine_Interface.h"
+#include "FASTTurbineModel.h"
 #include "DriveTrain.h"
 #include "AeroDyn_Interface_Wrapper.h"
 #include "MasterController.h"

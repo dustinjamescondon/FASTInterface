@@ -149,7 +149,7 @@
     <ClCompile Include="src\Driver.cpp" />
     <ClCompile Include="src\Graphics.cpp" />
     <ClCompile Include="src\TimePlot.cpp" />
-    <ClCompile Include="src\wrap_test.cpp" />
+    <ClCompile Include="src\test.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\Driver.h" />

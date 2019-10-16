@@ -1,7 +1,6 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
-    <ClCompile Include="src\FASTTurbine_Interface.cpp" />
     <ClCompile Include="src\DriveTrain.cpp">
       <Filter>DriveTrain</Filter>
     </ClCompile>
@@ -29,9 +28,9 @@
     <ClCompile Include="src\MasterController.cpp">
       <Filter>MasterController</Filter>
     </ClCompile>
+    <ClCompile Include="src\FASTTurbineModel.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="src\FASTTurbine_Interface.h" />
     <ClInclude Include="src\DriveTrain.h">
       <Filter>DriveTrain</Filter>
     </ClInclude>
@@ -62,6 +61,8 @@
     <ClInclude Include="src\MasterController.h">
       <Filter>MasterController</Filter>
     </ClInclude>
+    <ClInclude Include="src\FASTTurbineExceptions.h" />
+    <ClInclude Include="src\FASTTurbineModel.h" />
   </ItemGroup>
   <ItemGroup>
     <Library Include="..\AD_Interface_Wrapper_Test\Aerodyn_Interface_C_Win32_Debug_Double.lib">
