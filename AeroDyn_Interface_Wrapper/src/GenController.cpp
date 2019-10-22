@@ -21,16 +21,16 @@ GenController::GenController() noexcept :
 
 void GenController::ReadCSVFile(const char* filename)
 {
-	torqueFunc.loadCSVFile(filename);
+	torqueFunc.LoadCSVFile(filename);
 
 	// the max rated torque is the last entry in the CSV table, so use the biggest rotor speed
 	// entry to lookup the last torque.
-	maxRatedTorque = torqueFunc.F(torqueFunc.getMaxSpecX());
+	maxRatedTorque = torqueFunc.F(torqueFunc.GetMaxSpecX());
 }
 
 void GenController::ReadParameters(const char* fname)
 {
-	LoadFile(fname);
+	Load(fname);
 	VS_RtGnSp = ReadDouble("VS_RtGenSp");
 
 

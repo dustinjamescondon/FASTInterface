@@ -1,3 +1,18 @@
+/*
+Author: Dustin Condon
+Date: Oct 2019
+Description: 
+	This class provides an interface with the Bladed-style DLL. The interface was built by referencing 
+	the Bladed-style DLL of NREL's OC3 5 MW turbine. The interface allows the user of the class to pass
+	the needed values to the DLL, and recieve the results. Inside each DLL there is a pitch controller,
+	generator controller, and a low-pass filter on the generator shaft speed.
+
+	Note that (as far as I have seen), the Bladed-style DLL are written to be loosely coupled with the turbine 
+	model; therefore, this interface assumes that. It may be possible to write a tightly coupled controller DLL,
+	however - in which case this interface should be built upon to allow for it.
+*/
+
+
 #pragma once
 #include <windows.h>
 #include <string>
@@ -11,12 +26,12 @@ public:
 
 	void Init(const char* fname);
 
-	void UpdateController(double time, float BlPitch1, float BlPitch2, float BlPitch3, float GenSp, float HorWindV);
+	void UpdateController(double time, float blPitch1, float blPitch2, float blPitch3, float genSp, float horWindV);
 	float GetBlPitchCommand() const;
 	float GetGenTorqueCommand() const;
 
 private:
-	typedef void(*f_ptr)(float*, int*, const char*, const char*, const char*);
+	typedef void(__cdecl *f_ptr)(float*, int*, const char*, const char*, const char*);
 
 	// number of elements in the swap array
 	static const int NumSwap = 100; 

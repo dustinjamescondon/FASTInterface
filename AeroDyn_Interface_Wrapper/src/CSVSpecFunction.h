@@ -21,16 +21,16 @@ public:
 	CSVSpecFunction() noexcept;
 
 	// Loads the specified CSV file to define the function
-	void loadCSVFile(const char* filename);
+	void LoadCSVFile(const char* filename);
 
 	// Reads in the data a from an open file stream to define the function
-	void readCSVFile(std::ifstream& fin);
+	void ReadCSVFile(std::ifstream& fin);
 
 	// Returns the output of the function based upon the input x.
 	double F(double x) const;
 
-	double getMaxSpecX() const; // returns the largest x that was specified in the CSV table
-	double getMinSpecX() const; // returns the smallest x that was specified in the CSV table
+	double GetMaxSpecX() const; // returns the largest x that was specified in the CSV table
+	double GetMinSpecX() const; // returns the smallest x that was specified in the CSV table
 
 private:
 
@@ -38,15 +38,15 @@ private:
 		double x, Fofx;
 	};
 
-	void validateInput();
+	void ValidateInput();
 
-	void calcSamplePeriod();
-	void calcMinSpecDomain();
-	void calcMaxSpecDomain();
-	void calcSpecRangeHead();
-	void calcSpecRangeTail();
+	void CalcSamplePeriod();
+	void CalcMinSpecDomain();
+	void CalcMaxSpecDomain();
+	void CalcSpecRangeHead();
+	void CalcSpecRangeTail();
 
-	double interpolate(const Pair&, const Pair&, double x) const;
+	double Interpolate(const Pair&, const Pair&, double x) const;
 
 	double deltaX;              // the sample period
 	double minSpecDomain;       // the minimum x value specified in the CSV file

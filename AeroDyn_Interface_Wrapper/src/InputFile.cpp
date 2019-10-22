@@ -18,16 +18,19 @@ InputFile::InputFile()
 
 }
 
-void InputFile::LoadFile(const char* fname)
+void InputFile::Load(const char* fname)
 {
+	filename = fname;
 	fin.open(fname, std::fstream::in);
 	if (!fin.is_open()) {
 		std::string errMsg = std::string("Couldn't open input file: ") + std::string(fname);
 		throw FileNotFoundException(errMsg);
 	}
+
+	
 }
 
-void InputFile::CloseFile()
+void InputFile::Close()
 {
 	fin.close();
 }
@@ -59,6 +62,33 @@ double InputFile::ReadDouble(const char* label)
 	}
 
 	return std::stod(token.c_str());
+}
+
+std::string InputFile::ReadString(const char* label)
+{
+	std::string line = GetNextNonCommentLine();
+
+	std::stringstream linestream(line);
+	std::string token;
+
+	// get LHS of assignment
+	std::getline(linestream, token, '=');
+	if (token != label)
+	{
+		std::string errMsg = std::string("Expected ") + std::string(label) +
+			std::string(" in input file, but got ") + std::string(token);
+		throw FileContentsException(errMsg);
+	}
+
+	// get RHS of assignment 
+	std::getline(linestream, token);
+	if (false)
+	{
+		std::string errMsg;
+		throw FileContentsException(errMsg);
+	}
+
+	return token;
 }
 
 std::string InputFile::GetNextNonCommentLine()

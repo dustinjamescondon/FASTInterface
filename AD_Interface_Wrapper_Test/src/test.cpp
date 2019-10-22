@@ -27,7 +27,7 @@ int main()
 	static const double dt = 0.015;
 	static const int NSteps = (int)(EndTime / dt);
 
-	static const double InflowSpeed = 10.0;    // in metres/sec
+	static const double InflowSpeed = 15.0;    // in metres/sec
 	static const double FluidDensity = 1.225;
 	static const double KinematicFluidVisc = 1.4639e-05;
 	static const double InitialRotorSpeed = 1.183333233;
@@ -37,7 +37,6 @@ int main()
 	static const double GenMOI = 534.116;					// "
 	static const double LPFCornerFreq = 1.570796;			// "
 	static const double RotorMOI = 38829739.1;				// " (Used parallel axis theorem to calculate this using NREL's specification of MOI relative to root)
-
 
 	//-------------------------
 	// Local variables
@@ -78,33 +77,32 @@ int main()
 	nstate.velocity[0] = nstate.velocity[1] = nstate.velocity[2] = 0.0;
 
 	try {
-		//turb.InitDriveTrain(RotorMOI, GenMOI, DriveTrainStiffness, DriveTrainDamping, GearboxRatio, InitialRotorSpeed);
-		//turb.InitControllers("Discon.dll");
-		turb.InitWithConstantRotorSpeedAndPitch(InitialRotorSpeed, 0.0);
-		turb.InitAeroDyn("C:/Users/dusti/Documents/Work/PRIMED/inputfiles/ad_interface_example2.inp", FluidDensity, KinematicFluidVisc,
+		// Use these initialization methods to use the Bladed-style DLL
+		turb.InitDriveTrain(RotorMOI, GenMOI, DriveTrainStiffness, DriveTrainDamping, GearboxRatio, InitialRotorSpeed);
+		turb.InitControllers_BladedDLL("Discon.dll");
+
+		// Use this to intialize the turbine with constant rotor speed and blade pitch
+		//turb.InitWithConstantRotorSpeedAndPitch(InitialRotorSpeed, 0.0);
+		turb.InitAeroDyn("C:/Users/dusti/Documents/Work/PRIMED/ToDSA/22Oct2019/AeroDynInputFiles/ad_interface_example2.inp", FluidDensity, KinematicFluidVisc,
 			nstate);
 	}
+
 	catch (FileNotFoundException& e) {
-		std::cout << "Input file couldn't be found" << std::endl;
 		std::cout << e.what();
 		return 0;
 	}
 
 	catch (FileContentsException& e) {
-		std::cout << "Input file has invalid contents" << std::endl;
 		std::cout << e.what();
 		return 0;
 	}
 
 	catch (ADErrorException& e) {
-		std::cout << "An error occured in AeroDyn" << std::endl;
 		std::cout << e.what();
 		return 0;
 	}
 
-	catch (std::runtime_error& e)
-	{
-		std::cout << "An error occured" << std::endl;
+	catch (std::runtime_error& e) {
 		std::cout << e.what();
 		return 0;
 	}
@@ -153,6 +151,7 @@ int main()
 
 		// And update the states to time, returning the nacelle reaction forces
 		rf = turb.UpdateStates();
+
 		//---------------------------------------------------------------------
 		// Value visualization code
 		RenderBladeNodes(window, bladeNodePositions, Vector3d(nstate.position), 5.0, totalNodes);

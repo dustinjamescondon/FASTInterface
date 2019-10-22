@@ -7,14 +7,11 @@
     <ClCompile Include="src\AeroDyn_Interface_Wrapper.cpp">
       <Filter>AeroDyn_Interface</Filter>
     </ClCompile>
-    <ClCompile Include="src\CSVSpecFunction.cpp">
-      <Filter>MasterController\GeneratorControl</Filter>
-    </ClCompile>
     <ClCompile Include="src\GenController.cpp">
       <Filter>MasterController\GeneratorControl</Filter>
     </ClCompile>
     <ClCompile Include="src\LowPassFilter.cpp">
-      <Filter>MasterController\GeneratorControl\LowPassFilter</Filter>
+      <Filter>LowPassFilter</Filter>
     </ClCompile>
     <ClCompile Include="src\PitchController.cpp">
       <Filter>MasterController\PitchControl</Filter>
@@ -29,19 +26,19 @@
       <Filter>MasterController</Filter>
     </ClCompile>
     <ClCompile Include="src\FASTTurbineModel.cpp" />
+    <ClCompile Include="src\CSVSpecFunction.cpp">
+      <Filter>Input</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\DriveTrain.h">
       <Filter>DriveTrain</Filter>
     </ClInclude>
-    <ClInclude Include="src\CSVSpecFunction.h">
-      <Filter>MasterController\GeneratorControl</Filter>
-    </ClInclude>
     <ClInclude Include="src\GenController.h">
       <Filter>MasterController\GeneratorControl</Filter>
     </ClInclude>
     <ClInclude Include="src\LowPassFilter.h">
-      <Filter>MasterController\GeneratorControl\LowPassFilter</Filter>
+      <Filter>LowPassFilter</Filter>
     </ClInclude>
     <ClInclude Include="src\AeroDyn_Interface_Wrapper.h">
       <Filter>AeroDyn_Interface</Filter>
@@ -60,6 +57,9 @@
     </ClInclude>
     <ClInclude Include="src\FASTTurbineExceptions.h" />
     <ClInclude Include="src\FASTTurbineModel.h" />
+    <ClInclude Include="src\CSVSpecFunction.h">
+      <Filter>Input</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Library Include="..\AD_Interface_Wrapper_Test\Aerodyn_Interface_C_Win32_Debug_Double.lib">
@@ -94,11 +94,11 @@
     <Filter Include="MasterController\GeneratorControl">
       <UniqueIdentifier>{91f7ceee-f353-41f7-9996-a65903453cfa}</UniqueIdentifier>
     </Filter>
-    <Filter Include="MasterController\GeneratorControl\LowPassFilter">
-      <UniqueIdentifier>{78ee4d2e-afda-434d-a962-b359eeb1d84b}</UniqueIdentifier>
-    </Filter>
     <Filter Include="MasterController\BladedInterface">
       <UniqueIdentifier>{24e1056d-8773-4535-a0a4-a98e73011299}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="LowPassFilter">
+      <UniqueIdentifier>{78ee4d2e-afda-434d-a962-b359eeb1d84b}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
 </Project>

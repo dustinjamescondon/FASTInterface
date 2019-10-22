@@ -12,12 +12,12 @@ MasterController::MasterController(double bladePitch)
 
 MasterController::MasterController(const char* bladed_dll_fname)
 {
-	Init(bladed_dll_fname);
+	Init_BladedDLL(bladed_dll_fname);
 }
 
-MasterController::MasterController(const char* gen_csv_fname, const char* pitch_param_csv_fname, double cornerFreq, double initGenSpeed) 
+MasterController::MasterController(const char* inputfile, double initGenSpeed) 
 {
-	Init(gen_csv_fname, pitch_param_csv_fname, cornerFreq, initGenSpeed);
+	Init_InputFile(inputfile, initGenSpeed);
 }
 
 void MasterController::Init(double bladePitch)
@@ -27,21 +27,47 @@ void MasterController::Init(double bladePitch)
 	constantBladePitch = bladePitch;
 }
 
-void MasterController::Init(const char* fname)
+void MasterController::Init_BladedDLL(const char* fname)
 {
 	controlMode = BLADED_DLL;
 
 	bladedcont.Init(fname);
 }
 
-void MasterController::Init(const char* gen_csv, const char* pit_param, double cf, double initSpeed)
+void MasterController::Init_InputFile(const char* inputfile_fname, double initSpeed)
 {
-	controlMode = CSV_TABLES;
+	// Set the mode to reflect how we're using the controller
+	controlMode = INPUT_FILE;
 
-	gencont.ReadCSVFile(gen_csv);
-	pitcont.LoadInputFile(pit_param, 0.0f);
+	// Load the main input file
+	inputfile.Load(inputfile_fname);
+
+	// Read the entry for the generator controller table filename
+	std::string genTable = inputfile.ReadString("GeneratorTorqueTable");
+
+	// Read the entry for the pitch gain scheduling table filename
+	std::string pitchTable = inputfile.ReadString("PitchGainSchedulingTable");
+
+	// Read the entry for the corner frequency of the low pass filter
+	double cornerFreq = inputfile.ReadDouble("LPFCornerFreqency");
+
+	// Read the pitch controller's proportion gain
+	double proportionGain = inputfile.ReadDouble("PitchController_ProportionGain");
+
+	// Read the pitch controller's integral gain
+	double integralGain = inputfile.ReadDouble("PitchController_IntegralGain");
+
+	// Done reading from file, so close it
+	inputfile.Close();
+
+
+	// Use the read values to set parameters
+	gencont.ReadCSVFile(genTable.c_str());
+	pitcont.LoadGainSchedulingFile(pitchTable.c_str(), 0.0f);
+	pitcont.SetProportionGain(proportionGain);
+	pitcont.SetIntegralGain(integralGain);
 	genSpeedLPF.InitFilterVal(initSpeed);
-	genSpeedLPF.SetCornerFreq(cf);
+	genSpeedLPF.SetCornerFreq(cornerFreq);
 }
 
 void MasterController::UpdateController(double time, double genSpeed, double currBladePitch)
@@ -52,7 +78,7 @@ void MasterController::UpdateController(double time, double genSpeed, double cur
 	case BLADED_DLL:
 		bladedcont.UpdateController(time, currBladePitch, currBladePitch, currBladePitch, genSpeed, 0.0);
 		break;
-	case CSV_TABLES:
+	case INPUT_FILE:
 		// Update the Low-Pass Filter
 		genSpeedF = genSpeedLPF.UpdateEstimate(time, genSpeed);
 
@@ -74,7 +100,7 @@ double MasterController::GetBladePitchCommand() const
 	case BLADED_DLL:
 		return bladedcont.GetBlPitchCommand();
 		break;
-	case CSV_TABLES:
+	case INPUT_FILE:
 		return pitcont.GetLastPitchCommand();
 		break;
 	default:
@@ -89,7 +115,7 @@ double MasterController::GetGeneratorTorqueCommand() const
 	case BLADED_DLL:
 		return bladedcont.GetGenTorqueCommand();
 		break;
-	case CSV_TABLES:
+	case INPUT_FILE:
 		return gencont.GetTorque(genSpeedLPF.GetCurrEstimatedValue());
 		break;
 	default:

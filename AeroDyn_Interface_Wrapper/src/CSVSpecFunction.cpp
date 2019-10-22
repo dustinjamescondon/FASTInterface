@@ -8,12 +8,12 @@
 
 CSVSpecFunction::CSVSpecFunction(const char* filename)
 {
-  loadCSVFile(filename);
+  LoadCSVFile(filename);
 }
 
 CSVSpecFunction::CSVSpecFunction(std::ifstream& fin)
 {
-  readCSVFile(fin);
+  ReadCSVFile(fin);
 }
 
 CSVSpecFunction::CSVSpecFunction() noexcept
@@ -22,7 +22,7 @@ CSVSpecFunction::CSVSpecFunction() noexcept
 }
 
 // Assumes that the first line of the CSV just contains labels, so it ignores it.
-void CSVSpecFunction::loadCSVFile(const char* filename) {
+void CSVSpecFunction::LoadCSVFile(const char* filename) {
   std::ifstream fin(filename);
 
   // check if file was found and opened
@@ -32,7 +32,7 @@ void CSVSpecFunction::loadCSVFile(const char* filename) {
     std::string line;
     std::getline(fin, line, '\n');
 
-    readCSVFile(fin);
+    ReadCSVFile(fin);
 
     fin.close();
   }
@@ -44,7 +44,7 @@ void CSVSpecFunction::loadCSVFile(const char* filename) {
 }
 
 // Does not assume the first available line is the comment row, so the first row is NOT ignored
-void CSVSpecFunction::readCSVFile(std::ifstream& fin)
+void CSVSpecFunction::ReadCSVFile(std::ifstream& fin)
 {
   // holds a line from the file
   std::string line;
@@ -77,21 +77,21 @@ void CSVSpecFunction::readCSVFile(std::ifstream& fin)
     }
 
   // Make sure the input file is correctly formatted (throws an exception if not)
-  validateInput();
+  ValidateInput();
 
   // determine the sampling period
-  calcSamplePeriod();
+  CalcSamplePeriod();
 
-  calcMinSpecDomain();
-  calcMaxSpecDomain();
-  calcSpecRangeHead();
-  calcSpecRangeTail();
+  CalcMinSpecDomain();
+  CalcMaxSpecDomain();
+  CalcSpecRangeHead();
+  CalcSpecRangeTail();
 }
 
 // TODO add some more error checking
 // Checks to see if the content loaded from the input file is valid. Throws an exception
 // if it isn't.
-void CSVSpecFunction::validateInput() {
+void CSVSpecFunction::ValidateInput() {
 
   if (pairs.size() <= 1) {
     std::string errMsg("The table has less than two sample points.");
@@ -101,38 +101,38 @@ void CSVSpecFunction::validateInput() {
 
 
 // just takes the first two entries and takes the absolute value of their difference
-void CSVSpecFunction::calcSamplePeriod()
+void CSVSpecFunction::CalcSamplePeriod()
 {
   deltaX = fabs(pairs[0].x - pairs[1].x);
 }
 
 
-void CSVSpecFunction::calcMinSpecDomain()
+void CSVSpecFunction::CalcMinSpecDomain()
 {
   minSpecDomain = pairs.begin()->x;
 }
 
-void CSVSpecFunction::calcMaxSpecDomain()
+void CSVSpecFunction::CalcMaxSpecDomain()
 {
   maxSpecDomain = (pairs.end() - 1)->x;
 }
 
-void CSVSpecFunction::calcSpecRangeHead()
+void CSVSpecFunction::CalcSpecRangeHead()
 {
   specRangeHead = pairs.begin()->Fofx;
 }
 
-void CSVSpecFunction::calcSpecRangeTail()
+void CSVSpecFunction::CalcSpecRangeTail()
 {
   specRangeTail = (pairs.end() - 1)->Fofx;
 }
 
-double CSVSpecFunction::getMaxSpecX() const
+double CSVSpecFunction::GetMaxSpecX() const
 {
   return maxSpecDomain;
 }
 
-double CSVSpecFunction::getMinSpecX() const
+double CSVSpecFunction::GetMinSpecX() const
 {
   return minSpecDomain;
 }
@@ -169,7 +169,7 @@ double CSVSpecFunction::F(double x) const
     for (unsigned int i = index; i < pairs.size(); ++i) {
       if (pairs[i].x > x) {
 	// interpolate
-	double result = interpolate(pairs[index], pairs[i], x);
+	double result = Interpolate(pairs[index], pairs[i], x);
 
 	// save the index so we can start from here for next time
 	index = i;
@@ -184,7 +184,7 @@ double CSVSpecFunction::F(double x) const
     for (unsigned int i = index; i >= 0; --i) {
       if (pairs[i].x < x) {
 	// interpolate
-	double result = interpolate(pairs[index], pairs[i], x);
+	double result = Interpolate(pairs[index], pairs[i], x);
 
 	return result;
       }
@@ -196,7 +196,7 @@ double CSVSpecFunction::F(double x) const
   return 0.0;
 }
 
-double CSVSpecFunction::interpolate(const Pair& a, const Pair& b, double x) const {
+double CSVSpecFunction::Interpolate(const Pair& a, const Pair& b, double x) const {
   const double epsilon = 1.0e-6;
 
   // if the rotorSpeed is close enough to the rotor speed of a,
