@@ -24,7 +24,7 @@ public:
 
 	PImp();
 
-	DriveTrain::ModelStates IntegrateDriveTrain_Euler(double time, const FASTTurbineModel::NacelleMotion&) const;
+	DriveTrain::ModelStates IntegrateDriveTrain_Euler(double time, const FASTTurbineModel::NacelleMotion&);
 	DriveTrain::ModelStates IntegrateDriveTrain_RK4(double time, const FASTTurbineModel::NacelleMotion&, const std::vector<double>& inflows);
 
 	
@@ -37,7 +37,7 @@ public:
 	FASTTurbineModel::NacelleMotion nacelleMotion;
 	Matrix3d nacelleOrient, hubOrient;
 	Vector3d nacelleForce, nacelleMoment;
-	DriveTrain::ModelStates drivetrainStates_tmp; // Holds drivetrain states on non-real state updates
+	DriveTrain::ModelStates drivetrainStates_hold; // Holds drivetrain states on non-real state updates
 	std::vector<double> inflows; // holds the blade node inflows
 	AeroDyn_Interface_Wrapper aerodyn;
 	DriveTrain				  drivetrain;
@@ -87,6 +87,7 @@ void FASTTurbineModel::InitWithConstantRotorSpeedAndPitch(double constantRotorSp
 {
 	p_imp->drivetrain.Init(constantRotorSpeed);
 	p_imp->mcont.Init(constantBladePitch);
+	p_imp->drivetrainStates_hold = p_imp->drivetrain.GetStates();
 }
 
 // Sets all the necessary parameters for the drive train in order. Note, the gearbox ratio must be 
@@ -94,6 +95,7 @@ void FASTTurbineModel::InitWithConstantRotorSpeedAndPitch(double constantRotorSp
 void FASTTurbineModel::InitDriveTrain(double rotorMOI, double genMOI, double stiffness, double damping, double gearboxRatio, double initialRotorVel)
 {
 	p_imp->drivetrain.Init(initialRotorVel, gearboxRatio, damping, stiffness, rotorMOI, genMOI);
+	p_imp->drivetrainStates_hold = p_imp->drivetrain.GetStates();
 }
 
 void FASTTurbineModel::InitDriveTrain(const char* drivetrainDefFile, double initRotorSpeed)
@@ -187,7 +189,7 @@ void FASTTurbineModel::SetNacelleStates(double time, const NacelleMotion& nm, bo
 	p_imp->aerodyn.SetHubMotion(time, hm.position.data(), hm.orientation.data(), hm.velocity.data(), hm.angularVel.data(), bladePitch, false);
 }
 
-DriveTrain::ModelStates FASTTurbineModel::PImp::IntegrateDriveTrain_Euler(double t, const FASTTurbineModel::NacelleMotion& nm) const
+DriveTrain::ModelStates FASTTurbineModel::PImp::IntegrateDriveTrain_Euler(double t, const FASTTurbineModel::NacelleMotion& nm)
 {
 	double dt = t - time;  // Get this from somewhere
 
@@ -205,6 +207,9 @@ DriveTrain::ModelStates FASTTurbineModel::PImp::IntegrateDriveTrain_Euler(double
 
 	dtStates_np1.gen.theta += dtStates_n.gen.vel * dt;
 	dtStates_np1.gen.vel += drivetrainAccels.genAcc * dt;
+
+	// Save this so that we can retrieve it with get methods
+	drivetrainStates_hold = dtStates_np1;
 
 	// Return updated states
 	return dtStates_np1;
@@ -302,6 +307,9 @@ DriveTrain::ModelStates FASTTurbineModel::PImp::IntegrateDriveTrain_RK4(double t
 	state_fin.gen.theta = state_n.gen.theta + (1.0 / 6.0) * (gen_k_1x + 2.0 * gen_k_2x + 2.0 * gen_k_3x + gen_k_4x);
 	state_fin.rotor.vel = state_n.rotor.vel + (1.0 / 6.0) * (rot_k_1v + 2.0 * rot_k_2v + 2.0 * rot_k_3v + rot_k_4v);
 	state_fin.rotor.theta = state_n.rotor.theta + (1.0 / 6.0) * (rot_k_1x + 2.0 * rot_k_2x + 2.0 * rot_k_3x + rot_k_4x);
+
+	// Save this so that we can retrieve it with get methods
+	drivetrainStates_hold = state_fin;
 
 	return state_fin;
 }
@@ -413,6 +421,16 @@ double FASTTurbineModel::GetRotorSpeed() const
 	return p_imp->drivetrain.GetRotorShaftSpeed();
 }
 
+double FASTTurbineModel::GetRotorAngularDisp() const
+{
+	return p_imp->drivetrainStates_hold.rotor.theta;
+}
+
+double FASTTurbineModel::GetGeneratorAngularDisp() const
+{
+	return p_imp->drivetrainStates_hold.gen.theta;
+}
+
 // All three of GetForce, GetMoment, and GetAerodynamicTorque get their values from member
 // variables in AeroDyn_Interface. The value returned is the last value 
 // returned by AeroDyn, whether it be from a real step or a temporary step for the RK4 
@@ -423,15 +441,30 @@ double FASTTurbineModel::GetAerodynamicTorque() const
 	return p_imp->aerodyn.GetTorque();
 }
 
-void FASTTurbineModel::GetForce(double v[3]) const
+void FASTTurbineModel::GetNacelleForce(double v[3]) const
 {
 	memcpy(v, p_imp->nacelleForce.data(), 3 * sizeof(double));
 }
 
 // The x component of the moment is equal to the aerodynamic torque
-void FASTTurbineModel::GetMoment(double v[3]) const
+void FASTTurbineModel::GetNacelleMoment(double v[3]) const
 {
 	memcpy(v, p_imp->nacelleMoment.data(), 3 * sizeof(double));
+}
+
+double FASTTurbineModel::GetTSR() const
+{
+	return p_imp->aerodyn.GetTSR();
+}
+
+void FASTTurbineModel::GetHubForce(double v[3]) const
+{
+	return p_imp->aerodyn.GetForce(v);
+}
+
+void FASTTurbineModel::GetHubMoment(double v[3]) const
+{
+	p_imp->aerodyn.GetMoment(v);
 }
 
 

@@ -112,6 +112,8 @@ AeroDyn_Interface_Wrapper::AeroDyn_Interface_Wrapper()
 	force[0] = force[1] = force[2] = 0.0;
 	moment[0] = moment[1] = moment[2] = 0.0;
 
+	tsr = 0.0;
+
 	simulationInstance = 0;
 
 	f.open("InputLog.txt", std::ofstream::out);
@@ -281,6 +283,7 @@ void AeroDyn_Interface_Wrapper::UpdateStates(
 	}
 
 	// Save the resulting forces and moments
+	tsr = *tsr_out;
 	Transform_ADtoPDS(force_out);
 	Transform_ADtoPDS(moment_out);
 	memcpy(force, force_out, VectorSize);
@@ -328,6 +331,11 @@ double AeroDyn_Interface_Wrapper::GetBladePitch() const
 double AeroDyn_Interface_Wrapper::GetTurbineDiameter() const
 {
 	return turbineDiameter;
+}
+
+double AeroDyn_Interface_Wrapper::GetTSR() const
+{
+	return tsr;
 }
 
 double AeroDyn_Interface_Wrapper::GetTorque() const

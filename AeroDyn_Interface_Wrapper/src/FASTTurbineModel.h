@@ -118,25 +118,35 @@ public:
 		double fluidDensity,
 		double kinematicFluidVisc,
 		const NacelleMotion& nacelleMotion);
-	//-----------------------------------------------------------
+
 
 	DECLDIR void InitInflows(const std::vector<double>&);
+	//-----------------------------------------------------------
 
-	// If isRealStep was true for SetNacelleStates, then this doesn't update states permanently
+	// If isRealStep was false for SetNacelleStates, then this doesn't update states permanently.
+	// If false, then this does update states perminantely.
 	DECLDIR NacelleReactionForces UpdateStates();
 
 	// Returns the blade node postion at the \time which was passed to SetNacelleMotion(...)
 	// Sets the pass-by-reference parameters with the blade node positions. Assumes enough space has been allocated.
 	DECLDIR void GetBladeNodePositions(std::vector<double>&);
 
-	// Returns these values based on the last call to UpdateStates
 	DECLDIR double GetAerodynamicTorque() const;
 
 	// Returns the reaction force on the nacelle
-	DECLDIR void GetForce(double[3]) const;
+	DECLDIR void GetNacelleForce(double[3]) const;
 
 	// Returns the moment of the nacelle
-	DECLDIR void GetMoment(double[3]) const;
+	DECLDIR void GetNacelleMoment(double[3]) const;
+
+	// Returns the tip speed ratio
+	DECLDIR double GetTSR() const;
+
+	// Get reaction force at hub in hub coordinate system
+	DECLDIR void GetHubForce(double[3]) const;
+
+	// Get moment of hub in hub coordinate system
+	DECLDIR void GetHubMoment(double[3]) const;
 
 	// Returns the total number of nodes 
 	DECLDIR int GetNumNodes() const;
@@ -157,6 +167,12 @@ public:
 
 	// Returns the current rotor shaft speed from the drive train
 	DECLDIR double GetRotorSpeed() const;
+
+	// Returns the current angular displacement of the rotor shaft 
+	DECLDIR double GetRotorAngularDisp() const;
+
+	// Returns the current angular displacement of the generator shaft
+	DECLDIR double GetGeneratorAngularDisp() const;
 
 	// Begin an update to simulation states to bring them to \time
 	// \time: the time to update to

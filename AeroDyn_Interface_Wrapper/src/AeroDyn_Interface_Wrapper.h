@@ -92,6 +92,7 @@ public:
 		double addedMassMatrix_out[6][6],
 		bool isRealStep = true);
 
+	double GetTSR() const;
 	double GetTorque() const; // Returns the torque resulting from the last call to UpdateStates
 	void GetForce(double[3]) const; 
 	void GetMoment(double[3]) const;
@@ -105,6 +106,7 @@ private:
 	void* simulationInstance;
 
 	std::vector<double> aerodynInflows;
+	double tsr;
 	double turbineDiameter;
 	double force[3];
 	double moment[3];
