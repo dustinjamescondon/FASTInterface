@@ -53,7 +53,6 @@ public:
 	// returns the accelerations of both shafts given the states
 	ModelStateDeriv CalcDeriv(const ModelStates& states, double torque_rotor, double torque_gen) const;
 
-
 	// Pass torques at current time; returns temporary states at time + dt/2
 	ModelStates K1(double dt, double rotorTorque, double genTorque);
 

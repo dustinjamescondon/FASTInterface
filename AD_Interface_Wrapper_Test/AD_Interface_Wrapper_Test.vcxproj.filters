@@ -11,9 +11,6 @@
     <Filter Include="Driver">
       <UniqueIdentifier>{32fd9168-9174-4d0f-bdd2-189c98caa4c8}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Input Files">
-      <UniqueIdentifier>{8043d8ec-9707-4565-a8b9-68fffa621df4}</UniqueIdentifier>
-    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\Graphics.cpp">
@@ -43,10 +40,5 @@
   <ItemGroup>
     <Library Include="..\Win32\Debug\FASTTurbine_Interface_Debug.lib" />
     <Library Include="..\Release\FASTTurbine_Interface_Release.lib" />
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="PitchControllerParameters.inp">
-      <Filter>Input Files</Filter>
-    </None>
   </ItemGroup>
 </Project>

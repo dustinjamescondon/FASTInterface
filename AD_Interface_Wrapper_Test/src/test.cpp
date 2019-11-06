@@ -23,14 +23,15 @@ int main()
 
 	//-------------------------
 	// Simulation parameters
-	static const double EndTime = 40.0;
+	static const double EndTime = 100.0;
 	static const double dt = 0.015;
 	static const int NSteps = (int)(EndTime / dt);
 
-	static const double InflowSpeed = 15.0;    // in metres/sec
+	static const double InflowSpeed = 8.0;    // in metres/sec
 	static const double FluidDensity = 1.225;
 	static const double KinematicFluidVisc = 1.4639e-05;
-	static const double InitialRotorSpeed = 1.183333233;
+	static const double InitialRotorSpeed = 0.9529497705;
+	static const double ConstantPitch = 0.0;
 	static const double GearboxRatio = 97.0;				// From NREL's OC3 report
 	static const double DriveTrainDamping = 6215000.0;      // "
 	static const double DriveTrainStiffness = 867637000.0;  // "
@@ -43,7 +44,7 @@ int main()
 	double time = 0.0;
 
 	std::vector<double> inflows;
-	std::vector<double> bladeNodePositions;
+	std::vector<double> bladeNodePositions, bladeNodePositions2;
 
 	int totalNodes = 0;
 	//--------------------------
@@ -78,12 +79,12 @@ int main()
 
 	try {
 		// Use these initialization methods to use the Bladed-style DLL
-		turb.InitDriveTrain(RotorMOI, GenMOI, DriveTrainStiffness, DriveTrainDamping, GearboxRatio, InitialRotorSpeed);
-		turb.InitControllers_BladedDLL("Discon.dll");
+		//turb.InitDriveTrain(RotorMOI, GenMOI, DriveTrainStiffness, DriveTrainDamping, GearboxRatio, InitialRotorSpeed);
+		//turb.InitControllers_BladedDLL("Discon.dll");
 
 		// Use this to intialize the turbine with constant rotor speed and blade pitch
-		//turb.InitWithConstantRotorSpeedAndPitch(InitialRotorSpeed, 0.0);
-		turb.InitAeroDyn("C:/Users/dusti/Documents/Work/PRIMED/ToDSA/22Oct2019/AeroDynInputFiles/ad_interface_example2.inp", FluidDensity, KinematicFluidVisc,
+		turb.InitWithConstantRotorSpeedAndPitch(InitialRotorSpeed, ConstantPitch);
+		turb.InitAeroDyn("C:/Users/dusti/Documents/Work/PRIMED/inputfiles/ad_interface_example4.inp", FluidDensity, KinematicFluidVisc,
 			nstate);
 	}
 
@@ -114,6 +115,7 @@ int main()
 	// now we know the total number of nodes, so allocate accordingly
 	inflows.resize(totalNodes * 3, 0.0);
 	bladeNodePositions.resize(totalNodes * 3);
+	bladeNodePositions2.resize(totalNodes * 3);
 
 	// get hub positions from AD and then use then to find new inflows
 
@@ -122,7 +124,6 @@ int main()
 	GenerateInflowVelocities(bladeNodePositions, totalNodes, InflowSpeed, inflows);
 
 	turb.InitInflows(inflows);
-
 	//-------------------------------
 	// Simulation loop
 	for (int i = 0; i < NSteps; i++)
@@ -155,7 +156,7 @@ int main()
 		//---------------------------------------------------------------------
 		// Value visualization code
 		RenderBladeNodes(window, bladeNodePositions, Vector3d(nstate.position), 5.0, totalNodes);
-		
+
 		pitchPlot.plot(0.0, turb.GetBladePitch());
 		pitchPlot.draw(window);
 
