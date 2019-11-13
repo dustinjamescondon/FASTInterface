@@ -48,10 +48,17 @@ States_dy CalcWeightedAvg(const DriverStates k[4])
 
 void GenerateInflowVelocities(const std::vector<double>& nodePositions, int totalNodes, double inflowSpeed, std::vector<double>& inflows)
 {
+	for (int i = 0; i < totalNodes * 3; i++)
+		inflows[i] = 0.0;
+
+	inflows[0] = 1.0;
+	/*
 	for (int i = 0; i < totalNodes; i++)
 	{
-		inflows[i * 3] = inflowSpeed;
-	}
+		inflows[i * 3 + 0] = inflowSpeed;
+		inflows[i * 3 + 1] = 0.0;
+		inflows[i * 3 + 2] = 0.0;
+	}*/
 }
 
 // taken from Aerodyn's subroutine of the same name

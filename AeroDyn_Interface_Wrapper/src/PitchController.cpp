@@ -65,3 +65,8 @@ void PitchController::SetIntegralGain(double x)
 {
 	i_gain = x;
 }
+
+void PitchController::SetTargetGenSpeed(double x)
+{
+	targetGenSpeed = x;
+}

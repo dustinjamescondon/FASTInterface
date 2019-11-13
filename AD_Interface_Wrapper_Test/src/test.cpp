@@ -27,7 +27,7 @@ int main()
 	static const double dt = 0.015;
 	static const int NSteps = (int)(EndTime / dt);
 
-	static const double InflowSpeed = 8.0;    // in metres/sec
+	static const double InflowSpeed = 8.69;    // in metres/sec
 	static const double FluidDensity = 1.225;
 	static const double KinematicFluidVisc = 1.4639e-05;
 	static const double InitialRotorSpeed = 0.9529497705;
@@ -44,7 +44,7 @@ int main()
 	double time = 0.0;
 
 	std::vector<double> inflows;
-	std::vector<double> bladeNodePositions, bladeNodePositions2;
+	std::vector<double> bladeNodePositions;
 
 	int totalNodes = 0;
 	//--------------------------
@@ -84,7 +84,7 @@ int main()
 
 		// Use this to intialize the turbine with constant rotor speed and blade pitch
 		turb.InitWithConstantRotorSpeedAndPitch(InitialRotorSpeed, ConstantPitch);
-		turb.InitAeroDyn("C:/Users/dusti/Documents/Work/PRIMED/inputfiles/ad_interface_example4.inp", FluidDensity, KinematicFluidVisc,
+		turb.InitAeroDyn("C:/Users/dusti/Documents/Work/PRIMED/inputfiles/ad_interface_example2.inp", FluidDensity, KinematicFluidVisc,
 			nstate);
 	}
 
@@ -113,9 +113,8 @@ int main()
 	totalNodes = turb.GetNumNodes();
 
 	// now we know the total number of nodes, so allocate accordingly
-	inflows.resize(totalNodes * 3, 0.0);
+	inflows.resize(totalNodes * 3);
 	bladeNodePositions.resize(totalNodes * 3);
-	bladeNodePositions2.resize(totalNodes * 3);
 
 	// get hub positions from AD and then use then to find new inflows
 
@@ -123,7 +122,9 @@ int main()
 	// create a steady flow in +x direction
 	GenerateInflowVelocities(bladeNodePositions, totalNodes, InflowSpeed, inflows);
 
-	turb.InitInflows(inflows);
+	float diam = turb.GetTurbineDiameter();
+
+	//turb.InitInflows(inflows);
 	//-------------------------------
 	// Simulation loop
 	for (int i = 0; i < NSteps; i++)
@@ -138,11 +139,17 @@ int main()
 			}
 		}
 
+		if (i <= 4)
+			time = 0;
+		if (i == 4)
+			time = 2.0e-5;
+
+		bool isRealStep = true;
 		//---------------------------------------------------------------------
 		// Using the FASTTurbine
 
 		// Begin a simulation update to time by passing nacelle state at time
-		turb.SetNacelleStates(time, nstate, true);
+		turb.SetNacelleStates(time, nstate, isRealStep);
 
 		// Now the rotor orientation has been set, so Aerodyn can report where the node positions are
 		turb.GetBladeNodePositions(bladeNodePositions);

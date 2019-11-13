@@ -35,6 +35,7 @@ public:
 		const char* inputFilename,		       // filename (including path) of the main driver input file
 		double fluidDensity,                   // kg/m^3
 		double kinematicFluidVisc,             // m^2/sec
+		bool useAddedMass,                     // have AeroDyn include added mass effects
 		const double hubPosition[3],		   // metres
 		const double hubOrientation[3],        // Euler angles (in radians)
 		const double hubVelocity[3],		   // metres/sec

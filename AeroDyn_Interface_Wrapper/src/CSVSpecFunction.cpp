@@ -21,8 +21,9 @@ CSVSpecFunction::CSVSpecFunction() noexcept
   deltaX = minSpecDomain = maxSpecDomain = specRangeHead = specRangeTail = 0;
 }
 
-// Assumes that the first line of the CSV just contains labels, so it ignores it.
-void CSVSpecFunction::LoadCSVFile(const char* filename) {
+// Assumes that the first line of the CSV just contains labels, so it ignores it. Can set what the delimiting
+// character is. The default delimiter is ',' Could also set it to a tab: '\t' 
+void CSVSpecFunction::LoadCSVFile(const char* filename, char delim) {
   std::ifstream fin(filename);
 
   // check if file was found and opened
@@ -32,7 +33,7 @@ void CSVSpecFunction::LoadCSVFile(const char* filename) {
     std::string line;
     std::getline(fin, line, '\n');
 
-    ReadCSVFile(fin);
+    ReadCSVFile(fin, delim);
 
     fin.close();
   }
@@ -44,7 +45,7 @@ void CSVSpecFunction::LoadCSVFile(const char* filename) {
 }
 
 // Does not assume the first available line is the comment row, so the first row is NOT ignored
-void CSVSpecFunction::ReadCSVFile(std::ifstream& fin)
+void CSVSpecFunction::ReadCSVFile(std::ifstream& fin, char delim)
 {
   // holds a line from the file
   std::string line;
@@ -57,7 +58,7 @@ void CSVSpecFunction::ReadCSVFile(std::ifstream& fin)
       // parse the line, saving only the first two entries
       std::stringstream linestream(line);
       std::string token;
-      while (std::getline(linestream, token, ',')) {
+      while (std::getline(linestream, token, delim)) {
 	// if we're still reading in the first two colums,
 	//    save them 
 	if (i < 2) {

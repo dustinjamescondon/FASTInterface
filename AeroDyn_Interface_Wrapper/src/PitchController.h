@@ -16,6 +16,7 @@ public:
 
 	void SetProportionGain(double);
 	void SetIntegralGain(double);
+	void SetTargetGenSpeed(double);
 
 private:
 	bool engaged;

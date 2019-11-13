@@ -2,7 +2,7 @@
 Author: Dustin Condon
 Date: Oct 2019
 Description:
-	This class models a turbine which uses AeroDyn for its calculation of reaction forces.
+	This class models a turbine which uses AeroDyn for its calculation of reaction loads.
 	It includes a drive train, generator controller, and pitch controller. The user of this 
 	class must provide the nacelle position, velocity, orientation, and angular velocity, as well 
 	as inflow velocities.

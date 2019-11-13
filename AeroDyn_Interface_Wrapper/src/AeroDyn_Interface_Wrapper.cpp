@@ -37,7 +37,7 @@ typedef Matrix<double, 6, 6> Matrix6d;
 
 // declare the existence of the FORTRAN subroutines which are in the DLL
 extern "C" {
-	void INTERFACE_INITAERODYN(const char* inputFilename, int* fname_len, double* fluidDensity, double* kinematicFluidVisc,
+	void INTERFACE_INITAERODYN(const char* inputFilename, int* fname_len, bool* useAddedMass, double* fluidDensity, double* kinematicFluidVisc,
 	    double* hubPos, double* hubOri, double* hubVel, double* hubRotVel, 
 	    double* bladePitch, int* nBlades_out, int* nNodes_out, double* turbDiameter_out, void** simulationInstance_out,
 		int* errStat, char* errMsg);
@@ -50,9 +50,9 @@ extern "C" {
 	void INTERFACE_SETHUBMOTION_FAKE(void* simulationInstance, double* time, double hubPos[3], double hubOri[3], double hubVel[3],
 		double hubRotVel[3], double* bladePitch);
 
-	void INTERFACE_SETINFLOWS(void* simulationInstance, double* inflows, int* nBlades, int* nNodes);
+	void INTERFACE_SETINFLOWS(void* simulationInstance, int* nBlades, int* nNodes, double* inflows);
 
-	void INTERFACE_SETINFLOWS_FAKE(void* simulationInstance, double* inflows, int* nBlades, int* nNodes);
+	void INTERFACE_SETINFLOWS_FAKE(void* simulationInstance, int* nBlades, int* nNodes, double* inflows);
 
 	void INTERFACE_UPDATESTATES(void* simulationInstance, double* force_out,
 		double* moment_out, double* power_out, double* tsr_out, double massMatrix_out[6][6], double addedMassMatrix_out[6][6]);
@@ -130,6 +130,7 @@ void AeroDyn_Interface_Wrapper::InitAerodyn(
 	const char* inputFilename,
 	double fluidDensity,
 	double kinematicFluidVisc,
+	bool useAddedMass,
 	const double hubPosition[3],
 	const double hubOrientation[3],
 	const double hubVelocity[3],
@@ -163,7 +164,7 @@ void AeroDyn_Interface_Wrapper::InitAerodyn(
 	TransformHubKinematics_PDStoAD(_hubPos, _hubOri, _hubVel, _hubRotVel);
 
 	// call the initialization subroutine in the FORTRAN DLL
-	INTERFACE_INITAERODYN(inputFilename, &fname_len, &fluidDensity, &kinematicFluidVisc,
+	INTERFACE_INITAERODYN(inputFilename, &fname_len, &useAddedMass, &fluidDensity, &kinematicFluidVisc,
 	    _hubPos, _hubOri, _hubVel, _hubRotVel,
 		&bladePitch, &nBlades, &nNodes, &turbineDiameter, &simulationInstance, &errStat,
 		errMsg);
@@ -247,11 +248,11 @@ void AeroDyn_Interface_Wrapper::SetInflowVelocities(const std::vector<double>& i
 	TransformInflows_PDStoAD(inflows);
 
 	if (isRealStep) {
-		INTERFACE_SETINFLOWS(simulationInstance, aerodynInflows.data(), &nBlades, &nNodes);
+		INTERFACE_SETINFLOWS(simulationInstance, &nBlades, &nNodes, aerodynInflows.data());
 	}
 	else
 	{
-		INTERFACE_SETINFLOWS_FAKE(simulationInstance, aerodynInflows.data(), &nBlades, &nNodes);
+		INTERFACE_SETINFLOWS_FAKE(simulationInstance, &nBlades, &nNodes, aerodynInflows.data());
 	}
 }
 

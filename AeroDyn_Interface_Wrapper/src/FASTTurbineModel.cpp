@@ -117,9 +117,14 @@ void FASTTurbineModel::InitControllers_BladedDLL(const char* bladed_dll_fname)
 	p_imp->mcont.Init_BladedDLL(bladed_dll_fname);
 }
 
-void FASTTurbineModel::InitControllers_InputFile(const char* inputfile)
+void FASTTurbineModel::InitControllers_InputFile(const char* inputfilename)
 {
-	p_imp->mcont.Init_InputFile(inputfile, p_imp->drivetrain.GetGenShaftSpeed());
+	InputFile inputfile;
+	inputfile.Load(inputfilename);
+
+	std::string genControllerInputFile = inputfile.ReadString("GeneratorControllerFile");
+	std::string pitchControllerInputFile = inputfile.ReadString("PitchControllerFile");
+	p_imp->mcont.Init_InputFile(genControllerInputFile.c_str(), p_imp->drivetrain.GetGenShaftSpeed());
 }
 
 // Note, this must be called after the drive train and controllers have been initialized because it 
@@ -133,9 +138,13 @@ void FASTTurbineModel::InitAeroDyn(const char* inputFilename,
 	DriveTrain::States rotorState = p_imp->drivetrain.GetRotorStates();
 	FASTTurbineModel::PImp::HubMotion hm = p_imp->CalculateHubMotion(nm, rotorState);
 
+	// Hard-code this to false because added mass in AeroDyn isn't complete
+	bool useAddedMass = false;
+
 	p_imp->aerodyn.InitAerodyn(inputFilename,
 		fluidDensity,
 		kinematicFluidVisc,
+		useAddedMass,
 		hm.position.data(),
 		hm.orientation.data(),
 		hm.velocity.data(),
@@ -143,7 +152,7 @@ void FASTTurbineModel::InitAeroDyn(const char* inputFilename,
 		p_imp->mcont.GetBladePitchCommand());
 
 	// Resize our container for the inflow velocities to the appropriate size
-	p_imp->inflows.resize(p_imp->aerodyn.GetNumNodes() * 3);
+	p_imp->inflows.resize(p_imp->aerodyn.GetNumNodes() * 3, 0.0);
 }
 
 void FASTTurbineModel::InitInflows(const std::vector<double>& inflows)

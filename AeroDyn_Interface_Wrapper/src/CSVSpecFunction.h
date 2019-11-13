@@ -7,7 +7,7 @@
 // of F(x) is specified by the second column. The function is assumed to be contiguous, so any parts 
 // in between the specified values is linearly interpolated
 //
-// The table is expected to have only 2 columns; 
+// The table is expected to have only 2 columns; also the sampling period is expected to be consistent.
 
 #include <vector>
 #include <fstream>
@@ -21,10 +21,10 @@ public:
 	CSVSpecFunction() noexcept;
 
 	// Loads the specified CSV file to define the function
-	void LoadCSVFile(const char* filename);
+	void LoadCSVFile(const char* filename, char delim = ',');
 
 	// Reads in the data a from an open file stream to define the function
-	void ReadCSVFile(std::ifstream& fin);
+	void ReadCSVFile(std::ifstream& fin, char delim = ',');
 
 	// Returns the output of the function based upon the input x.
 	double F(double x) const;
