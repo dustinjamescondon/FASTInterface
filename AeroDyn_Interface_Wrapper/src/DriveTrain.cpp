@@ -1,5 +1,10 @@
 #include "DriveTrain.h"
 
+DriveTrain::DriveTrain(double constantRotorSpeed)
+{
+	Init(constantRotorSpeed);
+}
+
 DriveTrain::DriveTrain(double rs, double gbr) {
 	states.rotor.vel = rs;
 	states.gen.vel = rs * gbr;
@@ -22,6 +27,7 @@ DriveTrain::DriveTrain() {
 	time = 0.0;
 }
 
+// Initialize the drive train with a constant rotor speed
 void DriveTrain::Init(double constantRotorSpeed)
 {
 	mode = CONSTANT;
@@ -36,6 +42,7 @@ void DriveTrain::Init(double constantRotorSpeed)
 	states.gen.theta = 0.0;
 }
 
+// Initialize the drive train using the connected two-mass model
 void DriveTrain::Init(double initialRotorSpeed, double gbr, double damping, double stiffness,
 	double rotorMOI, double genMOI)
 {
@@ -50,12 +57,12 @@ void DriveTrain::Init(double initialRotorSpeed, double gbr, double damping, doub
 }
 
 // Calculates the accelerations given the states s
-DriveTrain::ModelStateDeriv DriveTrain::CalcDeriv(const ModelStates& s, double torque_rotor, double torque_gen) const
+DriveTrain::ModelStates DriveTrain::CalcDeriv(const ModelStates& s, double torque_rotor, double torque_gen) const
 {
-	DriveTrain::ModelStateDeriv result;
+	DriveTrain::ModelStates result = s;
 
 	if (mode == CONSTANT) {
-		result.genAcc = result.rotorAcc = 0.0;
+		result.gen.acc = result.rotor.acc = 0.0;
 	}
 	else {
 		double theta_gen = s.gen.theta;
@@ -64,15 +71,15 @@ DriveTrain::ModelStateDeriv DriveTrain::CalcDeriv(const ModelStates& s, double t
 		double vel_rotor = s.rotor.vel;
 
 		// ODEs from Ben's report
-		result.rotorAcc = torque_rotor + stiffness_coeff * ((theta_gen / gearbox_ratio) - theta_rotor) +
+		result.rotor.acc = torque_rotor + stiffness_coeff * ((theta_gen / gearbox_ratio) - theta_rotor) +
 			damping_coeff * ((vel_gen / gearbox_ratio) - vel_rotor);
 
-		result.rotorAcc /= rotor_moi; // all over rotor_moi
+		result.rotor.acc /= rotor_moi; // all over rotor_moi
 
-		result.genAcc = (-1.0 * gearbox_ratio * torque_gen) + stiffness_coeff * (theta_rotor - (theta_gen / gearbox_ratio)) +
+		result.gen.acc = (-1.0 * gearbox_ratio * torque_gen) + stiffness_coeff * (theta_rotor - (theta_gen / gearbox_ratio)) +
 			damping_coeff * (vel_rotor - (vel_gen / gearbox_ratio));
 
-		result.genAcc /= gen_moi;  // all over gen_moi
+		result.gen.acc /= gen_moi;  // all over gen_moi
 	}
 
 	return result;
@@ -91,27 +98,26 @@ DriveTrain::ModelStates DriveTrain::GetStates() const
 // Base states are the states for which the accelerations are calculated
 DriveTrain::ModelStates DriveTrain::K(int i, double dt, double dState_coeff, const ModelStates& base_states, double rotor_torque, double gen_torque)
 {
-	ModelStateDeriv deriv = CalcDeriv(base_states, rotor_torque, gen_torque);
-	ModelStates result;
+	ModelStates s = CalcDeriv(base_states, rotor_torque, gen_torque);
 
 	/* calculate rotor shaft states */
-	dStates_k[i].rotor.dVel = deriv.rotorAcc * dt;
-	dStates_k[i].rotor.dTheta = states.rotor.vel * dt;
+	dStates_k[i].rotor.dVel = s.rotor.acc * dt;
+	dStates_k[i].rotor.dTheta = s.rotor.vel * dt;
 
 	//result.rotorStates.acc = deriv.rotorAcc; not sure if this is right, but we don't need it anyway
-	result.rotor.vel = states.rotor.vel + dState_coeff * dStates_k[i].rotor.dVel;
-	result.rotor.theta = states.rotor.theta + dState_coeff * dStates_k[i].rotor.dTheta;
+	s.rotor.vel = s.rotor.vel + dState_coeff * dStates_k[i].rotor.dVel;
+	s.rotor.theta = s.rotor.theta + dState_coeff * dStates_k[i].rotor.dTheta;
 
 	/* calculate generator shaft states */
-	dStates_k[i].gen.dVel = deriv.genAcc * dt;
-	dStates_k[i].gen.dTheta = states.gen.vel * dt;
+	dStates_k[i].gen.dVel = s.gen.acc * dt;
+	dStates_k[i].gen.dTheta = s.gen.vel * dt;
 
 	//result.genStates.acc = deriv.genAcc; not sure if this is right, but we don't need it anyway
-	result.gen.vel = states.gen.vel + dState_coeff * dStates_k[i].gen.dVel;
-	result.gen.theta = states.gen.theta + dState_coeff * dStates_k[i].gen.dTheta;
+	s.gen.vel = s.gen.vel + dState_coeff * dStates_k[i].gen.dVel;
+	s.gen.theta = s.gen.theta + dState_coeff * dStates_k[i].gen.dTheta;
 
-	result_k[i] = result;
-	return result;
+	result_k[i] = s;
+	return s;
 }
 
 // input torques at current time; returns temporary states at t + dt/2
@@ -186,7 +192,7 @@ DriveTrain::ModelStates DriveTrain::UpdateStates(double dt, double rotor_torque,
 
 	// If the torque isn't going to change through the whole step, then this isn't any different than the broken
 	// down version with K 1 through 4.
-	ModelStateDeriv deriv = CalcDeriv(states, rotor_torque, gen_torque);
+	ModelStates deriv = CalcDeriv(states, rotor_torque, gen_torque);
 
 	K1(dt, rotor_torque, gen_torque);
 	K2(dt, rotor_torque, gen_torque);
@@ -203,6 +209,7 @@ void DriveTrain::SetInitialGenSpeed(double s)
 	states.gen.vel = s;
 	states.rotor.vel = s / gearbox_ratio;
 }
+
 
 void DriveTrain::SetInitialRotorSpeed(double s)
 {

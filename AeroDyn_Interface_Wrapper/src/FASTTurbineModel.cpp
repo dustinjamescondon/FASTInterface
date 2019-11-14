@@ -4,6 +4,7 @@
 #include "MasterController.h"
 #include <Eigen/Dense>
 #include "InputFile.h"
+#include <fstream>
 
 // Used for representing vectors and matrices
 using namespace Eigen;
@@ -43,12 +44,31 @@ public:
 	DriveTrain				  drivetrain;
 	DriveTrain::ModelStates   dt_resultStates;
 	MasterController		  mcont;
+
+	std::ofstream fout;
+	void WriteHeader() {
+		fout << "time\torient_roll\torient_pitch\torient_yaw\tang_vel_x\tang_vel_y\tang_vel_z\tinflows_x\tFx\tFy\tFz" << std::endl;
+	}
+	void LogInput(double time, FASTTurbineModel::NacelleMotion nm) {
+		fout << time << '\t' << nm.eulerAngles[0] << '\t' << nm.eulerAngles[1] << '\t' << nm.eulerAngles[2] << '\t' << nm.angularVel[0] << '\t' << nm.angularVel[1] << '\t'
+			<< nm.angularVel[2] << '\t';
+	}
+	void LogInflows(double x) {
+		fout << x << '\t';
+	}
+	void LogOutput(FASTTurbineModel::NacelleReactionForces rf)
+	{
+		fout << rf.force[0] << '\t' << rf.force[1] << '\t' << rf.force[2] << std::endl;
+	}
 };
 
 FASTTurbineModel::PImp::PImp()
 {
 	time = targetTime = 0.0;
 	onRealStep = false;
+
+	fout.open("LogTurbineInput.out", std::ofstream::out);
+	WriteHeader();
 }
 
 FASTTurbineModel::FASTTurbineModel() : p_imp(new PImp)
@@ -153,6 +173,9 @@ void FASTTurbineModel::InitAeroDyn(const char* inputFilename,
 
 	// Resize our container for the inflow velocities to the appropriate size
 	p_imp->inflows.resize(p_imp->aerodyn.GetNumNodes() * 3, 0.0);
+
+	// Do the initial call for the controller
+	p_imp->mcont.UpdateController(p_imp->time, p_imp->drivetrain.GetGenShaftSpeed(), p_imp->aerodyn.GetBladePitch());
 }
 
 void FASTTurbineModel::InitInflows(const std::vector<double>& inflows)
@@ -163,6 +186,10 @@ void FASTTurbineModel::InitInflows(const std::vector<double>& inflows)
 // Begin updating the model's state by first setting the nacelle states at point in future
 void FASTTurbineModel::SetNacelleStates(double time, const NacelleMotion& nm, bool isRealStep) 
 {
+	// Debug
+	if (isRealStep)
+		p_imp->LogInput(time, nm);
+
 	p_imp->targetTime = time; // Save the target time to update to
 	p_imp->onRealStep = isRealStep; // Save whether this is a call for a real update or not
 
@@ -171,30 +198,23 @@ void FASTTurbineModel::SetNacelleStates(double time, const NacelleMotion& nm, bo
 
 	double dt = time - p_imp->time; 
 
-	if (isRealStep)
-	{
-		p_imp->mcont.UpdateController(p_imp->time, p_imp->drivetrain.GetGenShaftSpeed(), p_imp->aerodyn.GetBladePitch());
-	}
-
 	// First we estimate the orientation and velocity of the rotor shaft so we can predict around where the nodes will be 
 	DriveTrain::ModelStates dtStates_n = p_imp->drivetrain.GetStates();
 	double aerodynamicTorque = p_imp->aerodyn.GetTorque();
 	double genTorque = p_imp->mcont.GetGeneratorTorqueCommand();
 	double bladePitch = p_imp->mcont.GetBladePitchCommand();
 
-	DriveTrain::ModelStateDeriv drivetrainAccels = p_imp->drivetrain.CalcDeriv(dtStates_n, aerodynamicTorque, genTorque);
+	DriveTrain::ModelStates dtStates_withAcc = p_imp->drivetrain.CalcDeriv(dtStates_n, aerodynamicTorque, genTorque);
 	
 	// Integrate the drive train states using Euler's method for our estimate of the rotor state
-	DriveTrain::ModelStates dtStates_np1 = dtStates_n;
+	dtStates_withAcc.rotor.theta += dtStates_withAcc.rotor.vel * dt;
+	dtStates_withAcc.rotor.vel += dtStates_withAcc.rotor.acc * dt;
 
-	dtStates_np1.rotor.theta += dtStates_n.rotor.vel * dt;
-	dtStates_np1.rotor.vel += drivetrainAccels.rotorAcc * dt;
-
-	dtStates_np1.gen.theta += dtStates_n.gen.vel * dt;
-	dtStates_np1.gen.vel += drivetrainAccels.genAcc * dt;
+	dtStates_withAcc.gen.theta += dtStates_withAcc.gen.vel * dt;
+	dtStates_withAcc.gen.vel += dtStates_withAcc.gen.acc * dt;
 
 	// Send these estimated values to AeroDyn so the caller can get the blade node positions
-	PImp::HubMotion hm = p_imp->CalculateHubMotion(nm, dtStates_np1.rotor);
+	PImp::HubMotion hm = p_imp->CalculateHubMotion(nm, dtStates_withAcc.rotor);
 	p_imp->aerodyn.SetHubMotion(time, hm.position.data(), hm.orientation.data(), hm.velocity.data(), hm.angularVel.data(), bladePitch, false);
 }
 
@@ -206,16 +226,16 @@ DriveTrain::ModelStates FASTTurbineModel::PImp::IntegrateDriveTrain_Euler(double
 	DriveTrain::ModelStates dtStates_n = drivetrain.GetStates();
 	double aerodynamicTorque = aerodyn.GetTorque();
 	double genTorque = mcont.GetGeneratorTorqueCommand();
-	DriveTrain::ModelStateDeriv drivetrainAccels = drivetrain.CalcDeriv(dtStates_n, aerodynamicTorque, genTorque);
+	DriveTrain::ModelStates s = drivetrain.CalcDeriv(dtStates_n, aerodynamicTorque, genTorque);
 
 	// Integrate the drive train states using Euler's method
 	DriveTrain::ModelStates dtStates_np1 = dtStates_n;
 
 	dtStates_np1.rotor.theta += dtStates_n.rotor.vel * dt;
-	dtStates_np1.rotor.vel += drivetrainAccels.rotorAcc * dt;
+	dtStates_np1.rotor.vel += s.rotor.acc * dt;
 
 	dtStates_np1.gen.theta += dtStates_n.gen.vel * dt;
-	dtStates_np1.gen.vel += drivetrainAccels.genAcc * dt;
+	dtStates_np1.gen.vel += s.gen.acc * dt;
 
 	// Save this so that we can retrieve it with get methods
 	drivetrainStates_hold = dtStates_np1;
@@ -236,12 +256,12 @@ DriveTrain::ModelStates FASTTurbineModel::PImp::IntegrateDriveTrain_RK4(double t
 	double bladePitch = mcont.GetBladePitchCommand();
 
 	// K1
-	DriveTrain::ModelStateDeriv accels = drivetrain.CalcDeriv(state_n, aerodynamicTorque, genTorque);
+	DriveTrain::ModelStates s = drivetrain.CalcDeriv(state_n, aerodynamicTorque, genTorque);
 
-	double gen_k_1v = accels.genAcc * dt;
+	double gen_k_1v = s.gen.acc * dt;
 	double gen_k_1x = state_n.gen.vel * dt;
 
-	double rot_k_1v = accels.rotorAcc * dt;
+	double rot_k_1v = s.rotor.acc * dt;
 	double rot_k_1x = state_n.rotor.vel * dt;
 
 	DriveTrain::ModelStates state_n1;
@@ -263,13 +283,13 @@ DriveTrain::ModelStates FASTTurbineModel::PImp::IntegrateDriveTrain_RK4(double t
 
 
 	// K2
-	accels = drivetrain.CalcDeriv(state_n1, moment.x(), genTorque);
+	s = drivetrain.CalcDeriv(state_n1, moment.x(), genTorque);
 
-	double gen_k_2v = accels.genAcc * dt;
-	double gen_k_2x = state_n1.gen.vel * dt;
+	double gen_k_2v = s.gen.acc * dt;
+	double gen_k_2x = s.gen.vel * dt;
 
-	double rot_k_2v = accels.rotorAcc * dt;
-	double rot_k_2x = state_n1.rotor.vel * dt;
+	double rot_k_2v = s.rotor.acc * dt;
+	double rot_k_2x = s.rotor.vel * dt;
 
 	DriveTrain::ModelStates state_n2;
 	state_n2.gen.vel = state_n.gen.vel + 0.5 * gen_k_2v;
@@ -284,13 +304,13 @@ DriveTrain::ModelStates FASTTurbineModel::PImp::IntegrateDriveTrain_RK4(double t
 	aerodyn.UpdateStates(force.data(), moment.data(), &power, &tsr, massMat, addedMassMat, false);
 
 	// K3
-	accels = drivetrain.CalcDeriv(state_n2, moment.x(), genTorque);
+	s = drivetrain.CalcDeriv(state_n2, moment.x(), genTorque);
 
-	double gen_k_3v = accels.genAcc * dt;
-	double gen_k_3x = state_n2.gen.vel * dt;
+	double gen_k_3v = s.gen.acc * dt;
+	double gen_k_3x = s.gen.vel * dt;
 
-	double rot_k_3v = accels.rotorAcc * dt;
-	double rot_k_3x = state_n2.rotor.vel * dt;
+	double rot_k_3v = s.rotor.acc * dt;
+	double rot_k_3x = s.rotor.vel * dt;
 
 	DriveTrain::ModelStates state_n3;
 	state_n3.gen.vel = state_n.gen.vel + gen_k_3v;
@@ -303,12 +323,13 @@ DriveTrain::ModelStates FASTTurbineModel::PImp::IntegrateDriveTrain_RK4(double t
 	aerodyn.UpdateStates(force.data(), moment.data(), &power, &tsr, massMat, addedMassMat, false);
 
 	// K4
-	accels = drivetrain.CalcDeriv(state_n3, moment.x(), genTorque);
+	s = drivetrain.CalcDeriv(state_n3, moment.x(), genTorque);
 
-	double gen_k_4v = accels.genAcc * dt;
-	double gen_k_4x = state_n3.gen.vel * dt;
-	double rot_k_4v = accels.rotorAcc * dt;
-	double rot_k_4x = state_n3.rotor.vel * dt;
+	double gen_k_4v = s.gen.acc * dt;
+	double gen_k_4x = s.gen.vel * dt;
+
+	double rot_k_4v = s.rotor.acc * dt;
+	double rot_k_4x = s.rotor.vel * dt;
 
 	// Weighted average
 	DriveTrain::ModelStates state_fin;
@@ -336,6 +357,9 @@ void FASTTurbineModel::SetInflowVelocities(const std::vector<double>& inflows)
 	{
 		p_imp->inflows[i] = inflows[i];
 	}
+
+	if(p_imp->onRealStep)
+		p_imp->LogInflows(inflows[0]);
 }
 
 FASTTurbineModel::NacelleReactionForces FASTTurbineModel::UpdateStates()
@@ -358,7 +382,23 @@ FASTTurbineModel::NacelleReactionForces FASTTurbineModel::UpdateStates()
 	if (p_imp->onRealStep) {
 		p_imp->drivetrain.SetStates(states);
 		p_imp->time = p_imp->targetTime;
+		p_imp->mcont.UpdateController(p_imp->time, p_imp->drivetrain.GetGenShaftSpeed(), p_imp->aerodyn.GetBladePitch());
 	}
+
+	// Overwrite the nacelle x moment to be the generator torque
+	/* 
+	  Note that only when onRealStep == true is the generator torque reported at current time;
+	  if onRealStep == false, then UpdateController isn't called and the generator torque given by
+	  GetGeneratorTorqueCommand() is at the previous time.
+
+	  I do see this as a problem, but I think it may be unavoidable with the given Bladed-style DLL because
+	  it is written to be loosely coupled to, meaning all calls to it are permanent, and therefore we 
+	  can't call it when onRealStep == false
+	*/
+	rf.moment[0] = p_imp->mcont.GetGeneratorTorqueCommand();
+
+	if (p_imp->onRealStep)
+		p_imp->LogOutput(rf);
 
 	// Return the reaction forces
 	return rf;
@@ -458,7 +498,9 @@ void FASTTurbineModel::GetNacelleForce(double v[3]) const
 // The x component of the moment is equal to the aerodynamic torque
 void FASTTurbineModel::GetNacelleMoment(double v[3]) const
 {
-	memcpy(v, p_imp->nacelleMoment.data(), 3 * sizeof(double));
+	v[0] = p_imp->mcont.GetGeneratorTorqueCommand();
+	v[1] = p_imp->nacelleMoment.y();
+	v[2] = p_imp->nacelleMoment.z();
 }
 
 double FASTTurbineModel::GetTSR() const

@@ -5,7 +5,11 @@
    File: DriveTrain.h
 
    Description:
-   
+	This class implements a two-mass drivetrain model with a particular generator and rotor mass
+	moment of inertia, shaft stiffness and damping, and gearbox ratio. There are two methods to updating its
+	states: using CalcDeriv and SetStates, and using UpdateStates. The first can be used to integrate the states 
+	using any given integrator, and the second can be used to have the drive train integrate its own states 
+	given some inputs.
 
  */
 
@@ -21,11 +25,6 @@ public:
 	// By model I mean all the states of the model: rotor and generator shafts
 	struct ModelStates {
 		States rotor, gen;
-	};
-
-	struct ModelStateDeriv {
-		double rotorAcc;
-		double genAcc;
 	};
 
 	DriveTrain();
@@ -51,7 +50,7 @@ public:
 	void SetStates(const ModelStates&);
 
 	// returns the accelerations of both shafts given the states
-	ModelStateDeriv CalcDeriv(const ModelStates& states, double torque_rotor, double torque_gen) const;
+	ModelStates CalcDeriv(const ModelStates& states, double torque_rotor, double torque_gen) const;
 
 	// Pass torques at current time; returns temporary states at time + dt/2
 	ModelStates K1(double dt, double rotorTorque, double genTorque);

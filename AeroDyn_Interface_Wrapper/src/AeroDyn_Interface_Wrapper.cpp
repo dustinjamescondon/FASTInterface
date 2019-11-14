@@ -6,29 +6,6 @@
 #include <stdlib.h>
 #include <fstream>
 
-// this is for writing the input log to disk so we can read what ProteusDS is sending our AD interface
-std::ofstream f;
-
-void logHeader()
-{
-	f << "time \t pos \t eulerAngles \t vel \t angularVel \t bladePitch" << std::endl;
-}
-
-void logVector(const double* v)
-{
-	f << " ( " << v[0] << ", " << v[1] << ", " << v[2] << " ) \t";
-}
-
-void logInput(double time, const double* pos, const double* eulerAngles, const double* vel, const double* angularVel, double bladePitch)
-{
-	f << time << "\t";
-	logVector(pos);
-	logVector(eulerAngles);
-	logVector(vel);
-	logVector(angularVel);
-	f << bladePitch << std::endl;
-}
-
 // Create a 6x6 matrix from Eigen3's template for transforming the mass matrix
 using Eigen::Matrix;
 using Eigen::Vector3d;
@@ -115,15 +92,11 @@ AeroDyn_Interface_Wrapper::AeroDyn_Interface_Wrapper()
 	tsr = 0.0;
 
 	simulationInstance = 0;
-
-	f.open("InputLog.txt", std::ofstream::out);
-	logHeader();
 }
 
 AeroDyn_Interface_Wrapper::~AeroDyn_Interface_Wrapper()
 {
 	INTERFACE_END(simulationInstance);
-	f.close();
 }
 
 void AeroDyn_Interface_Wrapper::InitAerodyn(
@@ -186,8 +159,6 @@ void AeroDyn_Interface_Wrapper::InitAerodyn(
 	// resize our internal vector so it can hold the velocity components of each node
 	aerodynInflows.resize(totalNodes * 3);
 
-	logInput(-1.0, hubPosition, hubOrientation, hubVelocity, hubRotationalVelocity, bladePitch);
-
 	// Save the pitch at this time for later
 	pitch = bladePitch;
 }
@@ -238,7 +209,6 @@ void AeroDyn_Interface_Wrapper::SetHubMotion(double time,
 			_hubRotVel, &bladePitch);
 	}
 
-	logInput(time, hubPosition, hubOrientation, hubVelocity, hubRotationalVelocity, bladePitch);
 	pitch = bladePitch;
 }
 
