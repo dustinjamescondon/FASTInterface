@@ -52,10 +52,10 @@ public:
 		double fluidDensity,                   // kg/m^3
 		double kinematicFluidVisc,             // m^2/sec
 		bool useAddedMass,                     // have AeroDyn include added mass effects
-		Vector3d hubPosition,		   // metres
-		Matrix3d hubOrientation,        // Euler angles (in radians)
-		Vector3d hubVelocity,		   // metres/sec
-		Vector3d hubRotationalVelocity, // axis-angle form in global coordinate system
+		const Vector3d& hubPosition,		   // metres
+		const Matrix3d& hubOrientation,        // Euler angles (in radians)
+		const Vector3d& hubVelocity,		   // metres/sec
+		const Vector3d& hubRotationalVelocity, // axis-angle form in global coordinate system
 		double bladePitch);                    // radians
 	 
 	// Initializes the inflows. Note, inflow velocities are in global coordinate system
@@ -71,10 +71,10 @@ public:
 	// this before getBladeNodePositions(...)
 	void SetHubMotion(
 		double time,                    // the moment in time that the inputs describe (seconds)
-		Vector3d hubPosition,			// position of the hub in global coordinate system (meters)
-		Matrix3d hubOrientation,		// euler angles describing orientation of the hub of the hub (radians)
-		Vector3d hubVelocity,			// velocity of the hub in the global coordinate system (meters/sec)
-		Vector3d hubAngularVelocity,    // angular velocity of the hub in global coordinate system (axis-angle)
+		const Vector3d& hubPosition,			// position of the hub in global coordinate system (meters)
+		const Matrix3d& hubOrientation,		// euler angles describing orientation of the hub of the hub (radians)
+		const Vector3d& hubVelocity,			// velocity of the hub in the global coordinate system (meters/sec)
+		const Vector3d& hubAngularVelocity,    // angular velocity of the hub in global coordinate system (axis-angle)
 		double bladePitch,
 		bool isRealStep = true);
 
@@ -108,15 +108,15 @@ public:
 	double GetBladePitch() const; // Returns the last actual pitch value (ones that have been assigned via isRealStep == true).
 
 private:
-	Vector3d Transform_PDStoAD(Vector3d v) const;
+	Vector3d Transform_PDStoAD(const Vector3d& v) const;
 
-	Vector3d Transform_ADtoPDS(Vector3d v) const;
+	Vector3d Transform_ADtoPDS(const Vector3d& v) const;
 
-	Matrix6d Transform_ADtoPDS_MassMatrix(Matrix6d m) const;
+	Matrix6d Transform_ADtoPDS_MassMatrix(const Matrix6d& m) const;
 
 	// Transforms the global to local orientation matrix from z-down to z-up coordinate system
 	// Note 
-	Matrix3d TransformOrientation(Matrix3d orientation) const;
+	Matrix3d TransformOrientation(const Matrix3d& orientation) const;
 
 	// updates aerodynInflows with transformed pdsInflows
 	void TransformInflows_PDStoAD(const std::vector<double>& pdsInflows);

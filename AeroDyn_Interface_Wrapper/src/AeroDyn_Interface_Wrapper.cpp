@@ -38,33 +38,28 @@ extern "C" {
 }
 
 
-Vector3d AeroDyn_Interface_Wrapper::Transform_PDStoAD(Vector3d v) const
+Vector3d AeroDyn_Interface_Wrapper::Transform_PDStoAD(const Vector3d& v) const
 {
 	return Vector3d(v.x(), -v.y(), -v.z());
 }
 
 
-Vector3d AeroDyn_Interface_Wrapper::Transform_ADtoPDS(Vector3d v) const
+Vector3d AeroDyn_Interface_Wrapper::Transform_ADtoPDS(const Vector3d& v) const
 {
 	return Vector3d(v.x(), -v.y(), -v.z());
 }
 
-Matrix3d AeroDyn_Interface_Wrapper::TransformOrientation(Matrix3d orientation) const
+Matrix3d AeroDyn_Interface_Wrapper::TransformOrientation(const Matrix3d& orientation) const
 {
-	orientation.row(1) *= -1.0;
-	orientation.row(2) *= -1.0;
+	Matrix3d trans;
+	trans.row(0) = orientation.row(0);
+	trans.row(1) = -1.0 * orientation.row(1);
+	trans.row(2) = -1.0 * orientation.row(2);
 
 	return orientation;
 }
 
-void AeroDyn_Interface_Wrapper::TransformHubKinematics_PDStoAD(Vector3d& hubPos, Matrix3d& hubOri, Vector3d& hubVel, Vector3d& hubRotVel)
-{
-	hubPos = Transform_PDStoAD(hubPos);
-	hubVel = Transform_PDStoAD(hubVel);
-	hubRotVel = Transform_PDStoAD(hubRotVel);
-}
-
-Matrix6d AeroDyn_Interface_Wrapper::Transform_ADtoPDS_MassMatrix(Matrix6d m) const
+Matrix6d AeroDyn_Interface_Wrapper::Transform_ADtoPDS_MassMatrix(const Matrix6d& m) const
 {
 	// TODO figure out how to transform a mass matrix from positive-up to positive-down (roll pi radians)
 	return m;
@@ -101,10 +96,10 @@ void AeroDyn_Interface_Wrapper::InitAerodyn(
 	double fluidDensity,
 	double kinematicFluidVisc,
 	bool useAddedMass,
-	Vector3d hubPosition,
-	Matrix3d hubOrientation,
-	Vector3d hubVelocity,
-	Vector3d hubAngularVel,
+	const Vector3d& hubPosition,
+	const Matrix3d& hubOrientation,
+	const Vector3d& hubVelocity,
+	const Vector3d& hubAngularVel,
 	double bladePitch)
 {
 	// Holds the error status returned from AeroDyn_Interface's initialization function
@@ -117,12 +112,15 @@ void AeroDyn_Interface_Wrapper::InitAerodyn(
 	// doesn't recognize null-terminated character as the end of the string)
 	int fname_len = strlen(inputFilename);
 
-	// transform them to Aerodyn's global coordinate system 
-	TransformHubKinematics_PDStoAD(hubPosition, hubOrientation, hubVelocity, hubAngularVel);
+	// transform them to Aerodyn's global coordinate system
+	Vector3d hubPosition_trans = Transform_PDStoAD(hubPosition);
+	Vector3d hubVelocity_trans = Transform_PDStoAD(hubVelocity);
+	Vector3d hubAngularVel_trans = Transform_PDStoAD(hubAngularVel);
+	Matrix3d hubOrientation_trans = TransformOrientation(hubOrientation);
 
 	// call the initialization subroutine in the FORTRAN DLL
 	INTERFACE_INITAERODYN(inputFilename, &fname_len, &useAddedMass, &fluidDensity, &kinematicFluidVisc,
-	    hubPosition.data(), hubOrientation.data(), hubVelocity.data(), hubAngularVel.data(),
+	    hubPosition_trans.data(), hubOrientation_trans.data(), hubVelocity_trans.data(), hubAngularVel_trans.data(),
 		&bladePitch, &nBlades, &nNodes, &turbineDiameter, &simulationInstance, &errStat,
 		errMsg);
 
@@ -159,26 +157,29 @@ void AeroDyn_Interface_Wrapper::InitInflows(const std::vector<double>& pdsInflow
 }
 
 void AeroDyn_Interface_Wrapper::SetHubMotion(double time,
-	Vector3d hubPosition,
-	Matrix3d hubOrientation,
-	Vector3d hubVelocity,
-	Vector3d hubAngularVel,
+	const Vector3d& hubPosition,
+	const Matrix3d& hubOrientation,
+	const Vector3d& hubVelocity,
+	const Vector3d& hubAngularVel,
 	double bladePitch,
 	bool isRealStep)
 {
 
 	// transform them to Aerodyn's global coordinate system 
-	TransformHubKinematics_PDStoAD(hubPosition, hubOrientation, hubVelocity, hubAngularVel);
+	Vector3d hubPos_trans = Transform_PDStoAD(hubPosition);
+	Vector3d hubVel_trans = Transform_PDStoAD(hubVelocity);
+	Vector3d hubAngVel_trans = Transform_PDStoAD(hubAngularVel);
+	Matrix3d hubOri_trans = TransformOrientation(hubOrientation);
 
 	// If this is a fake-step, then we don't want this to be permanent, so we call the fake version
 	if (!isRealStep) {
-		INTERFACE_SETHUBMOTION_FAKE(simulationInstance, &time, hubPosition.data(), hubOrientation.data(), hubVelocity.data(),
-			hubAngularVel.data(), &bladePitch);
+		INTERFACE_SETHUBMOTION_FAKE(simulationInstance, &time, hubPos_trans.data(), hubOri_trans.data(), hubVel_trans.data(),
+			hubAngVel_trans.data(), &bladePitch);
 	}
 	// Otherwise we call the real version, which perminantly changes the inputs
 	else {
-		INTERFACE_SETHUBMOTION(simulationInstance, &time, hubPosition.data(), hubOrientation.data(), 
-			hubVelocity.data(), hubAngularVel.data(), &bladePitch);
+		INTERFACE_SETHUBMOTION(simulationInstance, &time, hubPos_trans.data(), hubOri_trans.data(), hubVel_trans.data(),
+			hubAngVel_trans.data(), &bladePitch);
 	}
 
 	pitch = bladePitch;

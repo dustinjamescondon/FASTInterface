@@ -51,7 +51,7 @@ void GenerateInflowVelocities(const std::vector<double>& nodePositions, int tota
 
 	for (int i = 0; i < totalNodes; i++)
 	{
-		inflows[i * 3 + 0] = -inflowSpeed;
+		inflows[i * 3 + 0] = inflowSpeed;
 		inflows[i * 3 + 1] = 0.0;
 		inflows[i * 3 + 2] = 0.0;
 	}

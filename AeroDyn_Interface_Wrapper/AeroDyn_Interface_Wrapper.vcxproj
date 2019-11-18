@@ -138,7 +138,7 @@
       <ConformanceMode>false</ConformanceMode>
       <PrecompiledHeaderFile>
       </PrecompiledHeaderFile>
-      <LanguageStandard>stdcpp14</LanguageStandard>
+      <LanguageStandard>stdcpp17</LanguageStandard>
       <AdditionalIncludeDirectories>C:\ProgramData\boost\boost_1_71_0;C:\ProgramData\Eigen\eigen-eigen-323c052e1731</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
@@ -181,7 +181,7 @@
       <ConformanceMode>false</ConformanceMode>
       <PrecompiledHeaderFile>
       </PrecompiledHeaderFile>
-      <LanguageStandard>stdcpp14</LanguageStandard>
+      <LanguageStandard>stdcpp17</LanguageStandard>
       <AdditionalIncludeDirectories>C:\ProgramData\boost\boost_1_71_0;C:\ProgramData\Eigen\eigen-eigen-323c052e1731</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>

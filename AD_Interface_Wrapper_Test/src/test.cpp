@@ -3,9 +3,9 @@
 #include <SFML/Graphics.hpp>
 #include <iostream>
 #include <vector>
-#include "Driver.h"
 #include "TimePlot.h"
 #include <Windows.h>
+#include "Driver.h"
 
 #define _USE_MATH_DEFINES
 #include <math.h>
@@ -70,7 +70,7 @@ int main()
 
 	nstate.eulerAngles[0] = 0.0;
 	nstate.eulerAngles[1] = 0.0;
-	nstate.eulerAngles[2] = M_PI;
+	nstate.eulerAngles[2] = 0.0;
 
 	nstate.position[0] = 0.0;
 	nstate.position[1] = nstate.position[2] = 75.0;

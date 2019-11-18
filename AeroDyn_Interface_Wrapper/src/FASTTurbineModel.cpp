@@ -143,7 +143,7 @@ void FASTTurbineModel::InitDriveTrain(double rotorMOI, double genMOI, double sti
 {
 	// TODO get Andre to change PDS to allow us to specify the initial rotor vel
 	// In the meantime because PDS isn't letting us set the initial rotor vel, I've hard-coded it here
-	initialRotorVel = 0.9529497705;
+	//initialRotorVel = 0.9529497705;
 	//--------------------------------------------------------------------------------------
 
 	p_imp->drivetrain.Init(initialRotorVel, gearboxRatio, damping, stiffness, rotorMOI, genMOI);
