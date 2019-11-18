@@ -24,7 +24,7 @@ int main()
 	//-------------------------
 	// Simulation parameters
 	static const double EndTime = 100.0;
-	static const double dt = 0.015;
+	static const double dt = 0.01;
 	static const int NSteps = (int)(EndTime / dt);
 
 	static const double InflowSpeed = 8.69;    // in metres/sec
@@ -70,7 +70,7 @@ int main()
 
 	nstate.eulerAngles[0] = 0.0;
 	nstate.eulerAngles[1] = 0.0;
-	nstate.eulerAngles[2] = 0.0;
+	nstate.eulerAngles[2] = M_PI;
 
 	nstate.position[0] = 0.0;
 	nstate.position[1] = nstate.position[2] = 75.0;
@@ -79,12 +79,12 @@ int main()
 
 	try {
 		// Use these initialization methods to use the Bladed-style DLL
-		turb.InitDriveTrain(RotorMOI, GenMOI, DriveTrainStiffness, DriveTrainDamping, GearboxRatio, InitialRotorSpeed);
-		turb.InitControllers_BladedDLL("Discon.dll");
+		//turb.InitDriveTrain(RotorMOI, GenMOI, DriveTrainStiffness, DriveTrainDamping, GearboxRatio, InitialRotorSpeed);
+		//turb.InitControllers_BladedDLL("Discon.dll");
 
 		// Use this to intialize the turbine with constant rotor speed and blade pitch
-		//turb.InitWithConstantRotorSpeedAndPitch(InitialRotorSpeed, ConstantPitch);
-		turb.InitAeroDyn("C:/Users/dusti/Documents/Work/PRIMED/inputfiles/ad_interface_example2.inp", FluidDensity, KinematicFluidVisc,
+		turb.InitWithConstantRotorSpeedAndPitch(InitialRotorSpeed, ConstantPitch);
+		turb.InitAeroDyn("C:/Users/dusti/Documents/Work/PRIMED/inputfiles/ad_interface_example4.inp", FluidDensity, KinematicFluidVisc,
 			nstate);
 	}
 
@@ -124,7 +124,7 @@ int main()
 
 	float diam = turb.GetTurbineDiameter();
 
-	//turb.InitInflows(inflows);
+	turb.InitInflows(inflows);
 	//-------------------------------
 	// Simulation loop
 	for (int i = 0; i < NSteps; i++)
@@ -138,11 +138,6 @@ int main()
 				return 0;
 			}
 		}
-
-		if (i <= 4)
-			time = 0;
-		if (i == 4)
-			time = 2.0e-5;
 
 		bool isRealStep = true;
 		//---------------------------------------------------------------------

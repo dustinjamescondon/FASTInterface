@@ -1,16 +1,9 @@
 
 #include "AeroDyn_Interface_Wrapper.h"
-#include "..//eigen/Eigen/SparseCore"
 #include <assert.h>
 #include <iostream>
 #include <stdlib.h>
 #include <fstream>
-
-// Create a 6x6 matrix from Eigen3's template for transforming the mass matrix
-using Eigen::Matrix;
-using Eigen::Vector3d;
-
-typedef Matrix<double, 6, 6> Matrix6d;
 
 // declare the existence of the FORTRAN subroutines which are in the DLL
 extern "C" {
@@ -21,10 +14,10 @@ extern "C" {
 
 	void INTERFACE_INITINFLOWS(void* simulationInstance, int* nBlades, int* nNodes, const double inflows[]);
 
-	void INTERFACE_SETHUBMOTION(void* simulationInstance, double* time, double hubPos[3], double hubOri[3], double hubVel[3],
+	void INTERFACE_SETHUBMOTION(void* simulationInstance, double* time, double hubPos[3], double hubOri[3*3], double hubVel[3],
 		double hubRotVel[3], double* bladePitch);
 
-	void INTERFACE_SETHUBMOTION_FAKE(void* simulationInstance, double* time, double hubPos[3], double hubOri[3], double hubVel[3],
+	void INTERFACE_SETHUBMOTION_FAKE(void* simulationInstance, double* time, double hubPos[3], double hubOri[3*3], double hubVel[3],
 		double hubRotVel[3], double* bladePitch);
 
 	void INTERFACE_SETINFLOWS(void* simulationInstance, int* nBlades, int* nNodes, double* inflows);
@@ -32,10 +25,10 @@ extern "C" {
 	void INTERFACE_SETINFLOWS_FAKE(void* simulationInstance, int* nBlades, int* nNodes, double* inflows);
 
 	void INTERFACE_UPDATESTATES(void* simulationInstance, double* force_out,
-		double* moment_out, double* power_out, double* tsr_out, double massMatrix_out[6][6], double addedMassMatrix_out[6][6]);
+		double* moment_out, double* power_out, double* tsr_out, double massMatrix_out[6*6], double addedMassMatrix_out[6*6]);
 
 	void INTERFACE_UPDATESTATES_FAKE(void* simulationInstance, double* force_out,
-		double* moment_out, double* power_out, double* tsr_out, double massMatrix_out[6][6], double addedMassMatrix_out[6][6]);
+		double* moment_out, double* power_out, double* tsr_out, double massMatrix_out[6*6], double addedMassMatrix_out[6*6]);
 
 	void INTERFACE_GETBLADENODEPOS(void* simulationInstance, double* nodePos);
 
@@ -45,27 +38,33 @@ extern "C" {
 }
 
 
-void Transform_PDStoAD(double v[3])
+Vector3d AeroDyn_Interface_Wrapper::Transform_PDStoAD(Vector3d v) const
 {
-	v[1] *= -1.0;
-	v[2] *= -1.0;
+	return Vector3d(v.x(), -v.y(), -v.z());
 }
 
-void Transform_ADtoPDS(double v[3])
+
+Vector3d AeroDyn_Interface_Wrapper::Transform_ADtoPDS(Vector3d v) const
 {
-	v[1] *= -1.0;
-	v[2] *= -1.0;
+	return Vector3d(v.x(), -v.y(), -v.z());
 }
 
-void TransformHubKinematics_PDStoAD(double hubPos[3], double hubOri[3], double hubVel[3], double hubRotVel[3])
+Matrix3d AeroDyn_Interface_Wrapper::TransformOrientation(Matrix3d orientation) const
 {
-	Transform_PDStoAD(hubPos);
-	Transform_PDStoAD(hubOri);
-	Transform_PDStoAD(hubVel);
-	Transform_PDStoAD(hubRotVel);
+	orientation.row(1) *= -1.0;
+	orientation.row(2) *= -1.0;
+
+	return orientation;
 }
 
-Matrix6d Transform_ADtoPDS(const Matrix6d& m)
+void AeroDyn_Interface_Wrapper::TransformHubKinematics_PDStoAD(Vector3d& hubPos, Matrix3d& hubOri, Vector3d& hubVel, Vector3d& hubRotVel)
+{
+	hubPos = Transform_PDStoAD(hubPos);
+	hubVel = Transform_PDStoAD(hubVel);
+	hubRotVel = Transform_PDStoAD(hubRotVel);
+}
+
+Matrix6d AeroDyn_Interface_Wrapper::Transform_ADtoPDS_MassMatrix(Matrix6d m) const
 {
 	// TODO figure out how to transform a mass matrix from positive-up to positive-down (roll pi radians)
 	return m;
@@ -86,10 +85,8 @@ AeroDyn_Interface_Wrapper::AeroDyn_Interface_Wrapper()
 {
 	nBlades = nNodes = totalNodes = 0;
 
-	force[0] = force[1] = force[2] = 0.0;
-	moment[0] = moment[1] = moment[2] = 0.0;
-
-	tsr = 0.0;
+	hubReactionLoads.tsr = 0.0;
+	hubReactionLoads.power = 0.0;
 
 	simulationInstance = 0;
 }
@@ -104,10 +101,10 @@ void AeroDyn_Interface_Wrapper::InitAerodyn(
 	double fluidDensity,
 	double kinematicFluidVisc,
 	bool useAddedMass,
-	const double hubPosition[3],
-	const double hubOrientation[3],
-	const double hubVelocity[3],
-	const double hubRotationalVelocity[3],
+	Vector3d hubPosition,
+	Matrix3d hubOrientation,
+	Vector3d hubVelocity,
+	Vector3d hubAngularVel,
 	double bladePitch)
 {
 	// Holds the error status returned from AeroDyn_Interface's initialization function
@@ -120,25 +117,12 @@ void AeroDyn_Interface_Wrapper::InitAerodyn(
 	// doesn't recognize null-terminated character as the end of the string)
 	int fname_len = strlen(inputFilename);
 
-	// copy all the vectors into their own local static arrays so we can transform them for Aerodyn's 
-	// coordinate system
-	double _hubPos[3];
-	double _hubOri[3];
-	double _hubVel[3];
-	double _hubRotVel[3];
-
-	// I know you wouldn't usually do this in c++... but I want to keep it simple with primary data types
-	memcpy(_hubPos, hubPosition, 3 * sizeof(double));
-	memcpy(_hubOri, hubOrientation, 3 * sizeof(double));
-	memcpy(_hubVel, hubVelocity, 3 * sizeof(double));
-	memcpy(_hubRotVel, hubRotationalVelocity, 3 * sizeof(double));
-
 	// transform them to Aerodyn's global coordinate system 
-	TransformHubKinematics_PDStoAD(_hubPos, _hubOri, _hubVel, _hubRotVel);
+	TransformHubKinematics_PDStoAD(hubPosition, hubOrientation, hubVelocity, hubAngularVel);
 
 	// call the initialization subroutine in the FORTRAN DLL
 	INTERFACE_INITAERODYN(inputFilename, &fname_len, &useAddedMass, &fluidDensity, &kinematicFluidVisc,
-	    _hubPos, _hubOri, _hubVel, _hubRotVel,
+	    hubPosition.data(), hubOrientation.data(), hubVelocity.data(), hubAngularVel.data(),
 		&bladePitch, &nBlades, &nNodes, &turbineDiameter, &simulationInstance, &errStat,
 		errMsg);
 
@@ -175,38 +159,26 @@ void AeroDyn_Interface_Wrapper::InitInflows(const std::vector<double>& pdsInflow
 }
 
 void AeroDyn_Interface_Wrapper::SetHubMotion(double time,
-	const double hubPosition[3],
-	const double hubOrientation[3],
-	const double hubVelocity[3],
-	const double hubRotationalVelocity[3],
+	Vector3d hubPosition,
+	Matrix3d hubOrientation,
+	Vector3d hubVelocity,
+	Vector3d hubAngularVel,
 	double bladePitch,
 	bool isRealStep)
 {
-	// copy all the vectors into their own local static arrays so we can transform them for Aerodyn's 
-	// coordinate system
-	double _hubPos[3];
-	double _hubOri[3];
-	double _hubVel[3];
-	double _hubRotVel[3];
-
-	// I know you wouldn't usually do this in c++... but I want to keep it simple with primary data types
-	memcpy(_hubPos, hubPosition, 3 * sizeof(double));
-	memcpy(_hubOri, hubOrientation, 3 * sizeof(double));
-	memcpy(_hubVel, hubVelocity, 3 * sizeof(double));
-	memcpy(_hubRotVel, hubRotationalVelocity, 3 * sizeof(double));
 
 	// transform them to Aerodyn's global coordinate system 
-	TransformHubKinematics_PDStoAD(_hubPos, _hubOri, _hubVel, _hubRotVel);
+	TransformHubKinematics_PDStoAD(hubPosition, hubOrientation, hubVelocity, hubAngularVel);
 
 	// If this is a fake-step, then we don't want this to be permanent, so we call the fake version
 	if (!isRealStep) {
-		INTERFACE_SETHUBMOTION_FAKE(simulationInstance, &time, _hubPos, _hubOri, _hubVel,
-			_hubRotVel, &bladePitch);
+		INTERFACE_SETHUBMOTION_FAKE(simulationInstance, &time, hubPosition.data(), hubOrientation.data(), hubVelocity.data(),
+			hubAngularVel.data(), &bladePitch);
 	}
 	// Otherwise we call the real version, which perminantly changes the inputs
 	else {
-		INTERFACE_SETHUBMOTION(simulationInstance, &time, _hubPos, _hubOri, _hubVel,
-			_hubRotVel, &bladePitch);
+		INTERFACE_SETHUBMOTION(simulationInstance, &time, hubPosition.data(), hubOrientation.data(), 
+			hubVelocity.data(), hubAngularVel.data(), &bladePitch);
 	}
 
 	pitch = bladePitch;
@@ -226,39 +198,30 @@ void AeroDyn_Interface_Wrapper::SetInflowVelocities(const std::vector<double>& i
 	}
 }
 
-void AeroDyn_Interface_Wrapper::UpdateStates(
-	double* force_out,
-	double* moment_out,
-	double* power_out,
-	double* tsr_out,
-	double massMatrix_out[6][6],
-	double addedMassMatrix_out[6][6],
-	bool isRealStep)
+AeroDyn_Interface_Wrapper::HubReactionLoads AeroDyn_Interface_Wrapper::UpdateStates(bool isRealStep)
 {
-	static const int VectorSize = sizeof(double) * 3;
-
-
 	// If this is a fake-step, then we don't want this to be permanent, so we call the fake version
 	if ( !isRealStep ) {
 		// Note, we're passing our transformed inflows here, not the inflows from the 
 		// function parameter.
-		INTERFACE_UPDATESTATES_FAKE(simulationInstance, force_out, moment_out, power_out,
-			tsr_out, massMatrix_out, addedMassMatrix_out);
+		INTERFACE_UPDATESTATES_FAKE(simulationInstance, hubReactionLoads.force.data(), hubReactionLoads.moment.data(), &hubReactionLoads.power,
+			&hubReactionLoads.tsr, hubReactionLoads.massMatrix.data(), hubReactionLoads.addedMassMatrix.data());
 	}
 	// Otherwise we call the real version, which permanently changes the states for this turbine
 	else {
 		// Note, we're passing our transformed inflows here, not the inflows from the 
 		// function parameter.
-		INTERFACE_UPDATESTATES(simulationInstance, force_out, moment_out, power_out,
-			tsr_out, massMatrix_out, addedMassMatrix_out);
+		INTERFACE_UPDATESTATES(simulationInstance, hubReactionLoads.force.data(), hubReactionLoads.moment.data(), &hubReactionLoads.power,
+			&hubReactionLoads.tsr, hubReactionLoads.massMatrix.data(), hubReactionLoads.addedMassMatrix.data());
 	}
 
-	// Save the resulting forces and moments
-	tsr = *tsr_out;
-	Transform_ADtoPDS(force_out);
-	Transform_ADtoPDS(moment_out);
-	memcpy(force, force_out, VectorSize);
-	memcpy(moment, moment_out, VectorSize);
+	// Transform the results into PDS' coordinate system
+	hubReactionLoads.force = Transform_ADtoPDS(hubReactionLoads.force);
+	hubReactionLoads.moment = Transform_ADtoPDS(hubReactionLoads.moment);
+	hubReactionLoads.massMatrix = Transform_ADtoPDS_MassMatrix(hubReactionLoads.massMatrix);
+	hubReactionLoads.addedMassMatrix = Transform_ADtoPDS_MassMatrix(hubReactionLoads.addedMassMatrix);
+
+	return hubReactionLoads;
 }
 
 // Communicates blade node positions to ProteusDS.  This needs to be separate from the other outputs so that it can be used to get inflow values at the current time step.
@@ -306,26 +269,22 @@ double AeroDyn_Interface_Wrapper::GetTurbineDiameter() const
 
 double AeroDyn_Interface_Wrapper::GetTSR() const
 {
-	return tsr;
+	return hubReactionLoads.tsr;
 }
 
 double AeroDyn_Interface_Wrapper::GetTorque() const
 {
-	return moment[0];
+	return hubReactionLoads.moment.x();
 }
 
-void AeroDyn_Interface_Wrapper::GetForce(double force_out[3]) const
+Vector3d AeroDyn_Interface_Wrapper::GetForce() const
 {
-	force_out[0] = force[0];
-	force_out[1] = force[1];
-	force_out[2] = force[2];
+	return hubReactionLoads.force;
 }
 
-void AeroDyn_Interface_Wrapper::GetMoment(double moment_out[3]) const
+Vector3d AeroDyn_Interface_Wrapper::GetMoment() const
 {
-	moment_out[0] = moment[0];
-	moment_out[1] = moment[1];
-	moment_out[2] = moment[2];
+	return hubReactionLoads.moment;
 }
 
 

@@ -20,7 +20,8 @@ class FASTTurbineModel::PImp
 {
 public:
 	struct HubMotion {
-		Vector3d position, velocity, orientation, angularVel;
+		Vector3d position, velocity, angularVel;
+		Matrix3d orientation;
 	};
 
 	PImp();
@@ -45,21 +46,27 @@ public:
 	DriveTrain::ModelStates   dt_resultStates;
 	MasterController		  mcont;
 
-	std::ofstream fout;
+	//-----------------------------------------------
+	// Debug
+	std::ofstream fout_input;
+	std::ofstream fout_output;
+
 	void WriteHeader() {
-		fout << "time\torient_roll\torient_pitch\torient_yaw\tang_vel_x\tang_vel_y\tang_vel_z\tinflows_x\tFx\tFy\tFz" << std::endl;
+		fout_input << "time\torient_roll\torient_pitch\torient_yaw\tang_vel_x\tang_vel_y\tang_vel_z" << std::endl;
+		fout_output << "time\tnacforce_x\tnacforce_y\tnacforce_z\tnacmoment_x\tnacmoment_y\tnacmoment_z" << std::endl;
 	}
 	void LogInput(double time, FASTTurbineModel::NacelleMotion nm) {
-		fout << time << '\t' << nm.eulerAngles[0] << '\t' << nm.eulerAngles[1] << '\t' << nm.eulerAngles[2] << '\t' << nm.angularVel[0] << '\t' << nm.angularVel[1] << '\t'
+		fout_input << time << '\t' << nm.eulerAngles[0] << '\t' << nm.eulerAngles[1] << '\t' << nm.eulerAngles[2] << '\t' << nm.angularVel[0] << '\t' << nm.angularVel[1] << '\t'
 			<< nm.angularVel[2] << '\t';
 	}
+	void LogOutput(double time, FASTTurbineModel::NacelleReactionForces rf) {
+		fout_output << time << '\t' << rf.force[0] << '\t' << rf.force[1] << '\t' << rf.force[2] << '\t' << rf.moment[0] << '\t'
+			<< rf.moment[1] << '\t' << rf.moment[2] << std::endl;
+	}
 	void LogInflows(double x) {
-		fout << x << '\t';
+		fout_input << x << '\t' << std::endl;
 	}
-	void LogOutput(FASTTurbineModel::NacelleReactionForces rf)
-	{
-		fout << rf.force[0] << '\t' << rf.force[1] << '\t' << rf.force[2] << std::endl;
-	}
+	//---------------------------------------------------
 };
 
 FASTTurbineModel::PImp::PImp()
@@ -67,7 +74,10 @@ FASTTurbineModel::PImp::PImp()
 	time = targetTime = 0.0;
 	onRealStep = false;
 
-	fout.open("LogTurbineInput.out", std::ofstream::out);
+	fout_input.open("LogTurbineInput.out", std::ofstream::out);
+	fout_output.open("LogTurbineOutput.out", std::ofstream::out);
+	fout_input.precision(5);
+	fout_output.precision(5);
 	WriteHeader();
 }
 
@@ -78,6 +88,7 @@ FASTTurbineModel::FASTTurbineModel() : p_imp(new PImp)
 
 FASTTurbineModel::~FASTTurbineModel() = default;
 
+// TODO send AeroDyn the actual hub orientation matrix to save the extra calculation of the Euler angles
 // Calculates the appropriate hub motion according to the nacelle motion and rotor motion
 FASTTurbineModel::PImp::HubMotion FASTTurbineModel::PImp::CalculateHubMotion(const NacelleMotion& nm, const DriveTrain::States& rs)
 {
@@ -89,13 +100,29 @@ FASTTurbineModel::PImp::HubMotion FASTTurbineModel::PImp::CalculateHubMotion(con
 	// Use Nacelle orientation and rotor.theta to update hub orientation for AeroDyn
 	nacelleOrient = EulerConstruct(Vector3d(nm.eulerAngles));
 
+	Vector3d bodyX = nacelleOrient.row(0);
+	Vector3d bodyY = nacelleOrient.row(1);
+	Vector3d bodyZ = nacelleOrient.row(2);
+
+	AngleAxisd angleaxis(rs.theta, bodyX);
+
+	Vector3d bodyY_prime = angleaxis * bodyY;
+	Vector3d bodyZ_prime = angleaxis * bodyZ;
+
+	hubOrient.row(0) = bodyX;
+	hubOrient.row(1) = bodyY_prime;
+	hubOrient.row(2) = bodyZ_prime;
+
 	// Create rotation matrix for the rotor angle
-	Matrix3d rotorRotation = EulerConstruct(Vector3d(rs.theta, 0.0, 0.0));
+	// TODO make sure this is rotating the right way
+	//Matrix3d rotorRotation = EulerConstruct(Vector3d(rs.theta, 0.0, 0.0));
 
 	// Combine the two rotation matrices
-	hubOrient = rotorRotation * nacelleOrient;
+	// R'_x R_z R_y R_x (Don't know why, but this is the order of multiplication and it gives the 
+	// correct result. I would assume that the R_x's would have to next to each other)
+	//hubOrient = rotorRotation * nacelleOrient;
 
-	hm.orientation = EulerExtract(hubOrient);
+	hm.orientation = hubOrient;
 
 	hm.angularVel = rs.vel * hubOrient.row(0); // rotation axis in the global coordinate system
 
@@ -114,6 +141,11 @@ void FASTTurbineModel::InitWithConstantRotorSpeedAndPitch(double constantRotorSp
 // set before the initial rotor speed.
 void FASTTurbineModel::InitDriveTrain(double rotorMOI, double genMOI, double stiffness, double damping, double gearboxRatio, double initialRotorVel)
 {
+	// TODO get Andre to change PDS to allow us to specify the initial rotor vel
+	// In the meantime because PDS isn't letting us set the initial rotor vel, I've hard-coded it here
+	initialRotorVel = 0.9529497705;
+	//--------------------------------------------------------------------------------------
+
 	p_imp->drivetrain.Init(initialRotorVel, gearboxRatio, damping, stiffness, rotorMOI, genMOI);
 	p_imp->drivetrainStates_hold = p_imp->drivetrain.GetStates();
 }
@@ -165,10 +197,10 @@ void FASTTurbineModel::InitAeroDyn(const char* inputFilename,
 		fluidDensity,
 		kinematicFluidVisc,
 		useAddedMass,
-		hm.position.data(),
-		hm.orientation.data(),
-		hm.velocity.data(),
-		hm.angularVel.data(),
+		hm.position,
+		hm.orientation,
+		hm.velocity,
+		hm.angularVel,
 		p_imp->mcont.GetBladePitchCommand());
 
 	// Resize our container for the inflow velocities to the appropriate size
@@ -215,7 +247,7 @@ void FASTTurbineModel::SetNacelleStates(double time, const NacelleMotion& nm, bo
 
 	// Send these estimated values to AeroDyn so the caller can get the blade node positions
 	PImp::HubMotion hm = p_imp->CalculateHubMotion(nm, dtStates_withAcc.rotor);
-	p_imp->aerodyn.SetHubMotion(time, hm.position.data(), hm.orientation.data(), hm.velocity.data(), hm.angularVel.data(), bladePitch, false);
+	p_imp->aerodyn.SetHubMotion(time, hm.position, hm.orientation, hm.velocity, hm.angularVel, bladePitch, false);
 }
 
 DriveTrain::ModelStates FASTTurbineModel::PImp::IntegrateDriveTrain_Euler(double t, const FASTTurbineModel::NacelleMotion& nm)
@@ -273,17 +305,15 @@ DriveTrain::ModelStates FASTTurbineModel::PImp::IntegrateDriveTrain_RK4(double t
 
 	HubMotion hm = CalculateHubMotion(nm, state_n1.rotor);
 
-	aerodyn.SetHubMotion(time + 0.5 * dt, hm.position.data(), hm.orientation.data(), hm.velocity.data(), hm.angularVel.data(), bladePitch, false);
+	aerodyn.SetHubMotion(time + 0.5 * dt, hm.position, hm.orientation, hm.velocity, hm.angularVel, bladePitch, false);
 	aerodyn.SetInflowVelocities(inflows, false);
-	double tsr, power;
-	Vector3d force, moment;
-	double massMat[6][6];
-	double addedMassMat[6][6];
-	aerodyn.UpdateStates(force.data(), moment.data(), &power, &tsr, massMat, addedMassMat, false);
+
+	// Hub reaction loads
+	AeroDyn_Interface_Wrapper::HubReactionLoads hrl = aerodyn.UpdateStates(false);
 
 
 	// K2
-	s = drivetrain.CalcDeriv(state_n1, moment.x(), genTorque);
+	s = drivetrain.CalcDeriv(state_n1, hrl.moment.x(), genTorque);
 
 	double gen_k_2v = s.gen.acc * dt;
 	double gen_k_2x = s.gen.vel * dt;
@@ -299,12 +329,12 @@ DriveTrain::ModelStates FASTTurbineModel::PImp::IntegrateDriveTrain_RK4(double t
 
 	hm = CalculateHubMotion(nm, state_n2.rotor);
 
-	aerodyn.SetHubMotion(time + 0.5 * dt, hm.position.data(), hm.orientation.data(), hm.velocity.data(), hm.angularVel.data(), bladePitch, false);
+	aerodyn.SetHubMotion(time + 0.5 * dt, hm.position, hm.orientation, hm.velocity, hm.angularVel, bladePitch, false);
 	aerodyn.SetInflowVelocities(inflows, false);
-	aerodyn.UpdateStates(force.data(), moment.data(), &power, &tsr, massMat, addedMassMat, false);
+	hrl = aerodyn.UpdateStates(false);
 
 	// K3
-	s = drivetrain.CalcDeriv(state_n2, moment.x(), genTorque);
+	s = drivetrain.CalcDeriv(state_n2, hrl.moment.x(), genTorque);
 
 	double gen_k_3v = s.gen.acc * dt;
 	double gen_k_3x = s.gen.vel * dt;
@@ -319,11 +349,11 @@ DriveTrain::ModelStates FASTTurbineModel::PImp::IntegrateDriveTrain_RK4(double t
 	state_n3.rotor.theta = state_n.rotor.theta + rot_k_3x;
 
 	hm = CalculateHubMotion(nm, state_n3.rotor);
-	aerodyn.SetHubMotion(time + dt, hm.position.data(), hm.orientation.data(), hm.velocity.data(), hm.angularVel.data(), bladePitch, false);
-	aerodyn.UpdateStates(force.data(), moment.data(), &power, &tsr, massMat, addedMassMat, false);
+	aerodyn.SetHubMotion(time + dt, hm.position, hm.orientation, hm.velocity, hm.angularVel, bladePitch, false);
+	hrl = aerodyn.UpdateStates(false);
 
 	// K4
-	s = drivetrain.CalcDeriv(state_n3, moment.x(), genTorque);
+	s = drivetrain.CalcDeriv(state_n3, hrl.moment.x(), genTorque);
 
 	double gen_k_4v = s.gen.acc * dt;
 	double gen_k_4x = s.gen.vel * dt;
@@ -372,8 +402,8 @@ FASTTurbineModel::NacelleReactionForces FASTTurbineModel::UpdateStates()
 
 	// Use drive train state to update aerodyn
 	PImp::HubMotion hm = p_imp->CalculateHubMotion(p_imp->nacelleMotion, states.rotor);
-	p_imp->aerodyn.SetHubMotion(p_imp->time, hm.position.data(), hm.orientation.data(), hm.velocity.data(),
-		hm.angularVel.data(), bladePitch, p_imp->onRealStep);
+	p_imp->aerodyn.SetHubMotion(p_imp->time, hm.position, hm.orientation, hm.velocity,
+		hm.angularVel, bladePitch, p_imp->onRealStep);
 
 	p_imp->aerodyn.SetInflowVelocities(p_imp->inflows, p_imp->onRealStep);
 	FASTTurbineModel::NacelleReactionForces rf = p_imp->UpdateAeroDynStates(p_imp->onRealStep);
@@ -397,9 +427,16 @@ FASTTurbineModel::NacelleReactionForces FASTTurbineModel::UpdateStates()
 	*/
 	rf.moment[0] = p_imp->mcont.GetGeneratorTorqueCommand();
 
-	if (p_imp->onRealStep)
-		p_imp->LogOutput(rf);
+	//----------------------------------
+	// Debug
+	if(p_imp->onRealStep)
+		p_imp->LogOutput(p_imp->time, rf);
 
+	// TODO PDS currently is applying the moments as forces: get Andre to correct this
+	rf.moment[0] = rf.force[0];
+	rf.moment[1] = rf.force[1];
+	rf.moment[2] = rf.force[2];
+	
 	// Return the reaction forces
 	return rf;
 }
@@ -407,28 +444,21 @@ FASTTurbineModel::NacelleReactionForces FASTTurbineModel::UpdateStates()
 // Updates AeroDyn's state up to time + dt and will return the forces and moments at that time
 FASTTurbineModel::NacelleReactionForces FASTTurbineModel::PImp::UpdateAeroDynStates(bool isRealStep)
 {
-	double force[3];
-	double moment[3];
-	double power;
-	double tsr;
-	double massMat[6][6];
-	double addedMassMat[6][6];
-
-	aerodyn.UpdateStates(force, moment, &power, &tsr, massMat, addedMassMat, isRealStep);
-
-	Vector3d force_vec(force);
-	Vector3d moment_vec(moment);
+	// Hub reaction loads
+	AeroDyn_Interface_Wrapper::HubReactionLoads hrl = aerodyn.UpdateStates(isRealStep);
 
 	// Transform the force and moment in from the hub coordinate system to the nacelle coordinate system
-	Vector3d trans_force_vec = TransformHubToNacelle(force_vec, nacelleOrient, hubOrient);
-	Vector3d trans_moment_vec = TransformHubToNacelle(moment_vec, nacelleOrient, hubOrient);
+	Vector3d trans_force_vec = TransformHubToNacelle(hrl.force, nacelleOrient, hubOrient);
+	Vector3d trans_moment_vec = TransformHubToNacelle(hrl.moment, nacelleOrient, hubOrient);
 
+	// Get the results into the NacelleReactionForces structure so we can return it
 	NacelleReactionForces r;
-	r.power = power;
-	r.tsr = tsr;
+	r.power = hrl.power;
+	r.tsr = hrl.tsr;
 	memcpy(r.force, trans_force_vec.data(), 3 * sizeof(double));
 	memcpy(r.moment, trans_moment_vec.data(), 3 * sizeof(double));
 
+	// Save the transformed reaction loads
 	nacelleForce = Vector3d(r.force);
 	nacelleMoment = Vector3d(r.moment);
 
@@ -510,12 +540,12 @@ double FASTTurbineModel::GetTSR() const
 
 void FASTTurbineModel::GetHubForce(double v[3]) const
 {
-	return p_imp->aerodyn.GetForce(v);
+	memcpy(v, p_imp->aerodyn.GetForce().data(), 3 * sizeof(double));
 }
 
 void FASTTurbineModel::GetHubMoment(double v[3]) const
 {
-	p_imp->aerodyn.GetMoment(v);
+	memcpy(v, p_imp->aerodyn.GetMoment().data(), 3 * sizeof(double));
 }
 
 

@@ -23,9 +23,25 @@ etc.
 
 #include <vector>
 #include "FASTTurbineExceptions.h"
+#include "Eigen/SparseCore"
+
+// Define this for the mass matrix
+typedef Eigen::Matrix<double, 6, 6> Matrix6d;
+using Eigen::Matrix3d;
+using Eigen::Vector3d;
 
 class AeroDyn_Interface_Wrapper {
 public:
+
+	struct HubReactionLoads {
+		Vector3d force;
+		Vector3d moment;
+		double power;
+		double tsr;
+		Matrix6d massMatrix;
+		Matrix6d addedMassMatrix;
+	};
+
 	AeroDyn_Interface_Wrapper();
 
 	~AeroDyn_Interface_Wrapper();
@@ -36,12 +52,12 @@ public:
 		double fluidDensity,                   // kg/m^3
 		double kinematicFluidVisc,             // m^2/sec
 		bool useAddedMass,                     // have AeroDyn include added mass effects
-		const double hubPosition[3],		   // metres
-		const double hubOrientation[3],        // Euler angles (in radians)
-		const double hubVelocity[3],		   // metres/sec
-		const double hubRotationalVelocity[3], // axis-angle form in global coordinate system
+		Vector3d hubPosition,		   // metres
+		Matrix3d hubOrientation,        // Euler angles (in radians)
+		Vector3d hubVelocity,		   // metres/sec
+		Vector3d hubRotationalVelocity, // axis-angle form in global coordinate system
 		double bladePitch);                    // radians
-
+	 
 	// Initializes the inflows. Note, inflow velocities are in global coordinate system
 	void InitInflows(const std::vector<double>& inflows);
 	// The format expected is (in global coordinate system)
@@ -54,11 +70,11 @@ public:
 	// Updates the hub motion variables, changing the positions of the nodes accordingly. Call
 	// this before getBladeNodePositions(...)
 	void SetHubMotion(
-		double time,                          // the moment in time that the inputs describe (seconds)
-		const double hubPosition[3],          // position of the hub in global coordinate system (meters)
-		const double hubOrientation[3],       // euler angles describing orientation of the hub of the hub (radians)
-		const double hubVelocity[3],          // velocity of the hub in the global coordinate system (meters/sec)
-		const double hubRotationalVelocity[3],// rotational velocity of the hub in global coordinate system (axis-angle)
+		double time,                    // the moment in time that the inputs describe (seconds)
+		Vector3d hubPosition,			// position of the hub in global coordinate system (meters)
+		Matrix3d hubOrientation,		// euler angles describing orientation of the hub of the hub (radians)
+		Vector3d hubVelocity,			// velocity of the hub in the global coordinate system (meters/sec)
+		Vector3d hubAngularVelocity,    // angular velocity of the hub in global coordinate system (axis-angle)
 		double bladePitch,
 		bool isRealStep = true);
 
@@ -82,35 +98,37 @@ public:
 	// Returns the diameter of the turbine (call after InitAeroDyn)
 	double GetTurbineDiameter() const;
 	
-	// Then we call this, passing the inflow velocities at the time passed to UpdateHubMotion(...)
-	// Returns the resulting force, moment, and power at that same time
-	void UpdateStates(
-		double force_out[3],
-		double moment_out[3],
-		double* power_out,
-		double* tsr_out,
-		double massMatrix_out[6][6],
-		double addedMassMatrix_out[6][6],
-		bool isRealStep = true);
+	// Then we call this, which returns the reaction loads (and other things) from AeroDyn
+	HubReactionLoads UpdateStates(bool isRealStep = true);
 
 	double GetTSR() const;
 	double GetTorque() const; // Returns the torque resulting from the last call to UpdateStates
-	void GetForce(double[3]) const; 
-	void GetMoment(double[3]) const;
+	Vector3d GetForce() const; 
+	Vector3d GetMoment() const;
 	double GetBladePitch() const; // Returns the last actual pitch value (ones that have been assigned via isRealStep == true).
 
 private:
+	Vector3d Transform_PDStoAD(Vector3d v) const;
+
+	Vector3d Transform_ADtoPDS(Vector3d v) const;
+
+	Matrix6d Transform_ADtoPDS_MassMatrix(Matrix6d m) const;
+
+	// Transforms the global to local orientation matrix from z-down to z-up coordinate system
+	// Note 
+	Matrix3d TransformOrientation(Matrix3d orientation) const;
+
 	// updates aerodynInflows with transformed pdsInflows
 	void TransformInflows_PDStoAD(const std::vector<double>& pdsInflows);
+
+	void TransformHubKinematics_PDStoAD(Vector3d& hubPos, Matrix3d& hubOri, Vector3d& hubVel, Vector3d& hubRotVel);
 
 	// the turbine instance pointer for the current instance of the class (points to a FORTRAN type)
 	void* simulationInstance;
 
+	HubReactionLoads hubReactionLoads; // Saved reaction loads from last call to UpdateStates
 	std::vector<double> aerodynInflows;
-	double tsr;
 	double turbineDiameter;
-	double force[3];
-	double moment[3];
 	double pitch;
 	int totalNodes;
 	int nBlades;

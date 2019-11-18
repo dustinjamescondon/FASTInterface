@@ -32,6 +32,7 @@ public:
 
 private:
 	typedef void(__cdecl *f_ptr)(float*, int*, const char*, const char*, const char*);
+	typedef void(__cdecl* vf_ptr)();
 
 	// number of elements in the swap array
 	static const int NumSwap = 100; 
