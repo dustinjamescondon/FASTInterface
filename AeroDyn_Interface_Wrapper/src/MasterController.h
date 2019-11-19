@@ -18,18 +18,15 @@ class MasterController
 {
 public:
 	MasterController();
-	MasterController(double bladePitch);
-	MasterController(const char* bladed_dll_fname);
-	MasterController(const char* inputfile, double initGenSpeed);
 
 	// Initialize the controller with a constant rotor speed and blade pitch
 	void Init(double bladePitch);
 
 	// Initialization function for the controllers when using a Bladed-style DLL
-	void Init_BladedDLL(const char* bladed_dll_fname);
+	void Init_BladedDLL(const char* bladed_dll_fname, double initBladePitch);
 
 	// Initialization function for the controllers when using parameters from CSV and parameter files
-	void Init_InputFile(const char* inputfile_fname, double initGenSpeed);
+	void Init_InputFile(const char* inputfile_fname, double initGenSpeed, double initBladePitch);
 
 	void UpdateController(double time, double genSpeed, double currBladePitch);
 
@@ -40,7 +37,7 @@ private:
 	enum ControllerMode { BLADED_DLL, INPUT_FILE, CONSTANT_SPEED };
 	ControllerMode controlMode;
 
-	double constantBladePitch;
+	double bladePitchCommand;
 	LowPassFilter genSpeedLPF;
 	PitchController pitcont;
 	GenController   gencont;

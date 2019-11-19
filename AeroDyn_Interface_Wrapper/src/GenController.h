@@ -14,7 +14,7 @@ Description:
 #pragma once
 
 #include "CSVSpecFunction.h"
-#include "FASTTurbineExceptions.h"
+#include "FASTInterfaceExceptions.h"
 
 class GenController
 {

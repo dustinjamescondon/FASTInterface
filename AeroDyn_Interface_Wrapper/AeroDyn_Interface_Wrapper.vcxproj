@@ -23,7 +23,7 @@
     <ClCompile Include="src\BladedInterface.cpp" />
     <ClCompile Include="src\CSVSpecFunction.cpp" />
     <ClCompile Include="src\DriveTrain.cpp" />
-    <ClCompile Include="src\FASTTurbineModel.cpp" />
+    <ClCompile Include="src\FASTInterface.cpp" />
     <ClCompile Include="src\InputFile.cpp" />
     <ClCompile Include="src\GenController.cpp" />
     <ClCompile Include="src\LowPassFilter.cpp" />
@@ -49,8 +49,8 @@
     <ClInclude Include="src\BladedInterface.h" />
     <ClInclude Include="src\CSVSpecFunction.h" />
     <ClInclude Include="src\DriveTrain.h" />
-    <ClInclude Include="src\FASTTurbineExceptions.h" />
-    <ClInclude Include="src\FASTTurbineModel.h" />
+    <ClInclude Include="src\FASTInterfaceExceptions.h" />
+    <ClInclude Include="src\FASTInterface.h" />
     <ClInclude Include="src\GenController.h" />
     <ClInclude Include="src\InputFile.h" />
     <ClInclude Include="src\LowPassFilter.h" />
@@ -134,7 +134,7 @@
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
       <SDLCheck>true</SDLCheck>
-      <PreprocessorDefinitions>WIN32;_DEBUG;FASTTURBINE_INTERFACE_EXPORTS;_WINDOWS;_USRDLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>WIN32;_DEBUG;FASTINTERFACE_EXPORTS;_WINDOWS;_USRDLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>false</ConformanceMode>
       <PrecompiledHeaderFile>
       </PrecompiledHeaderFile>
@@ -156,7 +156,7 @@
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
       <SDLCheck>true</SDLCheck>
-      <PreprocessorDefinitions>_DEBUG;AD_INTERFACE_WRAPPER_EXPORTS;_WINDOWS;_USRDLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>_DEBUG;FASTINTERFACE_EXPORTS;_WINDOWS;_USRDLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <PrecompiledHeaderFile>
       </PrecompiledHeaderFile>
@@ -177,7 +177,7 @@
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <SDLCheck>true</SDLCheck>
-      <PreprocessorDefinitions>WIN32;NDEBUG;FASTTURBINE_INTERFACE_EXPORTS;_WINDOWS;_USRDLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>WIN32;NDEBUG;FASTINTERFACE_EXPORTS;_WINDOWS;_USRDLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>false</ConformanceMode>
       <PrecompiledHeaderFile>
       </PrecompiledHeaderFile>
@@ -204,7 +204,7 @@
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <SDLCheck>true</SDLCheck>
-      <PreprocessorDefinitions>NDEBUG;ADINTERFACEWRAPPERVER2_EXPORTS;_WINDOWS;_USRDLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>NDEBUG;FASTINTERFACE_EXPORTS;_WINDOWS;_USRDLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <PrecompiledHeaderFile>
       </PrecompiledHeaderFile>

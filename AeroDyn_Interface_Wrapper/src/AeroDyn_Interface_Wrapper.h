@@ -22,7 +22,7 @@ etc.
 #pragma once
 
 #include <vector>
-#include "FASTTurbineExceptions.h"
+#include "FASTInterfaceExceptions.h"
 #include "Eigen/SparseCore"
 
 // Define this for the mass matrix

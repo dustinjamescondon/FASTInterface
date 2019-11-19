@@ -5,36 +5,23 @@ MasterController::MasterController()
 
 }
 
-MasterController::MasterController(double bladePitch)
-{
-	Init(bladePitch);
-}
-
-MasterController::MasterController(const char* bladed_dll_fname)
-{
-	Init_BladedDLL(bladed_dll_fname);
-}
-
-MasterController::MasterController(const char* inputfile, double initGenSpeed) 
-{
-	Init_InputFile(inputfile, initGenSpeed);
-}
 
 void MasterController::Init(double bladePitch)
 {
 	controlMode = CONSTANT_SPEED;
 	
-	constantBladePitch = bladePitch;
+	bladePitchCommand = bladePitch;
 }
 
-void MasterController::Init_BladedDLL(const char* fname)
+void MasterController::Init_BladedDLL(const char* fname, double initBladePitch)
 {
 	controlMode = BLADED_DLL;
+	bladePitchCommand = initBladePitch;
 
 	bladedcont.Init(fname);
 }
 
-void MasterController::Init_InputFile(const char* inputfile_fname, double initSpeed)
+void MasterController::Init_InputFile(const char* inputfile_fname, double initGenSpeed, double initRotorSpeed)
 {
 	// Set the mode to reflect how we're using the controller
 	controlMode = INPUT_FILE;
@@ -66,7 +53,7 @@ void MasterController::Init_InputFile(const char* inputfile_fname, double initSp
 	pitcont.LoadGainSchedulingFile(pitchTable.c_str(), 0.0f);
 	pitcont.SetProportionGain(proportionGain);
 	pitcont.SetIntegralGain(integralGain);
-	genSpeedLPF.InitFilterVal(initSpeed);
+	genSpeedLPF.InitFilterVal(initRotorSpeed);
 	genSpeedLPF.SetCornerFreq(cornerFreq);
 }
 
@@ -77,6 +64,7 @@ void MasterController::UpdateController(double time, double genSpeed, double cur
 	{
 	case BLADED_DLL:
 		bladedcont.UpdateController(time, currBladePitch, currBladePitch, currBladePitch, genSpeed, 0.0);
+		bladePitchCommand = bladedcont.GetBlPitchCommand();
 		break;
 	case INPUT_FILE:
 		// Update the Low-Pass Filter
@@ -84,6 +72,8 @@ void MasterController::UpdateController(double time, double genSpeed, double cur
 
 		// Update the pitch controller 
 		pitcont.Calculate(time, genSpeedF);
+
+		bladePitchCommand = pitcont.GetLastPitchCommand();
 
 		// Don't need to update the gen controller because it doesn't have any internal states
 		// to update; it's just a lookup table
@@ -98,13 +88,13 @@ double MasterController::GetBladePitchCommand() const
 {
 	switch (controlMode) {
 	case BLADED_DLL:
-		return bladedcont.GetBlPitchCommand();
+		return bladePitchCommand;
 		break;
 	case INPUT_FILE:
 		return pitcont.GetLastPitchCommand();
 		break;
 	default:
-		return constantBladePitch;
+		return bladePitchCommand;
 	}
 }
 

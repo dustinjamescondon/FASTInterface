@@ -1,4 +1,4 @@
-#include "..\..\AeroDyn_Interface_Wrapper\src\FASTTurbineModel.h"
+#include "..\..\AeroDyn_Interface_Wrapper\src\FASTInterface.h"
 #include <Eigen/Dense>
 #include <SFML/Graphics.hpp>
 #include <iostream>
@@ -27,11 +27,11 @@ int main()
 	static const double dt = 0.01;
 	static const int NSteps = (int)(EndTime / dt);
 
-	static const double InflowSpeed = 10.0;    // in metres/sec
+	static const double InflowSpeed = 20.0;    // in metres/sec
 	static const double FluidDensity = 1.225;
 	static const double KinematicFluidVisc = 1.4639e-05;
-	static const double InitialRotorSpeed = 0.9;
-	static const double ConstantPitch = 0.0;
+	static const double InitialRotorSpeed = 1.2;
+	static const double InitialPitch = 0.0;
 	static const double GearboxRatio = 97.0;				// From NREL's OC3 report
 	static const double DriveTrainDamping = 6215000.0;      // "
 	static const double DriveTrainStiffness = 867637000.0;  // "
@@ -49,7 +49,7 @@ int main()
 	int totalNodes = 0;
 	//--------------------------
 	// Outputs from turbine
-	FASTTurbineModel::NacelleReactionForces rf;
+	FASTInterface::NacelleReactionLoads rf;
 
 	//--------------------------
 	// Initialization
@@ -60,32 +60,37 @@ int main()
 	TimePlot genSpeedPlot(0, 204, 200, 100, 0.0, 300.0);
 	TimePlot rotorSpeedPlot(0, 306, 200, 100, 0.0, 2);
 
-	FASTTurbineModel turb;
+	FASTInterface turb;
 
 	// Initialize the nacelle state - it will be constant for this simulation test
-	FASTTurbineModel::NacelleMotion nstate;
-	nstate.angularVel[0] = 0.0;
-	nstate.angularVel[1] = 0.0;
-	nstate.angularVel[2] = 0.0;
+	double nacelleAngularVel[3];
+	double nacelleEulerAngles[3];
+	double nacellePosition[3];
+	double nacelleVel[3];
+	nacelleAngularVel[0] = 0.0;
+	nacelleAngularVel[1] = 0.0;
+	nacelleAngularVel[2] = 0.0;
 
-	nstate.eulerAngles[0] = 0.0;
-	nstate.eulerAngles[1] = 0.0;
-	nstate.eulerAngles[2] = 0.0;
+	nacelleEulerAngles[0] = 0.0;
+	nacelleEulerAngles[1] = 0.0;
+	nacelleEulerAngles[2] = 0.0;
 
-	nstate.position[0] = 0.0;
-	nstate.position[1] = nstate.position[2] = 75.0;
-
-	nstate.velocity[0] = nstate.velocity[1] = nstate.velocity[2] = 0.0;
+	nacellePosition[0] = 0.0;
+	nacellePosition[1] = nacellePosition[2] = 75.0;
+	nacelleVel[0] = nacelleVel[1] = nacelleVel[2] = 0.0;
 
 	try {
 		// Use these initialization methods to use the Bladed-style DLL
 		turb.InitDriveTrain(RotorMOI, GenMOI, DriveTrainStiffness, DriveTrainDamping, GearboxRatio, InitialRotorSpeed);
-		turb.InitControllers_BladedDLL("Discon_OC3Hywind.dll");
+		turb.InitControllers_BladedDLL("C:/Users/dusti/Documents/Work/PRIMED/ControllerDLLs/Discon.dll", InitialPitch);
 
 		// Use this to intialize the turbine with constant rotor speed and blade pitch
 		//turb.InitWithConstantRotorSpeedAndPitch(InitialRotorSpeed, ConstantPitch);
 		turb.InitAeroDyn("C:/Users/dusti/Documents/Work/PRIMED/inputfiles/ad_interface_example4.inp", FluidDensity, KinematicFluidVisc,
-			nstate);
+			nacellePosition,
+			nacelleEulerAngles,
+			nacelleVel,
+			nacelleAngularVel);
 	}
 
 	catch (FileNotFoundException& e) {
@@ -144,7 +149,12 @@ int main()
 		// Using the FASTTurbine
 
 		// Begin a simulation update to time by passing nacelle state at time
-		turb.SetNacelleStates(time, nstate, isRealStep);
+		turb.SetNacelleStates(time, 
+			nacellePosition,
+			nacelleEulerAngles,
+			nacelleVel,
+			nacelleAngularVel,
+			isRealStep);
 
 		// Now the rotor orientation has been set, so Aerodyn can report where the node positions are
 		turb.GetBladeNodePositions(bladeNodePositions);
@@ -153,11 +163,11 @@ int main()
 		turb.SetInflowVelocities(inflows);
 
 		// And update the states to time, returning the nacelle reaction forces
-		rf = turb.UpdateStates();
+		rf = turb.Simulate();
 
 		//---------------------------------------------------------------------
 		// Value visualization code
-		RenderBladeNodes(window, bladeNodePositions, Vector3d(nstate.position), 5.0, totalNodes);
+		RenderBladeNodes(window, bladeNodePositions, Vector3d(nacellePosition), 5.0, totalNodes);
 
 		pitchPlot.plot(0.0, turb.GetBladePitch());
 		pitchPlot.draw(window);

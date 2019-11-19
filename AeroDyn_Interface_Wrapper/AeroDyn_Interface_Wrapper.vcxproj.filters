@@ -25,10 +25,10 @@
     <ClCompile Include="src\MasterController.cpp">
       <Filter>MasterController</Filter>
     </ClCompile>
-    <ClCompile Include="src\FASTTurbineModel.cpp" />
     <ClCompile Include="src\CSVSpecFunction.cpp">
       <Filter>Input</Filter>
     </ClCompile>
+    <ClCompile Include="src\FASTInterface.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\DriveTrain.h">
@@ -55,11 +55,11 @@
     <ClInclude Include="src\MasterController.h">
       <Filter>MasterController</Filter>
     </ClInclude>
-    <ClInclude Include="src\FASTTurbineExceptions.h" />
-    <ClInclude Include="src\FASTTurbineModel.h" />
     <ClInclude Include="src\CSVSpecFunction.h">
       <Filter>Input</Filter>
     </ClInclude>
+    <ClInclude Include="src\FASTInterface.h" />
+    <ClInclude Include="src\FASTInterfaceExceptions.h" />
   </ItemGroup>
   <ItemGroup>
     <Library Include="..\AD_Interface_Wrapper_Test\Aerodyn_Interface_C_Win32_Debug_Double.lib">

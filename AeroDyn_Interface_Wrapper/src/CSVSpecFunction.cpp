@@ -4,7 +4,7 @@
 #include <iostream>
 #include <assert.h>
 #include <math.h>
-#include "FASTTurbineExceptions.h"
+#include "FASTInterfaceExceptions.h"
 
 CSVSpecFunction::CSVSpecFunction(const char* filename)
 {

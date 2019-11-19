@@ -2,7 +2,7 @@
 // Author: Dustin Condon 
 // File  : CSVSpecFunction.h
 
-// "Comma-Seperated-Variable Specified Function"
+// "Comma-Seperated-Value Specified Function"
 // Defines a function F(x), where the domain x is the first column of the CSV table, and the range
 // of F(x) is specified by the second column. The function is assumed to be contiguous, so any parts 
 // in between the specified values is linearly interpolated
@@ -11,7 +11,7 @@
 
 #include <vector>
 #include <fstream>
-#include "FASTTurbineExceptions.h"
+#include "FASTInterfaceExceptions.h"
 
 class CSVSpecFunction
 {
