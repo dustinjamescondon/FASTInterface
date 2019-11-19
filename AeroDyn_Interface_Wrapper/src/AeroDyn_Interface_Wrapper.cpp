@@ -56,7 +56,7 @@ Matrix3d AeroDyn_Interface_Wrapper::TransformOrientation(const Matrix3d& orienta
 	trans.row(1) = -1.0 * orientation.row(1);
 	trans.row(2) = -1.0 * orientation.row(2);
 
-	return orientation;
+	return trans;
 }
 
 Matrix6d AeroDyn_Interface_Wrapper::Transform_ADtoPDS_MassMatrix(const Matrix6d& m) const

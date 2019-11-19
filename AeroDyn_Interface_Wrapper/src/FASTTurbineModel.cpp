@@ -6,6 +6,10 @@
 #include "InputFile.h"
 #include <fstream>
 
+// If this is defined, then output files will be written to which log activity
+// To silence any logging, just comment out this define preprocessor statement
+#define LOG_ACTIVITY
+
 // Used for representing vectors and matrices
 using namespace Eigen;
 
@@ -46,10 +50,12 @@ public:
 	DriveTrain::ModelStates   dt_resultStates;
 	MasterController		  mcont;
 
+#ifdef LOG_ACTIVITY
 	//-----------------------------------------------
 	// Debug
 	std::ofstream fout_input;
 	std::ofstream fout_output;
+	std::ofstream fout_funcCalls;
 
 	void WriteHeader() {
 		fout_input << "time\torient_roll\torient_pitch\torient_yaw\tang_vel_x\tang_vel_y\tang_vel_z" << std::endl;
@@ -66,7 +72,7 @@ public:
 	void LogInflows(double x) {
 		fout_input << x << '\t' << std::endl;
 	}
-	//---------------------------------------------------
+#endif
 };
 
 FASTTurbineModel::PImp::PImp()
@@ -74,11 +80,14 @@ FASTTurbineModel::PImp::PImp()
 	time = targetTime = 0.0;
 	onRealStep = false;
 
+#ifdef LOG_ACTIVITY
 	fout_input.open("LogTurbineInput.out", std::ofstream::out);
 	fout_output.open("LogTurbineOutput.out", std::ofstream::out);
+	fout_funcCalls.open("LogFunctionCalls.out", std::ofstream::out);
 	fout_input.precision(5);
 	fout_output.precision(5);
 	WriteHeader();
+#endif
 }
 
 FASTTurbineModel::FASTTurbineModel() : p_imp(new PImp)
@@ -98,20 +107,20 @@ FASTTurbineModel::PImp::HubMotion FASTTurbineModel::PImp::CalculateHubMotion(con
 	hm.velocity = Vector3d(nm.velocity);
 	
 	// Use Nacelle orientation and rotor.theta to update hub orientation for AeroDyn
-	nacelleOrient = EulerConstruct(Vector3d(nm.eulerAngles));
+	nacelleOrient = EulerConstruct(Vector3d(nm.eulerAngles)).transpose();
 
-	Vector3d bodyX = nacelleOrient.row(0);
-	Vector3d bodyY = nacelleOrient.row(1);
-	Vector3d bodyZ = nacelleOrient.row(2);
+	Vector3d bodyX = nacelleOrient.col(0);
+	Vector3d bodyY = nacelleOrient.col(1);
+	Vector3d bodyZ = nacelleOrient.col(2);
 
 	AngleAxisd angleaxis(rs.theta, bodyX);
 
 	Vector3d bodyY_prime = angleaxis * bodyY;
 	Vector3d bodyZ_prime = angleaxis * bodyZ;
 
-	hubOrient.row(0) = bodyX;
-	hubOrient.row(1) = bodyY_prime;
-	hubOrient.row(2) = bodyZ_prime;
+	hubOrient.col(0) = bodyX;
+	hubOrient.col(1) = bodyY_prime;
+	hubOrient.col(2) = bodyZ_prime;
 
 	// Create rotation matrix for the rotor angle
 	// TODO make sure this is rotating the right way
@@ -124,7 +133,7 @@ FASTTurbineModel::PImp::HubMotion FASTTurbineModel::PImp::CalculateHubMotion(con
 
 	hm.orientation = hubOrient;
 
-	hm.angularVel = rs.vel * hubOrient.row(0); // rotation axis in the global coordinate system
+	hm.angularVel = rs.vel * hubOrient.col(0); // rotation axis in the global coordinate system
 
 	return hm;
 }
@@ -135,6 +144,11 @@ void FASTTurbineModel::InitWithConstantRotorSpeedAndPitch(double constantRotorSp
 	p_imp->drivetrain.Init(constantRotorSpeed);
 	p_imp->mcont.Init(constantBladePitch);
 	p_imp->drivetrainStates_hold = p_imp->drivetrain.GetStates();
+
+	// Debug
+#ifdef LOG_ACTIVITY
+	p_imp->fout_funcCalls << "InitWithiConstantRotorSpeedAndPitch( " << constantRotorSpeed << ", " << constantBladePitch << " );" << std::endl;
+#endif
 }
 
 // Sets all the necessary parameters for the drive train in order. Note, the gearbox ratio must be 
@@ -143,11 +157,15 @@ void FASTTurbineModel::InitDriveTrain(double rotorMOI, double genMOI, double sti
 {
 	// TODO get Andre to change PDS to allow us to specify the initial rotor vel
 	// In the meantime because PDS isn't letting us set the initial rotor vel, I've hard-coded it here
-	//initialRotorVel = 0.9529497705;
+	initialRotorVel = 0.733038285;
 	//--------------------------------------------------------------------------------------
 
 	p_imp->drivetrain.Init(initialRotorVel, gearboxRatio, damping, stiffness, rotorMOI, genMOI);
 	p_imp->drivetrainStates_hold = p_imp->drivetrain.GetStates();
+
+#ifdef LOG_ACTIVITY
+	p_imp->fout_funcCalls << "InitDriveTrain( " << rotorMOI << ", " << genMOI << ", " << stiffness << ", " << damping << ", " << gearboxRatio << ", " << initialRotorVel << " );" << std::endl;
+#endif
 }
 
 void FASTTurbineModel::InitDriveTrain(const char* drivetrainDefFile, double initRotorSpeed)
@@ -167,6 +185,10 @@ void FASTTurbineModel::InitDriveTrain(const char* drivetrainDefFile, double init
 void FASTTurbineModel::InitControllers_BladedDLL(const char* bladed_dll_fname)
 {
 	p_imp->mcont.Init_BladedDLL(bladed_dll_fname);
+
+#ifdef LOG_ACTIVITY
+	p_imp->fout_funcCalls << "InitControllers_BladedDLL( " << bladed_dll_fname << " );" << std::endl;
+#endif
 }
 
 void FASTTurbineModel::InitControllers_InputFile(const char* inputfilename)
@@ -208,19 +230,29 @@ void FASTTurbineModel::InitAeroDyn(const char* inputFilename,
 
 	// Do the initial call for the controller
 	p_imp->mcont.UpdateController(p_imp->time, p_imp->drivetrain.GetGenShaftSpeed(), p_imp->aerodyn.GetBladePitch());
+
+#ifdef LOG_ACTIVITY
+	p_imp->fout_funcCalls << "InitAeroDyn( );" << std::endl;
+#endif
 }
 
 void FASTTurbineModel::InitInflows(const std::vector<double>& inflows)
 {
 	p_imp->aerodyn.InitInflows(inflows);
+
+#ifdef LOG_ACTIVITY
+	p_imp->fout_funcCalls << "InitInflows();" << std::endl;
+#endif
 }
 
 // Begin updating the model's state by first setting the nacelle states at point in future
 void FASTTurbineModel::SetNacelleStates(double time, const NacelleMotion& nm, bool isRealStep) 
 {
 	// Debug
+#ifdef LOG_ACTIVITY
 	if (isRealStep)
 		p_imp->LogInput(time, nm);
+#endif
 
 	p_imp->targetTime = time; // Save the target time to update to
 	p_imp->onRealStep = isRealStep; // Save whether this is a call for a real update or not
@@ -388,8 +420,11 @@ void FASTTurbineModel::SetInflowVelocities(const std::vector<double>& inflows)
 		p_imp->inflows[i] = inflows[i];
 	}
 
+
+#ifdef LOG_ACTIVITY
 	if(p_imp->onRealStep)
 		p_imp->LogInflows(inflows[0]);
+#endif
 }
 
 FASTTurbineModel::NacelleReactionForces FASTTurbineModel::UpdateStates()
@@ -429,8 +464,10 @@ FASTTurbineModel::NacelleReactionForces FASTTurbineModel::UpdateStates()
 
 	//----------------------------------
 	// Debug
+#ifdef LOG_ACTIVITY
 	if(p_imp->onRealStep)
 		p_imp->LogOutput(p_imp->time, rf);
+#endif
 
 	// TODO PDS currently is applying the moments as forces: get Andre to correct this
 	rf.moment[0] = rf.force[0];
@@ -548,11 +585,11 @@ void FASTTurbineModel::GetHubMoment(double v[3]) const
 	memcpy(v, p_imp->aerodyn.GetMoment().data(), 3 * sizeof(double));
 }
 
-
+// 
 Vector3d FASTTurbineModel::PImp::TransformHubToNacelle(const Vector3d& v, const Matrix3d& nacelleOri,
 	const Matrix3d& hubOri)
 {
-	return nacelleOri * hubOri.transpose() * v;
+	return nacelleOrient.transpose() * hubOrient * v;
 }
 
 // taken from Aerodyn's subroutine of the same name

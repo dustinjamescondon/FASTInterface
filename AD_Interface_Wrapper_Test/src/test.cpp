@@ -27,10 +27,10 @@ int main()
 	static const double dt = 0.01;
 	static const int NSteps = (int)(EndTime / dt);
 
-	static const double InflowSpeed = 8.69;    // in metres/sec
+	static const double InflowSpeed = 10.0;    // in metres/sec
 	static const double FluidDensity = 1.225;
 	static const double KinematicFluidVisc = 1.4639e-05;
-	static const double InitialRotorSpeed = 0.9529497705;
+	static const double InitialRotorSpeed = 0.9;
 	static const double ConstantPitch = 0.0;
 	static const double GearboxRatio = 97.0;				// From NREL's OC3 report
 	static const double DriveTrainDamping = 6215000.0;      // "
@@ -79,11 +79,11 @@ int main()
 
 	try {
 		// Use these initialization methods to use the Bladed-style DLL
-		//turb.InitDriveTrain(RotorMOI, GenMOI, DriveTrainStiffness, DriveTrainDamping, GearboxRatio, InitialRotorSpeed);
-		//turb.InitControllers_BladedDLL("Discon.dll");
+		turb.InitDriveTrain(RotorMOI, GenMOI, DriveTrainStiffness, DriveTrainDamping, GearboxRatio, InitialRotorSpeed);
+		turb.InitControllers_BladedDLL("Discon_OC3Hywind.dll");
 
 		// Use this to intialize the turbine with constant rotor speed and blade pitch
-		turb.InitWithConstantRotorSpeedAndPitch(InitialRotorSpeed, ConstantPitch);
+		//turb.InitWithConstantRotorSpeedAndPitch(InitialRotorSpeed, ConstantPitch);
 		turb.InitAeroDyn("C:/Users/dusti/Documents/Work/PRIMED/inputfiles/ad_interface_example4.inp", FluidDensity, KinematicFluidVisc,
 			nstate);
 	}
