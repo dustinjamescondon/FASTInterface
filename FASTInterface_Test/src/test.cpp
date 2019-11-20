@@ -1,4 +1,4 @@
-#include "..\..\AeroDyn_Interface_Wrapper\src\FASTInterface.h"
+#include "..\..\FASTInterface\src\FASTInterface.h"
 #include <Eigen/Dense>
 #include <SFML/Graphics.hpp>
 #include <iostream>

@@ -1,6 +1,6 @@
 #pragma once
-#include "..\..\AeroDyn_Interface_Wrapper\eigen\Eigen\Dense"
-#include "..\..\AeroDyn_Interface_Wrapper\src\AeroDyn_Interface_Wrapper.h"
+#include "..\..\FASTInterface\eigen\Eigen\Dense"
+#include "..\..\FASTInterface\src\AeroDyn_Interface_Wrapper.h"
 #include <vector>
 
 // states that are a derivative of time which we will be integrating

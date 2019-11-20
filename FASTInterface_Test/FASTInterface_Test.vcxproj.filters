@@ -11,6 +11,9 @@
     <Filter Include="Driver">
       <UniqueIdentifier>{32fd9168-9174-4d0f-bdd2-189c98caa4c8}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Libraries">
+      <UniqueIdentifier>{110cb807-9592-49b3-97b6-638cfb99df3e}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\Graphics.cpp">
@@ -38,7 +41,11 @@
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <Library Include="..\Win32\Debug\FASTTurbine_Interface_Debug.lib" />
-    <Library Include="..\Release\FASTTurbine_Interface_Release.lib" />
+    <Library Include="..\Release\FASTInterface_Release.lib">
+      <Filter>Libraries</Filter>
+    </Library>
+    <Library Include="..\Win32\Debug\FASTInterface_Debug.lib">
+      <Filter>Libraries</Filter>
+    </Library>
   </ItemGroup>
 </Project>

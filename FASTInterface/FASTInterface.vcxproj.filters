@@ -62,14 +62,11 @@
     <ClInclude Include="src\FASTInterfaceExceptions.h" />
   </ItemGroup>
   <ItemGroup>
-    <Library Include="..\AD_Interface_Wrapper_Test\Aerodyn_Interface_C_Win32_Debug_Double.lib">
-      <Filter>AeroDyn_Interface\AeroDyn_Interface_Libs</Filter>
+    <Library Include="lib\Aerodyn_Interface_C_Win32_Double.lib">
+      <Filter>Libraries</Filter>
     </Library>
-    <Library Include="..\AD_Interface_Wrapper_Test\Aerodyn_Interface_C_Win32_Double.lib">
-      <Filter>AeroDyn_Interface\AeroDyn_Interface_Libs</Filter>
-    </Library>
-    <Library Include="..\AD_Interface_Wrapper_Test\Aerodyn_Interface_C_x64_Debug_Double.lib">
-      <Filter>AeroDyn_Interface\AeroDyn_Interface_Libs</Filter>
+    <Library Include="lib\Aerodyn_Interface_C_Win32_Debug_Double.lib">
+      <Filter>Libraries</Filter>
     </Library>
   </ItemGroup>
   <ItemGroup>
@@ -99,6 +96,9 @@
     </Filter>
     <Filter Include="LowPassFilter">
       <UniqueIdentifier>{78ee4d2e-afda-434d-a962-b359eeb1d84b}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Libraries">
+      <UniqueIdentifier>{bd3d23e7-5bc8-43b2-a2a5-558ccbd75968}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
 </Project>

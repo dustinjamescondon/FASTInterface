@@ -23,6 +23,7 @@
     <ProjectGuid>{4D72605A-9944-483F-9F0A-70DCDB3878A5}</ProjectGuid>
     <RootNamespace>ADInterfaceWrapperTest</RootNamespace>
     <WindowsTargetPlatformVersion>8.1</WindowsTargetPlatformVersion>
+    <ProjectName>FASTInterface_Test</ProjectName>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
@@ -157,10 +158,10 @@
     <ClInclude Include="src\TimePlot.h" />
   </ItemGroup>
   <ItemGroup>
-    <Library Include="..\Release\FASTTurbine_Interface_Release.lib">
+    <Library Include="..\Release\FASTInterface_Release.lib">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
     </Library>
-    <Library Include="..\Win32\Debug\FASTTurbine_Interface_Debug.lib">
+    <Library Include="..\Win32\Debug\FASTInterface_Debug.lib">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
     </Library>
   </ItemGroup>
