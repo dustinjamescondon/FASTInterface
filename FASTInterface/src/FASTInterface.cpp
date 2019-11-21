@@ -457,9 +457,18 @@ void FASTInterface::SetInflowVelocities(const std::vector<double>& inflows)
 FASTInterface::NacelleReactionLoads FASTInterface::Simulate()
 {
 	// Integrate to find the drive train state
-	DriveTrain::ModelStates states = p_imp->IntegrateDriveTrain_RK4(p_imp->targetTime, p_imp->nacelleMotion, p_imp->inflows);
-	//DriveTrain::ModelStates states = p_imp->IntegrateDriveTrain_Euler(p_imp->targetTime, p_imp->nacelleMotion);
-	
+	//-------------------------------------------
+	DriveTrain::ModelStates states;
+
+	// If we're performing a permanent step, then take more care by using the RK4 integrator
+	if (p_imp->onRealStep) {
+		states = p_imp->IntegrateDriveTrain_RK4(p_imp->targetTime, p_imp->nacelleMotion, p_imp->inflows);
+	}
+	// Otherwise just use Euler to save some time
+	else {
+		states = p_imp->IntegrateDriveTrain_Euler(p_imp->targetTime, p_imp->nacelleMotion);
+	}
+
 	double bladePitch = p_imp->mcont.GetBladePitchCommand();
 
 	// Use drive train state to update aerodyn
