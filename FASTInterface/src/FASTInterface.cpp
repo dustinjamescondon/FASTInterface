@@ -105,7 +105,6 @@ FASTInterface::FASTInterface() : p_imp(new PImp)
 
 FASTInterface::~FASTInterface() = default;
 
-// TODO send AeroDyn the actual hub orientation matrix to save the extra calculation of the Euler angles
 // Calculates the appropriate hub motion according to the nacelle motion and rotor motion
 FASTInterface::PImp::HubMotion FASTInterface::PImp::CalculateHubMotion(const NacelleMotion& nm, const DriveTrain::States& rs)
 {
@@ -115,29 +114,18 @@ FASTInterface::PImp::HubMotion FASTInterface::PImp::CalculateHubMotion(const Nac
 	hm.velocity = Vector3d(nm.velocity);
 	
 	// Use Nacelle orientation and rotor.theta to update hub orientation for AeroDyn
-	nacelleOrient = EulerConstruct(Vector3d(nm.EulerAngles)).transpose();
-
-	Vector3d bodyX = nacelleOrient.col(0);
-	Vector3d bodyY = nacelleOrient.col(1);
-	Vector3d bodyZ = nacelleOrient.col(2);
-
-	AngleAxisd angleaxis(rs.theta, bodyX);
-
-	Vector3d bodyY_prime = angleaxis * bodyY;
-	Vector3d bodyZ_prime = angleaxis * bodyZ;
-
-	hubOrient.col(0) = bodyX;
-	hubOrient.col(1) = bodyY_prime;
-	hubOrient.col(2) = bodyZ_prime;
+	nacelleOrient = AngleAxisd(nm.EulerAngles[0], Vector3d::UnitX())
+		* AngleAxisd(nm.EulerAngles[1], Vector3d::UnitY())
+		* AngleAxisd(nm.EulerAngles[2], Vector3d::UnitZ());
 
 	// Create rotation matrix for the rotor angle
-	// TODO make sure this is rotating the right way
-	//Matrix3d rotorRotation = EulerConstruct(Vector3d(rs.theta, 0.0, 0.0));
+
+	Matrix3d rotorRotation = AngleAxisd(rs.theta, Vector3d::UnitX()).toRotationMatrix();
 
 	// Combine the two rotation matrices
 	// R'_x R_z R_y R_x (Don't know why, but this is the order of multiplication and it gives the 
 	// correct result. I would assume that the R_x's would have to next to each other)
-	//hubOrient = rotorRotation * nacelleOrient;
+	hubOrient = nacelleOrient * rotorRotation;
 
 	hm.orientation = hubOrient;
 
@@ -163,11 +151,6 @@ void FASTInterface::InitWithConstantRotorSpeedAndPitch(double constantRotorSpeed
 // set before the initial rotor speed.
 void FASTInterface::InitDriveTrain(double rotorMOI, double genMOI, double stiffness, double damping, double gearboxRatio, double initialRotorVel)
 {
-	// TODO get Andre to change PDS to allow us to specify the initial rotor vel
-	// In the meantime because PDS isn't letting us set the initial rotor vel, I've hard-coded it here
-	// initialRotorVel = 0.733038285;
-	//--------------------------------------------------------------------------------------
-
 	p_imp->drivetrain.Init(initialRotorVel, gearboxRatio, damping, stiffness, rotorMOI, genMOI);
 	p_imp->drivetrainStates_hold = p_imp->drivetrain.GetStates();
 
@@ -287,7 +270,7 @@ void FASTInterface::SetNacelleStates(double time, const double nacellePos[3], co
 	// Save the nacelle motion for the UpdateStates function
 	p_imp->nacelleMotion = nm;
 
-	double dt = time - p_imp->time; 
+	double dt = time - p_imp->time;
 
 	// First we estimate the orientation and velocity of the rotor shaft so we can predict around where the nodes will be 
 	DriveTrain::ModelStates dtStates_n = p_imp->drivetrain.GetStates();
@@ -309,9 +292,11 @@ void FASTInterface::SetNacelleStates(double time, const double nacellePos[3], co
 	p_imp->aerodyn.SetHubMotion(time, hm.position, hm.orientation, hm.velocity, hm.angularVel, bladePitch, false);
 }
 
+
+// Uses aerodyn to calculate updated drive train states. Doesn't set drivetrain nor Aerodyn's states permenantly
 DriveTrain::ModelStates FASTInterface::PImp::IntegrateDriveTrain_Euler(double t, const FASTInterface::PImp::NacelleMotion& nm)
 {
-	double dt = t - time;  // Get this from somewhere
+	double dt = t - time; 
 
 	// First we update the drive train so we can get the rotor angular displacement 
 	DriveTrain::ModelStates dtStates_n = drivetrain.GetStates();
@@ -335,7 +320,7 @@ DriveTrain::ModelStates FASTInterface::PImp::IntegrateDriveTrain_Euler(double t,
 	return dtStates_np1;
 }
 
-// Uses aerodyn to calculate updated drivtrain states. Doesn't update drivetrain states, nor Aerodyn's states
+// Uses aerodyn to calculate updated drive train states. Doesn't set drivetrain nor Aerodyn's states permenantly
 DriveTrain::ModelStates FASTInterface::PImp::IntegrateDriveTrain_RK4(double t, const FASTInterface::PImp::NacelleMotion& nm, const std::vector<double>& inflows)
 {
 	double dt = t - time;
@@ -409,6 +394,7 @@ DriveTrain::ModelStates FASTInterface::PImp::IntegrateDriveTrain_RK4(double t, c
 
 	hm = CalculateHubMotion(nm, state_n3.rotor);
 	aerodyn.SetHubMotion(time + dt, hm.position, hm.orientation, hm.velocity, hm.angularVel, bladePitch, false);
+	aerodyn.SetInflowVelocities(inflows, false);
 	hrl = aerodyn.UpdateStates(false);
 
 	// K4
@@ -505,12 +491,6 @@ FASTInterface::NacelleReactionLoads FASTInterface::Simulate()
 		p_imp->LogOutput(p_imp->time, rf);
 #endif
 
-	//// TODO PDS currently is applying the moments as forces: get Andre to correct this
-	//rf.moment[0] = rf.force[0];
-	//rf.moment[1] = rf.force[1];
-	//rf.moment[2] = rf.force[2];
-	//
-	// Return the reaction forces
 	return rf;
 }
 
@@ -626,80 +606,4 @@ Vector3d FASTInterface::PImp::TransformHubToNacelle(const Vector3d& v, const Mat
 	const Matrix3d& hubOri)
 {
 	return nacelleOrient.transpose() * hubOrient * v;
-}
-
-// taken from Aerodyn's subroutine of the same name
-Matrix3d EulerConstruct(const Vector3d& theta)
-{
-	double cx = cos(theta(0));
-	double sx = sin(theta(0));
-
-	double cy = cos(theta(1));
-	double sy = sin(theta(1));
-
-	double cz = cos(theta(2));
-	double sz = sin(theta(2));
-
-	Matrix3d result;
-	result(0, 0) = cy * cz;
-	result(1, 0) = -cy * sz;
-	result(2, 0) = sy;
-	result(0, 1) = cx * sz + sx * sy * cz;
-	result(1, 1) = cx * cz - sx * sy * sz;
-	result(2, 1) = -sx * cy;
-	result(0, 2) = sx * sz - cx * sy * cz;
-	result(1, 2) = sx * cz + cx * sy * sz;
-	result(2, 2) = cx * cy;
-
-	return result;
-}
-
-// a build-in subroutine in FORTRAN. Multiply abs(a) by the sign of b
-double sign(double a, double b)
-{
-	if (b > 0) return a;
-	else return -a;
-}
-
-// taken from Aerodyn's subroutine of the same name
-Vector3d EulerExtract(const Matrix3d& m)
-{
-	static const double epsilon = 1.0e-5;
-
-	double cx, cy, cz, sx, sy, sz;
-	Vector3d theta;
-
-	cy = sqrt(pow(m(0, 0), 2) + pow(m(1, 0), 2));
-
-	if (cy < epsilon) {
-
-		theta(1) = atan2(m(2, 0), cy);
-		theta(2) = 0.0;
-		theta(0) = atan2(m(1, 2), m(1, 1));
-	}
-	else {
-		theta(2) = atan2(-m(1, 0), m(0, 0));
-		cz = cos(theta(2));
-		sz = sin(theta(2));
-
-		if (cz < epsilon) {
-			cy = sign(cy, -m(1, 0) / sz);
-		}
-
-		else {
-			cy = sign(cy, m(0, 0) / cz);
-
-		}
-		theta(1) = atan2(m(2, 0), cy);
-
-		cz = cos(theta(2));
-		sz = sin(theta(2));
-
-		cx = sz * m(0, 1) + cz * m(1, 1);
-		sx = sz * m(0, 2) + cz * m(1, 2);
-
-		theta(0) = atan2(sx, cx);
-	}
-
-	return theta;
 }

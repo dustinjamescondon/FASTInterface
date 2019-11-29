@@ -1,2 +1,2 @@
-copy C:\Users\dusti\Documents\prog\FASTInterface\FASTInterface_Test\Aerodyn_Interface_C_Win32_Double.dll "C:\Users\dusti\Documents\Work\PRIMED\ProteusDS Solver With Drivetrain\Aerodyn_Interface_C_Win32_Double.dll"
-copy C:\Users\dusti\Documents\prog\FASTInterface\Release\FASTInterface_Release.dll "C:\Users\dusti\Documents\Work\PRIMED\ProteusDS Solver With Drivetrain\FASTInterface_Release.dll"
+copy C:\Users\dusti\Documents\prog\FASTInterface\FASTInterface_Test\Aerodyn_Interface_C_Win32_Double.dll "C:\Users\dusti\Documents\Work\PRIMED\PDS Solver(22Nov2019)\Aerodyn_Interface_C_Win32_Double.dll"
+copy C:\Users\dusti\Documents\prog\FASTInterface\Release\FASTInterface_Release.dll "C:\Users\dusti\Documents\Work\PRIMED\PDS Solver(22Nov2019)\FASTInterface_Release.dll"

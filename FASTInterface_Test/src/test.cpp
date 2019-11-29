@@ -82,7 +82,7 @@ int main()
 	try {
 		// Use these initialization methods to use the Bladed-style DLL
 		turb.InitDriveTrain(RotorMOI, GenMOI, DriveTrainStiffness, DriveTrainDamping, GearboxRatio, InitialRotorSpeed);
-		turb.InitControllers_BladedDLL("C:/Users/dusti/Documents/Work/PRIMED/ControllerDLLs/Discon.dll", InitialPitch);
+		turb.InitControllers_BladedDLL("C:/Users/dusti/Documents/Work/PRIMED/ControllerDLLs/Discon_OC3Hywind.dll", InitialPitch);
 
 		// Use this to intialize the turbine with constant rotor speed and blade pitch
 		//turb.InitWithConstantRotorSpeedAndPitch(InitialRotorSpeed, ConstantPitch);
