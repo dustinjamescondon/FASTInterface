@@ -199,6 +199,8 @@ void AeroDyn_Interface_Wrapper::SetInflowVelocities(const std::vector<double>& i
 	}
 }
 
+// If isRealStep == false, the temporary instance of AeroDyn is updated; otherwise, the main instance of AeroDyn is 
+// updated. Once that is done, the resulting reaction loads are returned.
 AeroDyn_Interface_Wrapper::HubReactionLoads AeroDyn_Interface_Wrapper::UpdateStates(bool isRealStep)
 {
 	// If this is a fake-step, then we don't want this to be permanent, so we call the fake version
@@ -225,7 +227,7 @@ AeroDyn_Interface_Wrapper::HubReactionLoads AeroDyn_Interface_Wrapper::UpdateSta
 	return hubReactionLoads;
 }
 
-// Communicates blade node positions to ProteusDS.  This needs to be separate from the other outputs so that it can be used to get inflow values at the current time step.
+// Communicates blade node positions to ProteusDS. This needs to be separate from the other outputs so that it can be used to get inflow values at the current time step.
 void AeroDyn_Interface_Wrapper::GetBladeNodePositions(std::vector<double>& nodePos, bool isRealStep)
 {
 	// If we're in the process of performing a fake step, then we call the fake version, which returns the 

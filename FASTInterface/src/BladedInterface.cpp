@@ -32,8 +32,6 @@ void BladedInterface::Init(const char* fname)
 		throw FileNotFoundException(errMsg.c_str());
 	}
 
-	vf_ptr TEST = (vf_ptr)GetProcAddress(hInstance, "TEST");
-
 	// Get function address
 	DISCON = (f_ptr)GetProcAddress(hInstance, "DISCON");
 
