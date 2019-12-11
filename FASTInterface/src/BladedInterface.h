@@ -10,6 +10,10 @@ Description:
 	Note that (as far as I have seen), the Bladed-style DLL are written to be loosely coupled with the turbine 
 	model; therefore, this interface assumes that. It may be possible to write a tightly coupled controller DLL,
 	however - in which case this interface should be built upon to allow for it.
+
+Note:
+	This interface expects the controller DLL to set its own number of blades instead of getting it from here. Having 
+	the number of blades hard-coded into the DLL seemed reasonable because each controller DLL is tuned for a specific turbine.
 */
 
 

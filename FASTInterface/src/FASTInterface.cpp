@@ -123,8 +123,6 @@ FASTInterface::PImp::HubMotion FASTInterface::PImp::CalculateHubMotion(const Nac
 	Matrix3d rotorRotation = AngleAxisd(rs.theta, Vector3d::UnitX()).toRotationMatrix();
 
 	// Combine the two rotation matrices
-	// R'_x R_z R_y R_x (Don't know why, but this is the order of multiplication and it gives the 
-	// correct result. I would assume that the R_x's would have to next to each other)
 	hubOrient = nacelleOrient * rotorRotation;
 
 	hm.orientation = hubOrient;
@@ -293,12 +291,12 @@ void FASTInterface::SetNacelleStates(double time, const double nacellePos[3], co
 }
 
 
-// Uses aerodyn to calculate updated drive train states. Doesn't set drivetrain nor Aerodyn's states permenantly
+// Uses aerodyn to calculate drive train states at t. Doesn't set drivetrain or Aerodyn's states permanently
 DriveTrain::ModelStates FASTInterface::PImp::IntegrateDriveTrain_Euler(double t, const FASTInterface::PImp::NacelleMotion& nm)
 {
 	double dt = t - time; 
 
-	// First we update the drive train so we can get the rotor angular displacement 
+	// First we get the drive train shaft's accelerations using CalcDeriv
 	DriveTrain::ModelStates dtStates_n = drivetrain.GetStates();
 	double aerodynamicTorque = aerodyn.GetTorque();
 	double genTorque = mcont.GetGeneratorTorqueCommand();
@@ -320,7 +318,7 @@ DriveTrain::ModelStates FASTInterface::PImp::IntegrateDriveTrain_Euler(double t,
 	return dtStates_np1;
 }
 
-// Uses aerodyn to calculate updated drive train states. Doesn't set drivetrain nor Aerodyn's states permenantly
+// Uses aerodyn to calculate drive train states at t. Doesn't set drivetrain or Aerodyn's states permenantly
 DriveTrain::ModelStates FASTInterface::PImp::IntegrateDriveTrain_RK4(double t, const FASTInterface::PImp::NacelleMotion& nm, const std::vector<double>& inflows)
 {
 	double dt = t - time;
