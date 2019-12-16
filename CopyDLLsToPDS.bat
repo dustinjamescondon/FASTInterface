@@ -1,2 +1,5 @@
-copy C:\Users\dusti\Documents\prog\FASTInterface\FASTInterface_Test\Aerodyn_Interface_C_Win32_Double.dll "C:\Users\dusti\Documents\Work\PRIMED\PDS Solver(22Nov2019)\Aerodyn_Interface_C_Win32_Double.dll"
-copy C:\Users\dusti\Documents\prog\FASTInterface\Release\FASTInterface_Release.dll "C:\Users\dusti\Documents\Work\PRIMED\PDS Solver(22Nov2019)\FASTInterface_Release.dll"
+:REM Set the path to ProteusDS solver
+set pathToPDSSolver="C:\Users\dusti\Documents\Work\PRIMED\PDS Solver(22Nov2019)\"
+
+copy ..\FASTInterface_Test\Aerodyn_Interface_Win32_Double.dll %pathToPDSSolver%
+copy ..\Release\FASTInterface_Release.dll %pathToPDSSolver%

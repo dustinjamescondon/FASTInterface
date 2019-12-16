@@ -1,5 +1,5 @@
 #pragma once
-#include "..\..\FASTInterface\eigen\Eigen\Dense"
+#include <Eigen\Dense>
 #include "..\..\FASTInterface\src\AeroDyn_Interface_Wrapper.h"
 #include <vector>
 

@@ -128,12 +128,6 @@ void AeroDyn_Interface_Wrapper::InitAerodyn(
 	if (errStat == 4) {
 		throw ADErrorException(errMsg);
 	}
-	if (errStat == 5) {
-		throw FileNotFoundException(errMsg);
-	} 
-	else if (errStat == 6) {
-		throw FileContentsException(errMsg);
-	}
 
 	// return the total amount of nodes used in the simulation
 	totalNodes = nBlades * nNodes;

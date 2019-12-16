@@ -62,10 +62,10 @@
     <ClInclude Include="src\FASTInterfaceExceptions.h" />
   </ItemGroup>
   <ItemGroup>
-    <Library Include="lib\Aerodyn_Interface_C_Win32_Double.lib">
+    <Library Include="lib\AeroDyn_Interface_Win32_Debug_Double.lib">
       <Filter>Libraries</Filter>
     </Library>
-    <Library Include="lib\Aerodyn_Interface_C_Win32_Debug_Double.lib">
+    <Library Include="lib\AeroDyn_Interface_Win32_Double.lib">
       <Filter>Libraries</Filter>
     </Library>
   </ItemGroup>

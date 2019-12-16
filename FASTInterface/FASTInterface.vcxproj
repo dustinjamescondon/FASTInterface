@@ -31,11 +31,15 @@
     <ClCompile Include="src\PitchController.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <Library Include="lib\Aerodyn_Interface_C_Win32_Debug_Double.lib">
+    <Library Include="lib\AeroDyn_Interface_Win32_Debug_Double.lib">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">false</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">false</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
     </Library>
-    <Library Include="lib\Aerodyn_Interface_C_Win32_Double.lib">
+    <Library Include="lib\AeroDyn_Interface_Win32_Double.lib">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
     </Library>
   </ItemGroup>
   <ItemGroup>
@@ -116,7 +120,7 @@
     <EmbedManifest>false</EmbedManifest>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
-    <LinkIncremental>false</LinkIncremental>
+    <LinkIncremental>true</LinkIncremental>
     <TargetName>$(ProjectName)_$(Configuration)</TargetName>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
@@ -133,7 +137,7 @@
       <PrecompiledHeaderFile>
       </PrecompiledHeaderFile>
       <LanguageStandard>stdcpp17</LanguageStandard>
-      <AdditionalIncludeDirectories>C:\ProgramData\boost\boost_1_71_0;C:\ProgramData\Eigen\eigen-eigen-323c052e1731</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\..\Libraries\eigen-3.3.7</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -141,7 +145,8 @@
       <EnableUAC>false</EnableUAC>
     </Link>
     <PostBuildEvent>
-      <Command>call "../CopyDLLsToPDS.bat"</Command>
+      <Command>
+      </Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
@@ -155,7 +160,7 @@
       <PrecompiledHeaderFile>
       </PrecompiledHeaderFile>
       <LanguageStandard>stdcpp14</LanguageStandard>
-      <AdditionalIncludeDirectories>C:\ProgramData\boost\boost_1_71_0;C:\ProgramData\Eigen\eigen-eigen-323c052e1731</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\..\Libraries\eigen-3.3.7</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -176,7 +181,8 @@
       <PrecompiledHeaderFile>
       </PrecompiledHeaderFile>
       <LanguageStandard>stdcpp17</LanguageStandard>
-      <AdditionalIncludeDirectories>C:\ProgramData\boost\boost_1_71_0;C:\ProgramData\Eigen\eigen-eigen-323c052e1731</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\..\Libraries\eigen-3.3.7</AdditionalIncludeDirectories>
+      <WholeProgramOptimization>false</WholeProgramOptimization>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -184,6 +190,8 @@
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <EnableUAC>false</EnableUAC>
+      <LinkStatus>true</LinkStatus>
+      <LinkTimeCodeGeneration>Default</LinkTimeCodeGeneration>
     </Link>
     <PostBuildEvent>
       <Command>call "../CopyDLLsToPDS.bat"</Command>
@@ -202,7 +210,8 @@
       <ConformanceMode>true</ConformanceMode>
       <PrecompiledHeaderFile>
       </PrecompiledHeaderFile>
-      <AdditionalIncludeDirectories>C:\ProgramData\boost\boost_1_71_0;C:\ProgramData\Eigen\eigen-eigen-323c052e1731</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\..\Libraries\eigen-3.3.7</AdditionalIncludeDirectories>
+      <WholeProgramOptimization>false</WholeProgramOptimization>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>

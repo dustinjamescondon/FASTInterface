@@ -8,7 +8,7 @@
 
 // If this is defined, then output files will be written to which log activity
 // To silence any logging, just comment out this define preprocessor statement
-#define LOG_ACTIVITY
+// #define LOG_ACTIVITY
 
 // Used for representing vectors and matrices
 using namespace Eigen;
