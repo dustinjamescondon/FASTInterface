@@ -119,9 +119,9 @@ bool InputFile::IsNumber(const std::string& s) const
 		}
 
 		// otherwise, if this character isn't a valid digit
-		else if (!std::isdigit(*it)) {
-			return false;
-		}
+		//else if (!std::isdigit(*it)) {
+		//	return false;
+		//}
 	}
 	return true;
 }
