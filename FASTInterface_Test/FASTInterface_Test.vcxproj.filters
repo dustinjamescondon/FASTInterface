@@ -14,6 +14,9 @@
     <Filter Include="Libraries">
       <UniqueIdentifier>{110cb807-9592-49b3-97b6-638cfb99df3e}</UniqueIdentifier>
     </Filter>
+    <Filter Include="BatchScript">
+      <UniqueIdentifier>{ab8d153b-e612-4dff-9549-ddca13da262d}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\Graphics.cpp">
@@ -41,11 +44,16 @@
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <Library Include="..\Release\FASTInterface_Release.lib">
+    <Library Include="..\bin\FASTInterface_Release.lib">
       <Filter>Libraries</Filter>
     </Library>
-    <Library Include="..\Win32\Debug\FASTInterface_Debug.lib">
+    <Library Include="..\bin\FASTInterface_Debug.lib">
       <Filter>Libraries</Filter>
     </Library>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="FetchDLLs.bat">
+      <Filter>BatchScript</Filter>
+    </None>
   </ItemGroup>
 </Project>

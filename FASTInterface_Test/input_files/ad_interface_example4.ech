@@ -1,0 +1,31 @@
+Echo of Input File:
+ "input_files/ad_interface_example4.inp"
+Generated on: 17-Jun-2020 at 16:48:51.
+-----  AeroDyn Driver v1.00.x Input File  --------------------------------------                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                
+UAE Phase 3 turbine (BEM)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       
+-----  Input Configuration  ----------------------------------------------------                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                
+            T  Echo           - Echo input parameters to "rootname.ech"?
+               AD_InputFile   - Name of the AeroDyn input file
+  "../../modules/openfast/reg_tests/r-test/glue-codes/openfast/5MW_OC4Semi_WSt_WavesWN/NRELOffshrBsline5MW_OC3Hywind_AeroDyn15.dat"
+
+            3  NumBlades      - Number of blades
+   1.5000E+00  HubRad         - Hub radius (m)
+   9.0000E+01  HubHt          - Hub height (m)
+  -5.0190E+00  Overhang       - Overhang (m)
+   0.0000E+00  ShftTilt       - Shaft tilt (deg)
+  -2.5000E+00  Precone        - Precone (deg)
+   1.0000E+00  MassAndInertia - Total system mass (kg)
+   2.0000E+00  MassAndInertia - Sway-yaw coupling moment of inertia (kg/m)
+   3.0000E+00  MassAndInertia - Heave-pitch coupling moment of inertia (kg/m)
+   4.0000E+00  MassAndInertia - roll moment of inertia (about shaft and surge direction) (kg/m^2)
+   5.0000E+00  MassAndInertia - pitch moment of inertia (about sway direction) (kg/m^2)
+   6.0000E+00  MassAndInertia - yaw moment of inertia (about heave direction) (kg/m^2)
+   1.0000E-02  dt             - Time-step that Aerodyn will take (s)
+   3.1400E+00  CG_Pos         - Position of center of gravity along rotor shaft, measured from rotor hub (m).
+
+               OutFileRoot    - Root name for any output files
+  "Test01"
+            T  TabDel         - Make output tab-delimited (fixed-width otherwise)?
+               OutFmt         - Format used for text tabular output (except time).  Resulting field should be 10 characters. (-)
+  "ES10.3E2"
+            T  Beep           - Beep on exit?

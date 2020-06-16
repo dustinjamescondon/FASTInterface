@@ -110,6 +110,19 @@
       <SubSystem>Console</SubSystem>
       <AdditionalDependencies>sfml-system-s-d.lib;opengl32.lib;winmm.lib;gdi32.lib;sfml-window-s-d.lib;sfml-graphics-s-d.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
+    <PreBuildEvent>
+      <Command>FetchDLLs.bat</Command>
+    </PreBuildEvent>
+    <PreBuildEvent>
+      <Message>
+      </Message>
+    </PreBuildEvent>
+    <PostBuildEvent>
+      <Command>FetchDLLs.bat</Command>
+    </PostBuildEvent>
+    <PostBuildEvent>
+      <Message>Fetching the necessary dlls from FASTInterface and openfast</Message>
+    </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <ClCompile>
@@ -130,6 +143,14 @@
       <OptimizeReferences>true</OptimizeReferences>
       <AdditionalDependencies>sfml-system-s.lib;opengl32.lib;winmm.lib;gdi32.lib;sfml-window-s.lib;sfml-graphics-s.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
+    <PreBuildEvent>
+      <Command>
+      </Command>
+    </PreBuildEvent>
+    <PostBuildEvent>
+      <Command>FetchDLLs.bat</Command>
+      <Message>Fetching the necessary dlls from FASTInterface and openfast</Message>
+    </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <ClCompile>
@@ -160,12 +181,17 @@
     <ClInclude Include="src\TimePlot.h" />
   </ItemGroup>
   <ItemGroup>
-    <Library Include="..\Release\FASTInterface_Release.lib">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
-    </Library>
-    <Library Include="..\Win32\Debug\FASTInterface_Debug.lib">
+    <Library Include="..\bin\FASTInterface_Debug.lib">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">false</ExcludedFromBuild>
     </Library>
+    <Library Include="..\bin\FASTInterface_Release.lib">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">false</ExcludedFromBuild>
+    </Library>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="FetchDLLs.bat" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

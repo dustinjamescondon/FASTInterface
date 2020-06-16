@@ -31,13 +31,11 @@
     <ClCompile Include="src\PitchController.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <Library Include="lib\AeroDyn_Interface_Win32_Debug_Double.lib">
+    <Library Include="..\modules\openfast\build\bin\AeroDyn_Interface_Win32_Debug_Double.lib">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">false</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">false</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
     </Library>
-    <Library Include="lib\AeroDyn_Interface_Win32_Double.lib">
+    <Library Include="..\modules\openfast\build\bin\AeroDyn_Interface_Win32_Double.lib">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
     </Library>
@@ -54,6 +52,9 @@
     <ClInclude Include="src\LowPassFilter.h" />
     <ClInclude Include="src\MasterController.h" />
     <ClInclude Include="src\PitchController.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="FetchDLLs.bat" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>16.0</VCProjectVersion>
@@ -111,20 +112,23 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <LinkIncremental>true</LinkIncremental>
     <IntDir>$(Platform)\$(Configuration)\</IntDir>
-    <OutDir>$(SolutionDir)$(Platform)\$(Configuration)\</OutDir>
+    <OutDir>..\bin\</OutDir>
     <TargetName>$(ProjectName)_$(Configuration)</TargetName>
     <CustomBuildAfterTargets />
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <LinkIncremental>true</LinkIncremental>
     <EmbedManifest>false</EmbedManifest>
+    <OutDir>bin</OutDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <LinkIncremental>true</LinkIncremental>
     <TargetName>$(ProjectName)_$(Configuration)</TargetName>
+    <OutDir>..\bin\</OutDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <LinkIncremental>false</LinkIncremental>
+    <OutDir>bin</OutDir>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
@@ -145,9 +149,17 @@
       <EnableUAC>false</EnableUAC>
     </Link>
     <PostBuildEvent>
+      <Command>FetchDLLs.bat</Command>
+      <Message>Fetching DLL files from openfast</Message>
+    </PostBuildEvent>
+    <PreBuildEvent>
       <Command>
       </Command>
-    </PostBuildEvent>
+    </PreBuildEvent>
+    <PreBuildEvent>
+      <Message>
+      </Message>
+    </PreBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <ClCompile>
@@ -186,17 +198,26 @@
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
-      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <EnableCOMDATFolding>false</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <EnableUAC>false</EnableUAC>
-      <LinkStatus>true</LinkStatus>
+      <LinkStatus>
+      </LinkStatus>
       <LinkTimeCodeGeneration>Default</LinkTimeCodeGeneration>
     </Link>
     <PostBuildEvent>
-      <Command>call "../CopyDLLsToPDS.bat"</Command>
-      <Message>Copying the DLLs to ProteusDS' solver path</Message>
+      <Command>FetchDLLs.bat</Command>
+      <Message>Fetching DLL files from openfast</Message>
     </PostBuildEvent>
+    <PreBuildEvent>
+      <Command>
+      </Command>
+    </PreBuildEvent>
+    <PreBuildEvent>
+      <Message>
+      </Message>
+    </PreBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <ClCompile>

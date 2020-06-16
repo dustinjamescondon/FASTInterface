@@ -86,7 +86,7 @@ int main()
 
 		// Use this to intialize the turbine with constant rotor speed and blade pitch
 		turb.InitWithConstantRotorSpeedAndPitch(InitialRotorSpeed, InitialPitch);
-		turb.InitAeroDyn("C:/Users/dusti/Documents/Work/PRIMED/inputfiles/ad_interface_example4.inp", FluidDensity, KinematicFluidVisc,
+		turb.InitAeroDyn("input_files/ad_interface_example4.inp", FluidDensity, KinematicFluidVisc,
 			nacellePosition,
 			nacelleEulerAngles,
 			nacelleVel,
