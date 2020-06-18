@@ -24,7 +24,7 @@ class FASTInterface::PImp
 {
 public:
 	struct HubMotion {
-		Vector3d position, velocity, angularVel;
+		Vector3d position, velocity, acceleration, angularVel, angularAcc;
 		Matrix3d orientation;
 	};
 
@@ -32,16 +32,19 @@ public:
 	struct NacelleMotion {
 		double position[3];
 		double velocity[3];
+		double acceleration[3];
 		double EulerAngles[3];
 		double angularVel[3];
+		double angularAcc[3];
 	};
 
 	PImp();
 
 	DriveTrain::ModelStates IntegrateDriveTrain_Euler(double time, const FASTInterface::PImp::NacelleMotion&);
-	DriveTrain::ModelStates IntegrateDriveTrain_RK4(double time, const FASTInterface::PImp::NacelleMotion&, const std::vector<double>& inflows);
+	DriveTrain::ModelStates IntegrateDriveTrain_RK4(double time, const FASTInterface::PImp::NacelleMotion&, const std::vector<double>& inflowVel,
+		const std::vector<double>& inflowAcc);
 
-	
+
 	NacelleReactionLoads UpdateAeroDynStates(bool isRealStep);
 	HubMotion CalculateHubMotion(const NacelleMotion&, const DriveTrain::States&);
 	Vector3d TransformHubToNacelle(const Vector3d& v, const Matrix3d& nacelleOrienation, const Matrix3d& hubOrienation);
@@ -52,11 +55,11 @@ public:
 	Matrix3d nacelleOrient, hubOrient;
 	Vector3d nacelleForce, nacelleMoment;
 	DriveTrain::ModelStates drivetrainStates_hold; // Holds drivetrain states on non-real state updates
-	std::vector<double> inflows; // holds the blade node inflows
+	std::vector<double> inflowVel, inflowAcc; // holds the blade node inflows
 	AeroDyn_Interface_Wrapper aerodyn;
-	DriveTrain				  drivetrain;
+	DriveTrain		      drivetrain;
 	DriveTrain::ModelStates   dt_resultStates;
-	MasterController		  mcont;
+	MasterController	      mcont;
 
 #ifdef LOG_ACTIVITY
 	//-----------------------------------------------
@@ -112,7 +115,7 @@ FASTInterface::PImp::HubMotion FASTInterface::PImp::CalculateHubMotion(const Nac
 
 	hm.position = Vector3d(nm.position);
 	hm.velocity = Vector3d(nm.velocity);
-	
+
 	// Use Nacelle orientation and rotor.theta to update hub orientation for AeroDyn
 	nacelleOrient = AngleAxisd(nm.EulerAngles[0], Vector3d::UnitX())
 		* AngleAxisd(nm.EulerAngles[1], Vector3d::UnitY())
@@ -167,7 +170,7 @@ void FASTInterface::InitDriveTrain(const std::string& drivetrainDefFile, double 
 	double stiffness = inputfile.ReadDouble("DriveTrainStiffness");
 	double damping = inputfile.ReadDouble("DriveTrainDamping");
 	double gearboxRatio = inputfile.ReadDouble("GearboxRatio");
-	
+
 	p_imp->drivetrain.Init(initRotorSpeed, gearboxRatio, damping, stiffness, rotorMOI, genMOI);
 }
 
@@ -199,14 +202,18 @@ void FASTInterface::InitAeroDyn(
 	const double nacellePos[3],
 	const double nacelleEulerAngles[3],
 	const double nacelleVel[3],
-	const double nacelleAngularVel[3])
+	const double nacelleAcc[3],
+	const double nacelleAngularVel[3],
+	const double nacelleAngularAcc[3])
 {
 	// Put the parameters in the HubMotion structure
 	PImp::NacelleMotion nm;
 	memcpy(nm.position, nacellePos, 3 * sizeof(double));
 	memcpy(nm.EulerAngles, nacelleEulerAngles, 3 * sizeof(double));
 	memcpy(nm.velocity, nacelleVel, 3 * sizeof(double));
+	memcpy(nm.acceleration, nacelleAcc, 3 * sizeof(double));
 	memcpy(nm.angularVel, nacelleAngularVel, 3 * sizeof(double));
+	memcpy(nm.angularAcc, nacelleAngularAcc, 3 * sizeof(double));
 
 	// Process the nacelle motions to find the hub motions
 	DriveTrain::States rotorState = p_imp->drivetrain.GetRotorStates();
@@ -222,11 +229,14 @@ void FASTInterface::InitAeroDyn(
 		hm.position,
 		hm.orientation,
 		hm.velocity,
+		hm.acceleration,
 		hm.angularVel,
+		hm.angularAcc,
 		p_imp->mcont.GetBladePitchCommand());
 
 	// Resize our container for the inflow velocities to the appropriate size
-	p_imp->inflows.resize(p_imp->aerodyn.GetNumNodes() * 3, 0.0);
+	p_imp->inflowVel.resize(p_imp->aerodyn.GetNumNodes() * 3, 0.0);
+	p_imp->inflowAcc.resize(p_imp->aerodyn.GetNumNodes() * 3, 0.0);
 
 	// Do the initial call for the controller
 	p_imp->mcont.UpdateController(p_imp->time, p_imp->drivetrain.GetGenShaftSpeed(), p_imp->aerodyn.GetBladePitch());
@@ -236,9 +246,9 @@ void FASTInterface::InitAeroDyn(
 #endif
 }
 
-void FASTInterface::InitInflows(const std::vector<double>& inflows)
+void FASTInterface::InitInflows(const std::vector<double>& inflowVel, const std::vector<double>& inflowAcc)
 {
-	p_imp->aerodyn.InitInflows(inflows);
+	p_imp->aerodyn.InitInflows(inflowVel, inflowAcc);
 
 #ifdef LOG_ACTIVITY
 	p_imp->fout_funcCalls << "InitInflows();" << std::endl;
@@ -247,14 +257,17 @@ void FASTInterface::InitInflows(const std::vector<double>& inflows)
 
 // Begin updating the model's state by first setting the nacelle states at point in future
 void FASTInterface::SetNacelleStates(double time, const double nacellePos[3], const double nacelleEulerAngles[3],
-	const double nacelleVel[3], const double nacelleAngularVel[3], bool isRealStep)
+	const double nacelleVel[3], const double nacelleAcc[3], const double nacelleAngularVel[3],
+	const double nacelleAngularAcc[3], bool isRealStep)
 {
 	// Put the parameters in the HubMotion structure
 	PImp::NacelleMotion nm;
 	memcpy(nm.position, nacellePos, 3 * sizeof(double));
 	memcpy(nm.EulerAngles, nacelleEulerAngles, 3 * sizeof(double));
 	memcpy(nm.velocity, nacelleVel, 3 * sizeof(double));
+	memcpy(nm.acceleration, nacelleAcc, 3 * sizeof(double));
 	memcpy(nm.angularVel, nacelleAngularVel, 3 * sizeof(double));
+	memcpy(nm.angularAcc, nacelleAngularAcc, 3 * sizeof(double));
 
 	// Debug
 #ifdef LOG_ACTIVITY
@@ -277,7 +290,7 @@ void FASTInterface::SetNacelleStates(double time, const double nacellePos[3], co
 	double bladePitch = p_imp->mcont.GetBladePitchCommand();
 
 	DriveTrain::ModelStates dtStates_withAcc = p_imp->drivetrain.CalcDeriv(dtStates_n, aerodynamicTorque, genTorque);
-	
+
 	// Integrate the drive train states using Euler's method for our estimate of the rotor state
 	dtStates_withAcc.rotor.theta += dtStates_withAcc.rotor.vel * dt;
 	dtStates_withAcc.rotor.vel += dtStates_withAcc.rotor.acc * dt;
@@ -287,14 +300,14 @@ void FASTInterface::SetNacelleStates(double time, const double nacellePos[3], co
 
 	// Send these estimated values to AeroDyn so the caller can get the blade node positions
 	PImp::HubMotion hm = p_imp->CalculateHubMotion(nm, dtStates_withAcc.rotor);
-	p_imp->aerodyn.SetHubMotion(time, hm.position, hm.orientation, hm.velocity, hm.angularVel, bladePitch, false);
+	p_imp->aerodyn.SetHubMotion(time, hm.position, hm.orientation, hm.velocity, hm.acceleration, hm.angularVel, hm.angularAcc, bladePitch, false);
 }
 
 
 // Uses aerodyn to calculate drive train states at t. Doesn't set drivetrain or Aerodyn's states permanently
 DriveTrain::ModelStates FASTInterface::PImp::IntegrateDriveTrain_Euler(double t, const FASTInterface::PImp::NacelleMotion& nm)
 {
-	double dt = t - time; 
+	double dt = t - time;
 
 	// First we get the drive train shaft's accelerations using CalcDeriv
 	DriveTrain::ModelStates dtStates_n = drivetrain.GetStates();
@@ -319,7 +332,8 @@ DriveTrain::ModelStates FASTInterface::PImp::IntegrateDriveTrain_Euler(double t,
 }
 
 // Uses aerodyn to calculate drive train states at t. Doesn't set drivetrain or Aerodyn's states permenantly
-DriveTrain::ModelStates FASTInterface::PImp::IntegrateDriveTrain_RK4(double t, const FASTInterface::PImp::NacelleMotion& nm, const std::vector<double>& inflows)
+DriveTrain::ModelStates FASTInterface::PImp::IntegrateDriveTrain_RK4(double t, const FASTInterface::PImp::NacelleMotion& nm,
+	const std::vector<double>& inflowVel, const std::vector<double>& inflowAcc)
 {
 	double dt = t - time;
 
@@ -347,8 +361,8 @@ DriveTrain::ModelStates FASTInterface::PImp::IntegrateDriveTrain_RK4(double t, c
 
 	HubMotion hm = CalculateHubMotion(nm, state_n1.rotor);
 
-	aerodyn.SetHubMotion(time + 0.5 * dt, hm.position, hm.orientation, hm.velocity, hm.angularVel, bladePitch, false);
-	aerodyn.SetInflowVelocities(inflows, false);
+	aerodyn.SetHubMotion(time + 0.5 * dt, hm.position, hm.orientation, hm.velocity, hm.acceleration, hm.angularVel, hm.angularAcc, bladePitch, false);
+	aerodyn.SetInflows(inflowVel, inflowAcc, false);
 
 	// Hub reaction loads
 	AeroDyn_Interface_Wrapper::HubReactionLoads hrl = aerodyn.UpdateStates(false);
@@ -371,8 +385,8 @@ DriveTrain::ModelStates FASTInterface::PImp::IntegrateDriveTrain_RK4(double t, c
 
 	hm = CalculateHubMotion(nm, state_n2.rotor);
 
-	aerodyn.SetHubMotion(time + 0.5 * dt, hm.position, hm.orientation, hm.velocity, hm.angularVel, bladePitch, false);
-	aerodyn.SetInflowVelocities(inflows, false);
+	aerodyn.SetHubMotion(time + 0.5 * dt, hm.position, hm.orientation, hm.velocity, hm.acceleration, hm.angularVel, hm.angularAcc, bladePitch, false);
+	aerodyn.SetInflows(inflowVel, inflowAcc, false);
 	hrl = aerodyn.UpdateStates(false);
 
 	// K3
@@ -391,8 +405,8 @@ DriveTrain::ModelStates FASTInterface::PImp::IntegrateDriveTrain_RK4(double t, c
 	state_n3.rotor.theta = state_n.rotor.theta + rot_k_3x;
 
 	hm = CalculateHubMotion(nm, state_n3.rotor);
-	aerodyn.SetHubMotion(time + dt, hm.position, hm.orientation, hm.velocity, hm.angularVel, bladePitch, false);
-	aerodyn.SetInflowVelocities(inflows, false);
+	aerodyn.SetHubMotion(time + dt, hm.position, hm.orientation, hm.velocity, hm.acceleration, hm.angularVel, hm.angularAcc, bladePitch, false);
+	aerodyn.SetInflows(inflowVel, inflowAcc, false);
 	hrl = aerodyn.UpdateStates(false);
 
 	// K4
@@ -423,18 +437,19 @@ void FASTInterface::GetBladeNodePositions(std::vector<double>& p)
 	p_imp->aerodyn.GetBladeNodePositions(p, false);
 }
 
-void FASTInterface::SetInflowVelocities(const std::vector<double>& inflows)
-{ 
+void FASTInterface::SetInflows(const std::vector<double>& inflowVel, const std::vector<double>& inflowAcc)
+{
 	// Don't actually update Aerodyn with these inflows, just save them
-	for (unsigned int i = 0; i < p_imp->inflows.size(); ++i)
+	for (unsigned int i = 0; i < p_imp->inflowVel.size(); ++i)
 	{
-		p_imp->inflows[i] = inflows[i];
+		p_imp->inflowVel[i] = inflowVel[i];
+		p_imp->inflowAcc[i] = inflowAcc[i];
 	}
 
 
 #ifdef LOG_ACTIVITY
-	if(p_imp->onRealStep)
-		p_imp->LogInflows(inflows[0]);
+	if (p_imp->onRealStep)
+		p_imp->LogInflows(inflowVel[0]);
 #endif
 }
 
@@ -446,7 +461,7 @@ FASTInterface::NacelleReactionLoads FASTInterface::Simulate()
 
 	// If we're performing a permanent step, then take more care by using the RK4 integrator
 	if (p_imp->onRealStep) {
-		states = p_imp->IntegrateDriveTrain_RK4(p_imp->targetTime, p_imp->nacelleMotion, p_imp->inflows);
+		states = p_imp->IntegrateDriveTrain_RK4(p_imp->targetTime, p_imp->nacelleMotion, p_imp->inflowVel, p_imp->inflowAcc);
 	}
 	// Otherwise just use Euler to save some time
 	else {
@@ -457,10 +472,10 @@ FASTInterface::NacelleReactionLoads FASTInterface::Simulate()
 
 	// Use drive train state to update aerodyn
 	PImp::HubMotion hm = p_imp->CalculateHubMotion(p_imp->nacelleMotion, states.rotor);
-	p_imp->aerodyn.SetHubMotion(p_imp->time, hm.position, hm.orientation, hm.velocity,
-		hm.angularVel, bladePitch, p_imp->onRealStep);
+	p_imp->aerodyn.SetHubMotion(p_imp->time, hm.position, hm.orientation, hm.velocity, hm.acceleration,
+		hm.angularVel, hm.angularAcc, bladePitch, p_imp->onRealStep);
 
-	p_imp->aerodyn.SetInflowVelocities(p_imp->inflows, p_imp->onRealStep);
+	p_imp->aerodyn.SetInflows(p_imp->inflowVel, p_imp->inflowAcc, p_imp->onRealStep);
 	FASTInterface::NacelleReactionLoads rf = p_imp->UpdateAeroDynStates(p_imp->onRealStep);
 
 	// If we're taking an actual step, then save the updated drivetrain state and simulation time
@@ -471,21 +486,21 @@ FASTInterface::NacelleReactionLoads FASTInterface::Simulate()
 	}
 
 	// Overwrite the nacelle x moment to be the generator torque
-	/* 
-	  Note that only when onRealStep == true is the generator torque reported at current time;
-	  if onRealStep == false, then UpdateController isn't called and the generator torque given by
-	  GetGeneratorTorqueCommand() is at the previous time.
+	/*
+	   Note that only when onRealStep == true is the generator torque reported at current time;
+	   if onRealStep == false, then UpdateController isn't called and the generator torque given by
+	   GetGeneratorTorqueCommand() is at the previous time.
 
-	  I do see this as a problem, but I think it may be unavoidable with the given Bladed-style DLL because
-	  it is written to be loosely coupled to, meaning all calls to it are permanent, and therefore we 
-	  can't call it when onRealStep == false
+	   I do see this as a problem, but I think it may be unavoidable with the given Bladed-style DLL because
+	   it is written to be loosely coupled to, meaning all calls to it are permanent, and therefore we
+	   can't call it when onRealStep == false
 	*/
 	rf.moment[0] = p_imp->mcont.GetGeneratorTorqueCommand();
 
 	//----------------------------------
 	// Debug
 #ifdef LOG_ACTIVITY
-	if(p_imp->onRealStep)
+	if (p_imp->onRealStep)
 		p_imp->LogOutput(p_imp->time, rf);
 #endif
 

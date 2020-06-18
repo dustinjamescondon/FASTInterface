@@ -116,10 +116,12 @@ public:
 		const double nacellePos[3],
 		const double nacelleEulerAngles[3],
 		const double nacelleVel[3],
-		const double nacelleAngularVel[3]);
+		const double nacelleAcc[3],
+		const double nacelleAngularVel[3],
+		const double nacelleAngularAcc[3]);
 
 
-	DECLDIR void InitInflows(const std::vector<double>&);
+	DECLDIR void InitInflows(const std::vector<double>& inflowVel, const std::vector<double>& inflowAcc);
 	//-----------------------------------------------------------
 
 	// This will simulate from the last simulation time up until the time passed to SetNacelleStates(...)
@@ -185,15 +187,17 @@ public:
 	//              the turbines states will only be temporarily updated to \time. In both cases
 	//				the reaction forces at /time are reported
 	DECLDIR void SetNacelleStates(
-		double time, 
-		const double nacellePos[3], 
+		double time,
+		const double nacellePos[3],
 		const double nacelleEulerAngles[3],
-		const double nacelleVel[3], 
+		const double nacelleVel[3],
+		const double nacelleAcc[3],
 		const double nacelleAngularVel[3],
+		const double nacelleAngularAcc[3],
 		bool isRealStep = true);
 
 	// Sets the inflow velocities at the \time passed to SetNacelleMotion(...)
-	DECLDIR void SetInflowVelocities(const std::vector<double>&);
+	DECLDIR void SetInflows(const std::vector<double>& inflowVel, const std::vector<double>& inflowAcc);
 
 private:
 	// Pointer to implementation class to hide implementation

@@ -1,10 +1,10 @@
-/* 
+/*
 Description:
 ------------
 
 This is a wrapper for AeroDyn_Interface, which is written in FORTRAN. Its main purpose is to provide Aerodyn with inputs,
-for which it can return reaction loads on the hub. It also changes from ProteusDS' z-positive-down coordinate 
-system to AeroDyn's z-positive-up coordinate system. 
+for which it can return reaction loads on the hub. It also changes from ProteusDS' z-positive-down coordinate
+system to AeroDyn's z-positive-up coordinate system.
 
 
 Notes:
@@ -12,11 +12,11 @@ Notes:
 
 This interface actually manages two sets of AeroDyn instances:
 one is the main instance, and the other is a temporary copy which can be updated without affecting the main states.
-The temporary states are accessed whenever the flag "isRealStep" is passed as false. The instances 
-are defined in the FORTRAN layer of the code; that layer uses <FUNCTIONNAME>_FAKE to get/set 
+The temporary states are accessed whenever the flag "isRealStep" is passed as false. The instances
+are defined in the FORTRAN layer of the code; that layer uses <FUNCTIONNAME>_FAKE to get/set
 the temporary AeroDyn instance, and <FUNCTIONNAME> to get/set the main AeroDyn instance.
 
-When SetHubMotion is called with isRealStep=false, the main states are copied, and the copy's input is updated with the rest of the 
+When SetHubMotion is called with isRealStep=false, the main states are copied, and the copy's input is updated with the rest of the
 parameters of SetHubMotion.
 
 Example:
@@ -70,18 +70,20 @@ public:
 
 	// Initializes AeroDyn by loading input files and setting initial hub state
 	void InitAerodyn(
-		const char* inputFilename,		       // filename (including path) of the main driver input file
+		const char* inputFilename,	       // filename (including path) of the main driver input file
 		double fluidDensity,                   // kg/m^3
 		double kinematicFluidVisc,             // m^2/sec
 		bool useAddedMass,                     // have AeroDyn include added mass effects
-		const Vector3d& hubPosition,		   // metres
+		const Vector3d& hubPosition,	       // metres
 		const Matrix3d& hubOrientation,        // 3x3 orientation matrix
-		const Vector3d& hubVelocity,		   // metres/sec
-		const Vector3d& hubRotationalVelocity, // axis-angle form in global coordinate system
+		const Vector3d& hubVel,	               // metres/sec
+		const Vector3d& hubAcc,		       // metres/sec^2
+		const Vector3d& hubRotationalVel,      // axis-angle form in global coordinate system
+		const Vector3d& hubRotationalAcc,      // axis-angle form in global coordinate system	
 		double bladePitch);                    // radians
-	 
-	// Initializes the inflows. Note, inflow velocities are in global coordinate system
-	void InitInflows(const std::vector<double>& inflows);
+
+		// Initializes the inflows. Note, inflow velocities are in global coordinate system
+	void InitInflows(const std::vector<double>& inflowVel, const std::vector<double>& inflowAcc);
 	// The format expected is (in global coordinate system)
 	// inflows[0] inflow velocity in x direction at node 0
 	//     ...[1] inflow velocity in y direction at node 0
@@ -94,14 +96,16 @@ public:
 	void SetHubMotion(
 		double time,                        // the moment in time that the inputs describe (seconds)
 		const Vector3d& hubPosition,        // position of the hub in global coordinate system (meters)
-		const Matrix3d& hubOrientation,		// orientation matrix in ProteusDS' z-positive-down coordinate system
-		const Vector3d& hubVelocity,	    // velocity of the hub in the global coordinate system (meters/sec)
-		const Vector3d& hubAngularVelocity, // angular velocity of the hub in global coordinate system (axis-angle)
+		const Matrix3d& hubOrientation,	    // orientation matrix in ProteusDS' z-positive-down coordinate system
+		const Vector3d& hubVel,	    // velocity of the hub in the global coordinate system (meters/sec)
+		const Vector3d& hubAcc,             // ^ (m/sec^2)
+		const Vector3d& hubAngularVel, // angular velocity of the hub in global coordinate system (axis-angle)
+		const Vector3d& hubAngularAcc,      // angular acceleration ^ 
 		double bladePitch,
 		bool isRealStep = true);
 
 	// Removed this from UpdateStates, so now this should be called before UpdateStates
-	void SetInflowVelocities(const std::vector<double>& inflow, bool isRealStep=true);
+	void SetInflows(const std::vector<double>& inflowVel, const std::vector<double>& inflowAcc, bool isRealStep = true);
 
 	// Once updateHubState has been called, we call this to get where those hub kinematics put the blade nodes
 	void GetBladeNodePositions(
@@ -127,16 +131,16 @@ public:
 	double GetTSR() const;
 
 	// Returns the torque resulting from the last call to UpdateStates
-	double GetTorque() const; 
+	double GetTorque() const;
 
 	// Returns the force resulting from the last call to UpdateStates
-	Vector3d GetForce() const; 
+	Vector3d GetForce() const;
 
 	// Returns the moment resulting from the last call to UpdateStates
 	Vector3d GetMoment() const;
 
 	// Returns the last actual pitch value (the one that have been assigned via isRealStep == true).
-	double GetBladePitch() const; 
+	double GetBladePitch() const;
 
 private:
 
@@ -154,13 +158,14 @@ private:
 	Matrix3d TransformOrientation(const Matrix3d& orientation) const;
 
 	// updates aerodynInflows with transformed pdsInflows
-	void TransformInflows_PDStoAD(const std::vector<double>& pdsInflows);
+	void TransformInflows_PDStoAD(const std::vector<double>& pdsInflowVel, const std::vector<double>& pdsInflowAcc);
 
 	// the turbine instance pointer for the current instance of the class (points to a FORTRAN type)
 	void* simulationInstance;
 
 	HubReactionLoads hubReactionLoads; // Saved reaction loads from last call to UpdateStates
-	std::vector<double> aerodynInflows;
+	std::vector<double> aerodynInflowVel;
+	std::vector<double> aerodynInflowAcc;
 	double turbineDiameter;
 	double pitch;
 	int totalNodes;
