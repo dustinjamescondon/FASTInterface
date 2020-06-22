@@ -1,4 +1,4 @@
-#include "..\..\FASTInterface\src\FASTInterface.h"
+#include "..\..\..\FASTInterface\src\FASTInterface.h"
 #include <Eigen/Dense>
 #include <SFML/Graphics.hpp>
 #include <iostream>
@@ -43,7 +43,8 @@ int main()
 	// Local variables
 	double time = 0.0;
 
-	std::vector<double> inflows;
+	std::vector<double> inflowVel;
+	std::vector<double> inflowAcc;
 	std::vector<double> bladeNodePositions;
 
 	int totalNodes = 0;
@@ -64,12 +65,19 @@ int main()
 
 	// Initialize the nacelle state - it will be constant for this simulation test
 	double nacelleAngularVel[3];
+	double nacelleAngularAcc[3];
 	double nacelleEulerAngles[3];
 	double nacellePosition[3];
 	double nacelleVel[3];
+	double nacelleAcc[3];
+
 	nacelleAngularVel[0] = 0.0;
 	nacelleAngularVel[1] = 0.0;
 	nacelleAngularVel[2] = 0.0;
+
+	nacelleAngularAcc[0] = 0.0;
+	nacelleAngularAcc[1] = 0.0;
+	nacelleAngularAcc[2] = 0.0;
 
 	nacelleEulerAngles[0] = 0.0;
 	nacelleEulerAngles[1] = 0.0;
@@ -77,7 +85,14 @@ int main()
 
 	nacellePosition[0] = 0.0;
 	nacellePosition[1] = nacellePosition[2] = 75.0;
-	nacelleVel[0] = nacelleVel[1] = nacelleVel[2] = 0.0;
+
+	nacelleVel[0] = 0.0;
+	nacelleVel[1] = 0.0; 
+	nacelleVel[2] = 0.0;
+
+	nacelleAcc[0] = 0.0;
+	nacelleAcc[1] = 0.0;
+	nacelleAcc[2] = 0.0;
 
 	try {
 		// Use these initialization methods to use the Bladed-style DLL
@@ -86,11 +101,13 @@ int main()
 
 		// Use this to intialize the turbine with constant rotor speed and blade pitch
 		turb.InitWithConstantRotorSpeedAndPitch(InitialRotorSpeed, InitialPitch);
-		turb.InitAeroDyn("input_files/ad_interface_example4.inp", FluidDensity, KinematicFluidVisc,
+		turb.InitAeroDyn("../tests/input_files/ad_interface_example4.inp", FluidDensity, KinematicFluidVisc,
 			nacellePosition,
 			nacelleEulerAngles,
 			nacelleVel,
-			nacelleAngularVel);
+			nacelleAcc,
+			nacelleAngularVel,
+			nacelleAngularAcc);
 	}
 
 	catch (FileNotFoundException& e) {
@@ -118,18 +135,19 @@ int main()
 	totalNodes = turb.GetNumNodes();
 
 	// now we know the total number of nodes, so allocate accordingly
-	inflows.resize(totalNodes * 3);
+	inflowVel.resize(totalNodes * 3);
+	inflowAcc.resize(totalNodes * 3);
 	bladeNodePositions.resize(totalNodes * 3);
 
 	// get hub positions from AD and then use then to find new inflows
 
 	// But for this test, just have a constant inflow
 	// create a steady flow in +x direction
-	GenerateInflowVelocities(bladeNodePositions, totalNodes, InflowSpeed, inflows);
+	GenerateInflowVelocities(bladeNodePositions, totalNodes, InflowSpeed, inflowVel, inflowAcc);
 
 	float diam = turb.GetTurbineDiameter();
 
-	turb.InitInflows(inflows);
+	turb.InitInflows(inflowVel, inflowAcc);
 	//-------------------------------
 	// Simulation loop
 	for (int i = 0; i < NSteps; i++)
@@ -153,14 +171,16 @@ int main()
 			nacellePosition,
 			nacelleEulerAngles,
 			nacelleVel,
+			nacelleAcc,
 			nacelleAngularVel,
+			nacelleAngularAcc,
 			isRealStep);
 
 		// Now the rotor orientation has been set, so Aerodyn can report where the node positions are
 		turb.GetBladeNodePositions(bladeNodePositions);
 
 		// Set the inflows at those positions
-		turb.SetInflowVelocities(inflows);
+		turb.SetInflows(inflowVel, inflowAcc);
 
 		// And update the states to time, returning the nacelle reaction forces
 		rf = turb.Simulate();

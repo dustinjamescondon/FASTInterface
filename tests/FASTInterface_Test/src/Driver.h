@@ -32,7 +32,8 @@ DriverStates UpdateDriverStates(DriverStates states, std::vector<double>& bladeN
 // Uses Euler method to update states in time by dt, returning the results
 DriverStates EulerStep(DriverStates states, std::vector<double>& bladeNodePos, std::vector<double>& inflows, AeroDyn_Interface_Wrapper& ad, double time, double dt);
 
-void GenerateInflowVelocities(const std::vector<double>& nodePositions, int totalNodes, double inflowSpeed, std::vector<double>& inflows);
+void GenerateInflowVelocities(const std::vector<double>& nodePositions, int totalNodes, 
+	double inflowSpeed, std::vector<double>& inflowVel, std::vector<double>& inflowAcc);
 
 //----------------------------
 // Function to display the blade nodes to visualize rotation

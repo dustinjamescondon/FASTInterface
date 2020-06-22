@@ -45,15 +45,21 @@ States_dy CalcWeightedAvg(const DriverStates k[4])
 
 
 
-
-void GenerateInflowVelocities(const std::vector<double>& nodePositions, int totalNodes, double inflowSpeed, std::vector<double>& inflows)
+// Assumes the inflow acceleration is zero
+void GenerateInflowVelocities(const std::vector<double>& nodePositions, int totalNodes,
+	double inflowSpeed, std::vector<double>& inflowVel, std::vector<double>& inflowAcc)
 {
 
 	for (int i = 0; i < totalNodes; i++)
 	{
-		inflows[i * 3 + 0] = inflowSpeed;
-		inflows[i * 3 + 1] = 0.0;
-		inflows[i * 3 + 2] = 0.0;
+		inflowVel[i * 3 + 0] = inflowSpeed;
+		inflowVel[i * 3 + 1] = 0.0;
+		inflowVel[i * 3 + 2] = 0.0;
+
+		// For this test, just assume the inflows aren't accelerating
+		inflowAcc[i * 3 + 0] = 0.0;
+		inflowAcc[i * 3 + 1] = 0.0;
+		inflowAcc[i * 3 + 2] = 0.0;
 	}
 }
 

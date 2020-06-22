@@ -72,14 +72,25 @@
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <LibraryPath>C:\Users\dusti\Documents\prog\libs\SFML-2.5.1(64bit)\lib;$(LibraryPath)</LibraryPath>
+    <OutDir>$(SolutionDir)\bin\</OutDir>
+    <PreBuildEventUseInBuild>false</PreBuildEventUseInBuild>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
-    <OutDir>$(SolutionDir)$(Platform)\$(Configuration)\</OutDir>
+    <OutDir>$(SolutionDir)\bin\</OutDir>
     <IntDir>$(Platform)\$(Configuration)\</IntDir>
-    <LibraryPath>..\extern\SFML-2.5.1\lib;..\modules\openfast\build\bin;$(LibraryPath)</LibraryPath>
+    <LibraryPath>..\..\extern\SFML-2.5.1\lib;..\..\modules\openfast\build\bin;$(LibraryPath)</LibraryPath>
+    <PreBuildEventUseInBuild>false</PreBuildEventUseInBuild>
+    <PostBuildEventUseInBuild>false</PostBuildEventUseInBuild>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
-    <LibraryPath>..\extern\SFML-2.5.1\lib;..\modules\openfast\build\bin;$(LibraryPath)</LibraryPath>
+    <LibraryPath>..\..\extern\SFML-2.5.1\lib;..\..\modules\openfast\build\bin;$(LibraryPath)</LibraryPath>
+    <OutDir>$(SolutionDir)\bin\</OutDir>
+    <PreBuildEventUseInBuild>false</PreBuildEventUseInBuild>
+    <PostBuildEventUseInBuild>false</PostBuildEventUseInBuild>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <OutDir>$(SolutionDir)\bin\</OutDir>
+    <PreBuildEventUseInBuild>false</PreBuildEventUseInBuild>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <ClCompile>
@@ -102,7 +113,7 @@
       <Optimization>Disabled</Optimization>
       <SDLCheck>true</SDLCheck>
       <ConformanceMode>false</ConformanceMode>
-      <AdditionalIncludeDirectories>..\modules\eigen;..\extern\SFML-2.5.1\include</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\..\modules\eigen;..\..\extern\SFML-2.5.1\include</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpp14</LanguageStandard>
       <PreprocessorDefinitions>SFML_STATIC;%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
@@ -111,17 +122,20 @@
       <AdditionalDependencies>sfml-system-s-d.lib;opengl32.lib;winmm.lib;gdi32.lib;sfml-window-s-d.lib;sfml-graphics-s-d.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <PreBuildEvent>
-      <Command>FetchDLLs.bat</Command>
+      <Command>
+      </Command>
     </PreBuildEvent>
     <PreBuildEvent>
       <Message>
       </Message>
     </PreBuildEvent>
     <PostBuildEvent>
-      <Command>FetchDLLs.bat</Command>
+      <Command>
+      </Command>
     </PostBuildEvent>
     <PostBuildEvent>
-      <Message>Fetching the necessary dlls from FASTInterface and openfast</Message>
+      <Message>
+      </Message>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
@@ -132,7 +146,7 @@
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <SDLCheck>true</SDLCheck>
       <ConformanceMode>false</ConformanceMode>
-      <AdditionalIncludeDirectories>..\modules\eigen;..\extern\SFML-2.5.1\include</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\..\modules\eigen;..\..\extern\SFML-2.5.1\include</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>SFML_STATIC;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <LanguageStandard>stdcpp17</LanguageStandard>
       <WholeProgramOptimization>false</WholeProgramOptimization>
@@ -148,8 +162,10 @@
       </Command>
     </PreBuildEvent>
     <PostBuildEvent>
-      <Command>FetchDLLs.bat</Command>
-      <Message>Fetching the necessary dlls from FASTInterface and openfast</Message>
+      <Command>
+      </Command>
+      <Message>
+      </Message>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
@@ -181,17 +197,14 @@
     <ClInclude Include="src\TimePlot.h" />
   </ItemGroup>
   <ItemGroup>
-    <Library Include="..\bin\FASTInterface_Debug.lib">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+    <Library Include="..\..\bin\FASTInterface_Debug.lib">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">false</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
     </Library>
-    <Library Include="..\bin\FASTInterface_Release.lib">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+    <Library Include="..\..\bin\FASTInterface_Release.lib">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">false</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
     </Library>
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="FetchDLLs.bat" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
