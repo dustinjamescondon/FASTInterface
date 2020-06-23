@@ -24,6 +24,9 @@ int main()
 	//-------------------------
 	// Simulation parameters
 	static const double EndTime = 100.0;
+	int numBlades = 3;
+	double hubRadius = 1.5;
+	double precone = 0.0;
 	static const double dt = 0.01;
 	static const int NSteps = (int)(EndTime / dt);
 
@@ -101,7 +104,14 @@ int main()
 
 		// Use this to intialize the turbine with constant rotor speed and blade pitch
 		turb.InitWithConstantRotorSpeedAndPitch(InitialRotorSpeed, InitialPitch);
-		turb.InitAeroDyn("../tests/input_files/ad_interface_example4.inp", FluidDensity, KinematicFluidVisc,
+		turb.InitAeroDyn("../modules/openfast/reg_tests/r-test/glue-codes/openfast/5MW_OC4Semi_WSt_WavesWN/NRELOffshrBsline5MW_OC3Hywind_AeroDyn15.dat",
+			"output",
+			dt,
+			numBlades,
+			hubRadius,
+			precone,
+			FluidDensity, 
+			KinematicFluidVisc,
 			nacellePosition,
 			nacelleEulerAngles,
 			nacelleVel,

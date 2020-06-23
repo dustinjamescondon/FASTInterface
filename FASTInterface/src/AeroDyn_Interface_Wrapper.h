@@ -70,7 +70,12 @@ public:
 
 	// Initializes AeroDyn by loading input files and setting initial hub state
 	void InitAerodyn(
-		const char* inputFilename,	       // filename (including path) of the main driver input file
+		const char* inputFilename,			   // filename (including path) of the AeroDyn input file
+		const char* outputFilename,			   // root name of the output file to be generated
+		double timestep,                       // the timestep that AeroDyn will take
+		int numBlades,                         //
+		double hubRadius,                      //
+		double precone,                        // in radians
 		double fluidDensity,                   // kg/m^3
 		double kinematicFluidVisc,             // m^2/sec
 		bool useAddedMass,                     // have AeroDyn include added mass effects

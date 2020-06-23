@@ -7,10 +7,10 @@
 
 // declare the existence of the FORTRAN subroutines which are in the DLL
 extern "C" {
-    void INTERFACE_INITAERODYN(const char* inputFilename, int* fname_len, bool* useAddedMass, double* fluidDensity, double* kinematicFluidVisc,
-			       double* hubPos, double* hubOri, double* hubVel, double* hubAcc, double* hubRotVel, double* hubRotAcc,
-			       double* bladePitch, int* nBlades_out, int* nNodes_out, double* turbDiameter_out, void** simulationInstance_out,
-			       int* errStat, char* errMsg);
+    void INTERFACE_INITAERODYN(const char* inputFilename, int* inputFile_len, const char* outputFilename, int* outputFile_len, double* timestep, bool* useAddedMass, 
+		double* fluidDensity, double* kinematicFluidVisc, double* hubPos, double* hubOri, double* hubVel, double* hubAcc, double* hubRotVel, 
+		double* hubRotAcc, int*nBlades, double* bladePitch, double* hubRadius, double* precone, int* nNodes_out, double* turbDiameter_out, 
+		void** simulationInstance_out, int* errStat, char* errMsg);
 
     void INTERFACE_INITINFLOWS(void* simulationInstance, int* nBlades, int* nNodes, const double inflowVel[], const double inflowAcc[]);
 
@@ -98,6 +98,11 @@ AeroDyn_Interface_Wrapper::~AeroDyn_Interface_Wrapper()
 
 void AeroDyn_Interface_Wrapper::InitAerodyn(
     const char* inputFilename,
+	const char* outputFilename,
+	double timestep,
+	int numBlades,
+	double hubRadius,
+	double precone,
     double fluidDensity,
     double kinematicFluidVisc,
     bool useAddedMass,
@@ -117,7 +122,8 @@ void AeroDyn_Interface_Wrapper::InitAerodyn(
 
     // get the length of the string to pass to the FORTRAN subroutine (FORTRAN needs the length, because it 
     // doesn't recognize null-terminated character as the end of the string)
-    int fname_len = strlen(inputFilename);
+    int inputFile_len = strlen(inputFilename);
+	int outputFile_len = strlen(outputFilename);
 
     // transform them to Aerodyn's global coordinate system
     Vector3d hubPosition_trans = Transform_PDStoAD(hubPosition);
@@ -127,10 +133,12 @@ void AeroDyn_Interface_Wrapper::InitAerodyn(
     Vector3d hubAngAcc_trans = Transform_PDStoAD(hubAngAcc);  
     Matrix3d hubOrientation_trans = TransformOrientation(hubOrientation);
 
+	nBlades = numBlades;
+
     // call the initialization subroutine in the FORTRAN DLL
-    INTERFACE_INITAERODYN(inputFilename, &fname_len, &useAddedMass, &fluidDensity, &kinematicFluidVisc,
+    INTERFACE_INITAERODYN(inputFilename, &inputFile_len, outputFilename, &outputFile_len, &timestep, &useAddedMass, &fluidDensity, &kinematicFluidVisc,
 			  hubPosition_trans.data(), hubOrientation_trans.data(), hubVel_trans.data(), hubAcc_trans.data(),
-			  hubAngVel_trans.data(), hubAngAcc_trans.data(), &bladePitch, &nBlades, &nNodes, &turbineDiameter,
+			  hubAngVel_trans.data(), hubAngAcc_trans.data(), &numBlades, &bladePitch, &hubRadius, &precone, &nNodes, &turbineDiameter,
 			  &simulationInstance, &errStat, errMsg);
 
     // check the error status number 

@@ -197,6 +197,11 @@ void FASTInterface::InitControllers_InputFile(const std::string& inputfilename, 
 // requires information gathered from both: rotor speed and blade pitch command.
 void FASTInterface::InitAeroDyn(
 	const std::string& inputFilename,
+	const std::string& outputFilename,
+	double timestep,
+	int numBlades,
+	double hubRadius,
+	double precone,
 	double fluidDensity,
 	double kinematicFluidVisc,
 	const double nacellePos[3],
@@ -222,7 +227,13 @@ void FASTInterface::InitAeroDyn(
 	// Hard-code this to false because added mass in AeroDyn isn't complete
 	bool useAddedMass = false;
 
-	p_imp->aerodyn.InitAerodyn(inputFilename.c_str(),
+	p_imp->aerodyn.InitAerodyn(
+		inputFilename.c_str(),
+		outputFilename.c_str(),
+		timestep,
+		numBlades,
+		hubRadius,
+		precone,
 		fluidDensity,
 		kinematicFluidVisc,
 		useAddedMass,

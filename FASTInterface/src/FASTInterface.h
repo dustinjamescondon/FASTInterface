@@ -111,6 +111,11 @@ public:
 	// \nacelleAngularVel: the initial nacelle angular velocity of the nacelle represented as axis-angle vector
 	DECLDIR void InitAeroDyn(
 		const std::string& inputFilename,
+		const std::string& outputFilename,
+		double timestep,
+		int numBlades,
+		double hubRadius,
+		double precone,
 		double fluidDensity,
 		double kinematicFluidVisc,
 		const double nacellePos[3],
