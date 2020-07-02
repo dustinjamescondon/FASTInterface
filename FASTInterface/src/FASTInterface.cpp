@@ -44,10 +44,14 @@ public:
 	DriveTrain::ModelStates IntegrateDriveTrain_RK4(double time, const FASTInterface::PImp::NacelleMotion&, const std::vector<double>& inflowVel,
 		const std::vector<double>& inflowAcc);
 
+	Vector<double, 6> PerturbADInputs(int n, double perturb, const double* nacelleAcc, const double* nacelleRotationAcc);
+	Vector<double, 12> CalcResidual(const Vector<double, 12>& y, const Vector<double, 12>& u);
 
 	NacelleReactionLoads UpdateAeroDynStates(bool isRealStep);
 	HubMotion CalculateHubMotion(const NacelleMotion&, const DriveTrain::States&);
 	Vector3d TransformHubToNacelle(const Vector3d& v, const Matrix3d& nacelleOrienation, const Matrix3d& hubOrienation);
+	Matrix3d InterpExtrapOrientation(double target_time, const Matrix3d& orient_1, double time_1, const Matrix3d& orient_2, double time_2) const;
+	Vector3d InterpExtrapVector(double target_time, const Vector3d& vect_1, double time_1, const Vector3d& vect_2, double time_2) const;
 
 	bool onRealStep;
 	double time, targetTime;
@@ -60,6 +64,7 @@ public:
 	DriveTrain		      drivetrain;
 	DriveTrain::ModelStates   dt_resultStates;
 	MasterController	      mcont;
+	std::function<void(const double*, const double*, double*, double*)> CalcOutput_callback;
 
 #ifdef LOG_ACTIVITY
 	//-----------------------------------------------
@@ -122,7 +127,6 @@ FASTInterface::PImp::HubMotion FASTInterface::PImp::CalculateHubMotion(const Nac
 		* AngleAxisd(nm.EulerAngles[2], Vector3d::UnitZ());
 
 	// Create rotation matrix for the rotor angle
-
 	Matrix3d rotorRotation = AngleAxisd(rs.theta, Vector3d::UnitX()).toRotationMatrix();
 
 	// Combine the two rotation matrices
@@ -158,20 +162,6 @@ void FASTInterface::InitDriveTrain(double rotorMOI, double genMOI, double stiffn
 #ifdef LOG_ACTIVITY
 	p_imp->fout_funcCalls << "InitDriveTrain( " << rotorMOI << ", " << genMOI << ", " << stiffness << ", " << damping << ", " << gearboxRatio << ", " << initialRotorVel << " );" << std::endl;
 #endif
-}
-
-void FASTInterface::InitDriveTrain(const std::string& drivetrainDefFile, double initRotorSpeed)
-{
-	InputFile inputfile;
-	inputfile.Load(drivetrainDefFile.c_str());
-
-	double rotorMOI = inputfile.ReadDouble("RotorMomentOfInertia");
-	double genMOI = inputfile.ReadDouble("GeneratorMomentOfInertia");
-	double stiffness = inputfile.ReadDouble("DriveTrainStiffness");
-	double damping = inputfile.ReadDouble("DriveTrainDamping");
-	double gearboxRatio = inputfile.ReadDouble("GearboxRatio");
-
-	p_imp->drivetrain.Init(initRotorSpeed, gearboxRatio, damping, stiffness, rotorMOI, genMOI);
 }
 
 void FASTInterface::InitControllers_BladedDLL(const std::string& bladed_dll_fname, double initialBladePitch)
@@ -311,7 +301,8 @@ void FASTInterface::SetNacelleStates(double time, const double nacellePos[3], co
 
 	// Send these estimated values to AeroDyn so the caller can get the blade node positions
 	PImp::HubMotion hm = p_imp->CalculateHubMotion(nm, dtStates_withAcc.rotor);
-	p_imp->aerodyn.SetHubMotion(time, hm.position, hm.orientation, hm.velocity, hm.acceleration, hm.angularVel, hm.angularAcc, bladePitch, false);
+	p_imp->aerodyn.Advance_InputWindow(false);
+	p_imp->aerodyn.Set_Inputs_Hub(time, hm.position, hm.orientation, hm.velocity, hm.acceleration, hm.angularVel, hm.angularAcc, bladePitch, false);
 }
 
 
@@ -372,8 +363,8 @@ DriveTrain::ModelStates FASTInterface::PImp::IntegrateDriveTrain_RK4(double t, c
 
 	HubMotion hm = CalculateHubMotion(nm, state_n1.rotor);
 
-	aerodyn.SetHubMotion(time + 0.5 * dt, hm.position, hm.orientation, hm.velocity, hm.acceleration, hm.angularVel, hm.angularAcc, bladePitch, false);
-	aerodyn.SetInflows(inflowVel, inflowAcc, false);
+	aerodyn.Set_Inputs_Hub(time + 0.5 * dt, hm.position, hm.orientation, hm.velocity, hm.acceleration, hm.angularVel, hm.angularAcc, bladePitch, false);
+	aerodyn.Set_Inputs_Inflow(inflowVel, inflowAcc, false);
 
 	// Hub reaction loads
 	AeroDyn_Interface_Wrapper::HubReactionLoads hrl = aerodyn.UpdateStates(false);
@@ -396,8 +387,8 @@ DriveTrain::ModelStates FASTInterface::PImp::IntegrateDriveTrain_RK4(double t, c
 
 	hm = CalculateHubMotion(nm, state_n2.rotor);
 
-	aerodyn.SetHubMotion(time + 0.5 * dt, hm.position, hm.orientation, hm.velocity, hm.acceleration, hm.angularVel, hm.angularAcc, bladePitch, false);
-	aerodyn.SetInflows(inflowVel, inflowAcc, false);
+	aerodyn.Set_Inputs_Hub(time + 0.5 * dt, hm.position, hm.orientation, hm.velocity, hm.acceleration, hm.angularVel, hm.angularAcc, bladePitch, false);
+	aerodyn.Set_Inputs_Inflow(inflowVel, inflowAcc, false);
 	hrl = aerodyn.UpdateStates(false);
 
 	// K3
@@ -416,8 +407,8 @@ DriveTrain::ModelStates FASTInterface::PImp::IntegrateDriveTrain_RK4(double t, c
 	state_n3.rotor.theta = state_n.rotor.theta + rot_k_3x;
 
 	hm = CalculateHubMotion(nm, state_n3.rotor);
-	aerodyn.SetHubMotion(time + dt, hm.position, hm.orientation, hm.velocity, hm.acceleration, hm.angularVel, hm.angularAcc, bladePitch, false);
-	aerodyn.SetInflows(inflowVel, inflowAcc, false);
+	aerodyn.Set_Inputs_Hub(time + dt, hm.position, hm.orientation, hm.velocity, hm.acceleration, hm.angularVel, hm.angularAcc, bladePitch, false);
+	aerodyn.Set_Inputs_Inflow(inflowVel, inflowAcc, false);
 	hrl = aerodyn.UpdateStates(false);
 
 	// K4
@@ -464,6 +455,145 @@ void FASTInterface::SetInflows(const std::vector<double>& inflowVel, const std::
 #endif
 }
 
+void FASTInterface::SetCalcOutputCallback(std::function<void(const double*, const double*, double*, double*)> calcOutput)
+{
+	p_imp->CalcOutput_callback = calcOutput;
+}
+
+FASTInterface::PDSAccOutputs FASTInterface::SolveForInputs_And_Outputs(const double nacelleAcc[3], const double nacelleRotationAcc[3])
+{
+	// hard-code here for now
+	const int solver_iterations = 2;
+	const double perturb = 0.01;
+
+	// Setup serialized vector of inputs
+	Vector<double,12> u;
+	// Setup serialized vector of outputs
+	Vector<double,12> y;
+
+	// Use the function arguments as the initial inputs to start off the 
+	// rootfinding process
+	HubMotion hm = p_imp->CalculateHubMotion()
+	Vector3d hubAcc = p_imp->CalculateHubMotion()
+	u.segment(6,9) = Vector
+
+	int k = 0;
+	while (true) {
+		//------------------------------------------------------
+		// Calculate the outputs
+		//------------------------------------------------------
+		//		Note: Do pointer arithmetic here for now just to save on code length
+		p_imp->CalcOutput_callback(u.data() + 0, u.data() + 3, 
+								   y.data() + 0, y.data() + 3);
+
+		// Combine the drivetrain information and the inputs from PDS to calculate the AD inputs
+		/* IMPORTANT: this assumes that the drivetrain currently contains the current rotor acceleration and that hubOrient has 
+					  the current hub orientation */
+		Vector3d hubRotationAcc = Vector3d(y.data() + 3) + (p_imp->drivetrain.GetGenShaftAcc() * p_imp->hubOrient.col(0));
+		
+		p_imp->aerodyn.Set_Inputs_HubAcceleration(
+			Vector3d(u.data() + 6), 
+			Vector3d(u.data() + 9), 
+			false);
+
+		p_imp->aerodyn.CalcOutput(
+			y + 6, 
+			y + 9, 
+			false);
+		//------------------------------------------------------
+
+		if (k >= solver_iterations)
+			break;
+
+		// At what point do we transfer the outputs from one to the 
+		// inputs of the other? Wait! We don't do that here. This part
+		// is all about root finding.
+
+		//------------------------------------------------------
+		// Perturb inputs
+		//------------------------------------------------------
+		Matrix<double, 12, 12> jacobian;
+		double u_perturb[12];
+		double y_perturb[12];
+		
+		// PDS first
+		for (int i = 0; i < 6; i++) {
+
+		
+		}
+
+		// AD second
+		for (int i = 0; i < 6; i++) {
+			Vector<double, 6> u_AD_perturb = p_imp->PerturbADInputs(i, perturb, u + 6, u + 9);
+
+			p_imp->aerodyn.Set_Inputs_HubAcceleration(
+				Vector3d(u_AD_perturb.data() + 0),
+				Vector3d(u_AD_perturb.data() + 3),
+				false);
+
+			p_imp->aerodyn.CalcOutput(
+				y_perturb + 6, 
+				y_perturb + 9,
+				false);
+		}
+		//------------------------------------------------------
+	}
+}
+
+Vector<double, 12> FASTInterface::PImp::CalcResidual(const Vector<double, 12>& y, const Vector<double, 12>& u)
+{
+	//----------------------------------------------------------------
+	// Derive the inputs of one module from the outputs of the other
+	//................................................................
+	/* first start with deriving AD's inputs from ProteusDS's outputs */
+	Vector3d nacelleAcc(y.data() + 0);
+	Vector3d nacelleRotationAcc(y.data() + 3);
+	Vector3d hubRotationAcc = nacelleRotationAcc + (drivetrain.GetGenShaftAcc() * hubOrient.col(0));
+
+	// Can we just set the hub linear acc in global coords? I'm pretty sure, yes
+	Vector3d hubAcc = nacelleAcc;
+
+	/* second derive PDS's inputs from AD's outputs */
+	Vector3d hubForce(y.data() + 6);
+	Vector3d hubMoment(y.data() + 9);
+
+	Vector3d nacelleForce = TransformHubToNacelle(
+		hubForce, 
+		nacelleOrient, 
+		hubOrient);
+	Vector3d nacelleMoment = TransformHubToNacelle(
+		hubMoment,
+		nacelleOrient,
+		hubOrient);
+	//------------------------------------------------------
+	// Pack these results in a vector
+	//......................................................
+	Vector<double, 12> u_derived;
+	memcpy(u_derived.data() + 0, nacelleForce.data(), 3 * sizeof(double));
+	memcpy(u_derived.data() + 3, nacelleMoment.data(), 3 * sizeof(double));
+	memcpy(u_derived.data() + 6, hubAcc.data(), 3 * sizeof(double));
+	memcpy(u_derived.data() + 9, hubRotationAcc.data(), 3 * sizeof(double));
+
+	/* Subtract the original inputs from the derived ones */
+	return u - u_derived;
+}
+
+// n is the "input number" to perturb. This just makes it possible to use iteration
+// for perturbing all the individual inputs.
+Vector<double,6> FASTInterface::PImp::PerturbADInputs(int n, double perturb, const double* nacelleAcc, const double* nacelleRotationAcc)
+{
+	// Pack the inputs into a one-dimensional array
+	Vector<double, 6> u_AD_perturb;
+	memcpy(u_AD_perturb.data() + 0, nacelleAcc, 3 * sizeof(double));
+	memcpy(u_AD_perturb.data() + 3, nacelleRotationAcc, 3 * sizeof(double));
+
+	// perturb an input by the input index
+	u_AD_perturb(n) += perturb;
+
+	return u_AD_perturb;
+}
+
+
 FASTInterface::NacelleReactionLoads FASTInterface::Simulate()
 {
 	// Integrate to find the drive train state
@@ -483,10 +613,10 @@ FASTInterface::NacelleReactionLoads FASTInterface::Simulate()
 
 	// Use drive train state to update aerodyn
 	PImp::HubMotion hm = p_imp->CalculateHubMotion(p_imp->nacelleMotion, states.rotor);
-	p_imp->aerodyn.SetHubMotion(p_imp->time, hm.position, hm.orientation, hm.velocity, hm.acceleration,
+	p_imp->aerodyn.Set_Inputs_Hub(p_imp->time, hm.position, hm.orientation, hm.velocity, hm.acceleration,
 		hm.angularVel, hm.angularAcc, bladePitch, p_imp->onRealStep);
 
-	p_imp->aerodyn.SetInflows(p_imp->inflowVel, p_imp->inflowAcc, p_imp->onRealStep);
+	p_imp->aerodyn.Set_Inputs_Inflow(p_imp->inflowVel, p_imp->inflowAcc, p_imp->onRealStep);
 	FASTInterface::NacelleReactionLoads rf = p_imp->UpdateAeroDynStates(p_imp->onRealStep);
 
 	// If we're taking an actual step, then save the updated drivetrain state and simulation time
@@ -525,7 +655,7 @@ FASTInterface::NacelleReactionLoads FASTInterface::PImp::UpdateAeroDynStates(boo
 	AeroDyn_Interface_Wrapper::HubReactionLoads hrl = aerodyn.UpdateStates(isRealStep);
 
 	// Transform the force and moment in from the hub coordinate system to the nacelle coordinate system
-	Vector3d trans_force_vec = TransformHubToNacelle(hrl.force, nacelleOrient, hubOrient);
+	Vector3d trans_force_vec  = TransformHubToNacelle(hrl.force,  nacelleOrient, hubOrient);
 	Vector3d trans_moment_vec = TransformHubToNacelle(hrl.moment, nacelleOrient, hubOrient);
 
 	// Get the results into the NacelleReactionForces structure so we can return it
@@ -540,6 +670,20 @@ FASTInterface::NacelleReactionLoads FASTInterface::PImp::UpdateAeroDynStates(boo
 	nacelleMoment = Vector3d(r.moment);
 
 	return r;
+}
+
+Matrix3d FASTInterface::PImp::InterpExtrapOrientation(double target_time, const Matrix3d& orient_1, double time_1, 
+	const Matrix3d& orient_2, double time_2) const
+{
+	// TODO
+	return Matrix3d();
+}
+
+Vector3d FASTInterface::PImp::InterpExtrapVector(double target_time, const Vector3d& vect_1, double time_1, 
+	const Vector3d& vect_2, double time_2) const
+{
+	// TODO
+	return Vector3d();
 }
 
 int FASTInterface::GetNumNodes() const
@@ -626,8 +770,7 @@ void FASTInterface::GetHubMoment(double v[3]) const
 }
 
 // 
-Vector3d FASTInterface::PImp::TransformHubToNacelle(const Vector3d& v, const Matrix3d& nacelleOri,
-	const Matrix3d& hubOri)
+Vector3d FASTInterface::PImp::TransformHubToNacelle(const Vector3d& v, const Matrix3d& nacelleOri, const Matrix3d& hubOri)
 {
 	return nacelleOrient.transpose() * hubOrient * v;
 }

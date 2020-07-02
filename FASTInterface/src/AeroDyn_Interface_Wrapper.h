@@ -16,8 +16,8 @@ The temporary states are accessed whenever the flag "isRealStep" is passed as fa
 are defined in the FORTRAN layer of the code; that layer uses <FUNCTIONNAME>_FAKE to get/set
 the temporary AeroDyn instance, and <FUNCTIONNAME> to get/set the main AeroDyn instance.
 
-When SetHubMotion is called with isRealStep=false, the main states are copied, and the copy's input is updated with the rest of the
-parameters of SetHubMotion.
+When Set_Inputs_Hub is called with isRealStep=false, the main states are copied, and the copy's input is updated with the rest of the
+parameters of Set_Inputs_Hub.
 
 Example:
 --------
@@ -28,12 +28,12 @@ The expected order of function calls is follows:
 2) GetBladeNodePositions, receiving the positions of the blade nodes in global coordinate system
 3) InitInflows, passing the inflows at time=0
 ----------- simulation loop -------------
-4) SetHubMotion, passing hubstate at time = 0
+4) Set_Inputs_Hub, passing hubstate at time = 0
 5) GetBladeNodePositions, ...
 6) SetInflowVelocities(...)
 7) Simulate, passing the inflow at time = 0
 ---next iteration---
-8) SetHubMotion, passing hubstate at time = t_1
+8) Set_Inputs_Hub, passing hubstate at time = t_1
 9) GetBladeNodePositions, ...
 10) SetInflowVelocities(...)
 11) Simulate, passing the inflow at time = t_1
@@ -98,7 +98,7 @@ public:
 
 	// Updates the hub motion variables, changing the positions of the nodes accordingly. Call
 	// this before getBladeNodePositions(...)
-	void SetHubMotion(
+	void Set_Inputs_Hub(
 		double time,                        // the moment in time that the inputs describe (seconds)
 		const Vector3d& hubPosition,        // position of the hub in global coordinate system (meters)
 		const Matrix3d& hubOrientation,	    // orientation matrix in ProteusDS' z-positive-down coordinate system
@@ -109,8 +109,21 @@ public:
 		double bladePitch,
 		bool isRealStep = true);
 
-	// Removed this from UpdateStates, so now this should be called before UpdateStates
-	void SetInflows(const std::vector<double>& inflowVel, const std::vector<double>& inflowAcc, bool isRealStep = true);
+	// This is just like Set_Inputs_Hub, but it only sets the accelerations. 
+	// The expected use of this function is to use to calculate the partial derivatives 
+	void Set_Inputs_HubAcceleration(
+		const Vector3d& hubAcc,
+		const Vector3d& hubAngularAcc,
+		bool isRealStep);
+
+	// This should be called before UpdateStates
+	void Set_Inputs_Inflow(const std::vector<double>& inflowVel, const std::vector<double>& inflowAcc, bool isRealStep = true);
+
+	// TODO
+	void CalcOutput(double* force_out, double* moment_out, bool isRealStep);
+
+	// TODO
+	void Advance_InputWindow(bool isRealStep);
 
 	// Once updateHubState has been called, we call this to get where those hub kinematics put the blade nodes
 	void GetBladeNodePositions(

@@ -40,6 +40,7 @@ Usage during simulation:
 */
 
 #pragma once
+#include <functional>
 #include <memory>
 #include <vector>
 #include <string>
@@ -65,6 +66,17 @@ public:
 		double power;
 	};
 
+	// TODO think of a better name
+	struct PDSAccOutputs {
+		double nacelleAcc[3];
+		double nacelleRotationAcc[3];
+	};
+
+	struct FASTOutput {
+		double nacelleForce[3];
+		double nacelleMoment[3];
+	};
+
 	DECLDIR FASTInterface();
 
 	DECLDIR ~FASTInterface();
@@ -85,9 +97,6 @@ public:
 	// \gearboxRatio: represented as "1 : \gearboxRatio", where LHS is the rotor shaft speed, and RHS is generator shaft speed
 	// \initialRotorSpeed: the initial rotation speed of the rotor shaft in rad/sec
 	DECLDIR void InitDriveTrain(double rotorMOI, double genMOI, double stiffness, double damping, double gearboxRatio, double initRotorSpeed);
-
-	// Version of drivetrain initialization which uses an input file
-	DECLDIR void InitDriveTrain(const std::string& drivetrainDefFile, double initRotorSpeed);
 
 	// Must initialize one of the controller types second
 	// (Bladed-style DLL controller initialization)
@@ -203,6 +212,11 @@ public:
 
 	// Sets the inflow velocities at the \time passed to SetNacelleMotion(...)
 	DECLDIR void SetInflows(const std::vector<double>& inflowVel, const std::vector<double>& inflowAcc);
+
+	DECLDIR void SetCalcOutputCallback(std::function<void(const double*, const double*, double*, double*)> calcOutput);
+
+	// TODO rename this: it's only solving for the acceleration/force inputs and outputs
+	DECLDIR PDSAccOutputs SolveForInputs_And_Outputs(const double nacelleAcc[3], const double nacelleRotationAcc[3]);
 
 private:
 	// Pointer to implementation class to hide implementation

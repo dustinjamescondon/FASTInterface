@@ -14,7 +14,6 @@
 // used to define vectors and matrices in this small example
 using namespace Eigen;
 
-
 //----------------------------
 // main routine
 int main()
@@ -98,12 +97,13 @@ int main()
 	nacelleAcc[2] = 0.0;
 
 	try {
-		// Use these initialization methods to use the Bladed-style DLL
+		// Option 1) Use these initialization methods to use the Bladed-style DLL
 		//turb.InitDriveTrain(RotorMOI, GenMOI, DriveTrainStiffness, DriveTrainDamping, GearboxRatio, InitialRotorSpeed);
 		//turb.InitControllers_BladedDLL("C:/Users/dusti/Documents/Work/PRIMED/ControllerDLLs/Discon_OC3Hywind.dll", InitialPitch);
 
-		// Use this to intialize the turbine with constant rotor speed and blade pitch
+		// Option 2) Use this to intialize the turbine with constant rotor speed and blade pitch
 		turb.InitWithConstantRotorSpeedAndPitch(InitialRotorSpeed, InitialPitch);
+
 		turb.InitAeroDyn("../modules/openfast/reg_tests/r-test/glue-codes/openfast/5MW_OC4Semi_WSt_WavesWN/NRELOffshrBsline5MW_OC3Hywind_AeroDyn15.dat",
 			"output",
 			dt,
@@ -119,22 +119,18 @@ int main()
 			nacelleAngularVel,
 			nacelleAngularAcc);
 	}
-
 	catch (FileNotFoundException& e) {
 		std::cout << e.what();
 		return 0;
 	}
-
 	catch (FileContentsException& e) {
 		std::cout << e.what();
 		return 0;
 	}
-
 	catch (ADErrorException& e) {
 		std::cout << e.what();
 		return 0;
 	}
-
 	catch (std::runtime_error& e) {
 		std::cout << e.what();
 		return 0;
@@ -150,12 +146,9 @@ int main()
 	bladeNodePositions.resize(totalNodes * 3);
 
 	// get hub positions from AD and then use then to find new inflows
-
-	// But for this test, just have a constant inflow
-	// create a steady flow in +x direction
+	//		But for this test, just have a constant inflow
+	//		create a steady flow in +x direction
 	GenerateInflowVelocities(bladeNodePositions, totalNodes, InflowSpeed, inflowVel, inflowAcc);
-
-	float diam = turb.GetTurbineDiameter();
 
 	turb.InitInflows(inflowVel, inflowAcc);
 	//-------------------------------

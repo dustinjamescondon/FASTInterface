@@ -12,37 +12,30 @@ extern "C" {
 		double* hubRotAcc, int*nBlades, double* bladePitch, double* hubRadius, double* precone, int* nNodes_out, double* turbDiameter_out, 
 		void** simulationInstance_out, int* errStat, char* errMsg);
 
-    void INTERFACE_INITINFLOWS(void* simulationInstance, int* nBlades, int* nNodes, const double inflowVel[], const double inflowAcc[]);
+    void INTERFACE_INITINPUTS_INFLOW(void* simulationInstance, int* nBlades, int* nNodes, const double inflowVel[], const double inflowAcc[]);
 
-    void INTERFACE_SETHUBMOTION(void* simulationInstance, double* time, double hubPos[3], double hubOri[3*3], double hubVel[3], double hubAcc[3],
+    void INTERFACE_SETINPUTS_HUB(void* simulationInstance, bool* isRealStep, double* time, double hubPos[3], double hubOri[3*3], double hubVel[3], double hubAcc[3],
 				double hubRotVel[3], double hubRotAcc[3], double* bladePitch);
 
-    void INTERFACE_SETHUBMOTION_FAKE(void* simulationInstance, double* time, double hubPos[3], double hubOri[3*3], double hubVel[3], double hubAcc[3],
-				     double hubRotVel[3], double hubRotAcc[3], double* bladePitch);
+    void INTERFACE_SETINPUTS_INFLOW(void* simulationInstance, bool* isRealStep, int* nBlades, int* nNodes, double* inflowVel, double* inflowAcc);
 
-    void INTERFACE_SETINFLOWS(void* simulationInstance, int* nBlades, int* nNodes, double* inflowVel, double* inflowAcc);
+	void INTERFACE_ADVANCE_INPUTWINDOW(void* simulationInstance, bool* isRealStep);
 
-    void INTERFACE_SETINFLOWS_FAKE(void* simulationInstance, int* nBlades, int* nNodes, double* inflowVel, double* inflowAcc);
+	void INTERFACE_SETINPUTS_HUBACCELERATION(void* simulationInstance, bool* isRealStep, const double linearAcc[3], const double rotationAcc[3]);
 
-    void INTERFACE_UPDATESTATES(void* simulationInstance, double* force_out, double* moment_out, double* power_out, double* tsr_out,
-				double massMatrix_out[6*6], double addedMassMatrix_out[6*6]);
+	void INTERFACE_CALCOUTPUT(void* simulationInstance, bool* isRealStep, double* force, double* moment);
 
-    void INTERFACE_UPDATESTATES_FAKE(void* simulationInstance, double* force_out, double* moment_out, double* power_out, double* tsr_out,
-				     double massMatrix_out[6*6], double addedMassMatrix_out[6*6]);
+    void INTERFACE_UPDATESTATES(void* simulationInstance, bool* isRealStep, double* force_out, double* moment_out, double* power_out, double* tsr_out);
 
-    void INTERFACE_GETBLADENODEPOS(void* simulationInstance, double* nodePos);
-
-    void INTERFACE_GETBLADENODEPOS_FAKE(void* simulationInstance, double* nodePos);
+    void INTERFACE_GETBLADENODEPOS(void* simulationInstance, bool* isRealStep, double* nodePos);
 
     void INTERFACE_END(void* simulationInstance);
 }
-
 
 Vector3d AeroDyn_Interface_Wrapper::Transform_PDStoAD(const Vector3d& v) const
 {
     return Vector3d(v.x(), -v.y(), -v.z());
 }
-
 
 Vector3d AeroDyn_Interface_Wrapper::Transform_ADtoPDS(const Vector3d& v) const
 {
@@ -165,10 +158,10 @@ void AeroDyn_Interface_Wrapper::InitInflows(const std::vector<double>& pdsInflow
     TransformInflows_PDStoAD(pdsInflowVel, pdsInflowAcc);
     
     // call inflow initialization subroutine in FORTRAN DLL with these transformed inflows
-    INTERFACE_INITINFLOWS(simulationInstance, &nBlades, &nNodes, &aerodynInflowVel[0], &aerodynInflowAcc[0]);
+    INTERFACE_INITINPUTS_INFLOW(simulationInstance, &nBlades, &nNodes, &aerodynInflowVel[0], &aerodynInflowAcc[0]);
 }
 
-void AeroDyn_Interface_Wrapper::SetHubMotion(double time,
+void AeroDyn_Interface_Wrapper::Set_Inputs_Hub(double time,
 					     const Vector3d& hubPosition,
 					     const Matrix3d& hubOrientation,
 					     const Vector3d& hubVel,
@@ -188,51 +181,50 @@ void AeroDyn_Interface_Wrapper::SetHubMotion(double time,
     Matrix3d hubOri_trans = TransformOrientation(hubOrientation);
 
     // If this is a fake-step, then we don't want this to be permanent, so we call the fake version
-    if (!isRealStep) {
-	INTERFACE_SETHUBMOTION_FAKE(simulationInstance, &time, hubPos_trans.data(), hubOri_trans.data(), hubVel_trans.data(),
+	INTERFACE_SETINPUTS_HUB(simulationInstance, &isRealStep, &time, hubPos_trans.data(), hubOri_trans.data(), hubVel_trans.data(),
 				    hubAcc_trans.data(), hubAngVel_trans.data(), hubAngAcc_trans.data(), &bladePitch);
-    }
+  
     // Otherwise we call the real version, which perminantly changes the inputs
-    else {
-	INTERFACE_SETHUBMOTION(simulationInstance, &time, hubPos_trans.data(), hubOri_trans.data(), hubVel_trans.data(),
-				    hubAcc_trans.data(), hubAngVel_trans.data(), hubAngAcc_trans.data(), &bladePitch);
-    }
 
     pitch = bladePitch;
 }
 
-void AeroDyn_Interface_Wrapper::SetInflows(const std::vector<double>& inflowVel, const std::vector<double>& inflowAcc, bool isRealStep)
+// This is just like Set_Inputs_Hub, but it only sets the accelerations. 
+// The expected use of this function is to use to calculate the partial derivatives of AeroDyn's CalcOutput function
+void AeroDyn_Interface_Wrapper::Set_Inputs_HubAcceleration(const Vector3d& hubAcc, const Vector3d& hubAngularAcc, bool isRealStep)
+{
+	Vector3d hubAcc_trans = Transform_PDStoAD(hubAcc);
+	Vector3d hubAngAcc_trans = Transform_PDStoAD(hubAngularAcc);
+
+	INTERFACE_SETINPUTS_HUBACCELERATION(simulationInstance, &isRealStep, hubAcc.data(), hubAngularAcc.data());
+}
+
+void AeroDyn_Interface_Wrapper::Set_Inputs_Inflow(const std::vector<double>& inflowVel, const std::vector<double>& inflowAcc, bool isRealStep)
 {
     // Assigns the transformed inflows to aeroDynInflows
     TransformInflows_PDStoAD(inflowVel, inflowAcc);
 
-    if (isRealStep) {
-	INTERFACE_SETINFLOWS(simulationInstance, &nBlades, &nNodes, aerodynInflowVel.data(), aerodynInflowAcc.data());
-    }
-    else
-    {
-	INTERFACE_SETINFLOWS_FAKE(simulationInstance, &nBlades, &nNodes, aerodynInflowVel.data(), aerodynInflowAcc.data());
-    }
+	INTERFACE_SETINPUTS_INFLOW(simulationInstance, &isRealStep, &nBlades, &nNodes, aerodynInflowVel.data(), aerodynInflowAcc.data());
+}
+
+void AeroDyn_Interface_Wrapper::Advance_InputWindow(bool isRealStep)
+{
+	INTERFACE_ADVANCE_INPUTWINDOW(simulationInstance, &isRealStep);
+}
+
+void AeroDyn_Interface_Wrapper::CalcOutput(double* force_out, double* moment_out, bool isRealStep)
+{
+	INTERFACE_CALCOUTPUT(simulationInstance, &isRealStep, force_out, moment_out);
 }
 
 // If isRealStep == false, the temporary instance of AeroDyn is updated; otherwise, the main instance of AeroDyn is 
 // updated. Once that is done, the resulting reaction loads are returned.
 AeroDyn_Interface_Wrapper::HubReactionLoads AeroDyn_Interface_Wrapper::UpdateStates(bool isRealStep)
 {
-    // If this is a fake-step, then we don't want this to be permanent, so we call the fake version
-    if ( !isRealStep ) {
 	// Note, we're passing our transformed inflows here, not the inflows from the 
 	// function parameter.
-	INTERFACE_UPDATESTATES_FAKE(simulationInstance, hubReactionLoads.force.data(), hubReactionLoads.moment.data(), &hubReactionLoads.power,
-				    &hubReactionLoads.tsr, hubReactionLoads.massMatrix.data(), hubReactionLoads.addedMassMatrix.data());
-    }
-    // Otherwise we call the real version, which permanently changes the states for this turbine
-    else {
-	// Note, we're passing our transformed inflows here, not the inflows from the 
-	// function parameter.
-	INTERFACE_UPDATESTATES(simulationInstance, hubReactionLoads.force.data(), hubReactionLoads.moment.data(), &hubReactionLoads.power,
-			       &hubReactionLoads.tsr, hubReactionLoads.massMatrix.data(), hubReactionLoads.addedMassMatrix.data());
-    }
+	INTERFACE_UPDATESTATES(simulationInstance, &isRealStep, hubReactionLoads.force.data(), hubReactionLoads.moment.data(), &hubReactionLoads.power,
+				    &hubReactionLoads.tsr);
 
     // Transform the results into PDS' coordinate system
     hubReactionLoads.force = Transform_ADtoPDS(hubReactionLoads.force);
@@ -246,17 +238,8 @@ AeroDyn_Interface_Wrapper::HubReactionLoads AeroDyn_Interface_Wrapper::UpdateSta
 // Communicates blade node positions to ProteusDS. This needs to be separate from the other outputs so that it can be used to get inflow values at the current time step.
 void AeroDyn_Interface_Wrapper::GetBladeNodePositions(std::vector<double>& nodePos, bool isRealStep)
 {
-    // If we're in the process of performing a fake step, then we call the fake version, which returns the 
-    // node positions according to the last call to the fake UpdateHubMotion
-    if ( !isRealStep ) {
 	// fills nodePos with node positions. Note! It assumes enough elements have been allocated
-	INTERFACE_GETBLADENODEPOS_FAKE(simulationInstance, nodePos.data());
-    } 
-    // Otherwise, return the node positions according to the last call to normal UpdateHubMotion
-    else {
-	// fills nodePos with node positions. Note! It assumes enough elements have been allocated
-	INTERFACE_GETBLADENODEPOS(simulationInstance, nodePos.data());
-    }
+	INTERFACE_GETBLADENODEPOS(simulationInstance, &isRealStep, nodePos.data());
 
     // copy node positions into the vector<double> for ProteusDS, including coordinate system conversion
     for (int i = 0; i < totalNodes; ++i) {
@@ -305,5 +288,3 @@ Vector3d AeroDyn_Interface_Wrapper::GetMoment() const
 {
     return hubReactionLoads.moment;
 }
-
-
