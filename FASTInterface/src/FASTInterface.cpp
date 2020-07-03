@@ -28,6 +28,10 @@ public:
 		Matrix3d orientation;
 	};
 
+	struct HubAcc {
+		Vector3d acceleration, angularAcc;
+	};
+
 	// Structure to hold the state of the nacelle
 	struct NacelleMotion {
 		double position[3];
@@ -44,11 +48,12 @@ public:
 	DriveTrain::ModelStates IntegrateDriveTrain_RK4(double time, const FASTInterface::PImp::NacelleMotion&, const std::vector<double>& inflowVel,
 		const std::vector<double>& inflowAcc);
 
-	Vector<double, 6> PerturbADInputs(int n, double perturb, const double* nacelleAcc, const double* nacelleRotationAcc);
 	Vector<double, 12> CalcResidual(const Vector<double, 12>& y, const Vector<double, 12>& u);
 
 	NacelleReactionLoads UpdateAeroDynStates(bool isRealStep);
 	HubMotion CalculateHubMotion(const NacelleMotion&, const DriveTrain::States&);
+	HubAcc CalculateHubAcc(const Vector3d& nacAcc, const Vector3d& nacRotAcc, const Matrix3d& nacOri, double rotorShaftAcc);
+
 	Vector3d TransformHubToNacelle(const Vector3d& v, const Matrix3d& nacelleOrienation, const Matrix3d& hubOrienation);
 	Matrix3d InterpExtrapOrientation(double target_time, const Matrix3d& orient_1, double time_1, const Matrix3d& orient_2, double time_2) const;
 	Vector3d InterpExtrapVector(double target_time, const Vector3d& vect_1, double time_1, const Vector3d& vect_2, double time_2) const;
@@ -58,7 +63,7 @@ public:
 	FASTInterface::PImp::NacelleMotion nacelleMotion;
 	Matrix3d nacelleOrient, hubOrient;
 	Vector3d nacelleForce, nacelleMoment;
-	DriveTrain::ModelStates drivetrainStates_hold; // Holds drivetrain states on non-real state updates
+	DriveTrain::ModelStates drivetrainStates_pred; // Holds drivetrain states on non-real state updates
 	std::vector<double> inflowVel, inflowAcc; // holds the blade node inflows
 	AeroDyn_Interface_Wrapper aerodyn;
 	DriveTrain		      drivetrain;
@@ -139,12 +144,28 @@ FASTInterface::PImp::HubMotion FASTInterface::PImp::CalculateHubMotion(const Nac
 	return hm;
 }
 
+// Calculates the appropriate hub accelerations according to the nacelle and rotor shaft accelerations
+FASTInterface::PImp::HubAcc FASTInterface::PImp::CalculateHubAcc(
+	const Vector3d& nacAcc, 
+	const Vector3d& nacRotAcc,
+	const Matrix3d& nacOrient,
+	double rotorShaftAcc)
+{
+	HubAcc ha;
+
+	ha.acceleration = nacAcc;
+
+	ha.angularAcc = rotorShaftAcc * hubOrient.col(0); // rotation axis in the global coordinate system
+
+	return ha;
+}
+
 
 void FASTInterface::InitWithConstantRotorSpeedAndPitch(double constantRotorSpeed, double constantBladePitch)
 {
 	p_imp->drivetrain.Init(constantRotorSpeed);
 	p_imp->mcont.Init(constantBladePitch);
-	p_imp->drivetrainStates_hold = p_imp->drivetrain.GetStates();
+	p_imp->drivetrainStates_pred = p_imp->drivetrain.GetStates();
 
 	// Debug
 #ifdef LOG_ACTIVITY
@@ -157,7 +178,7 @@ void FASTInterface::InitWithConstantRotorSpeedAndPitch(double constantRotorSpeed
 void FASTInterface::InitDriveTrain(double rotorMOI, double genMOI, double stiffness, double damping, double gearboxRatio, double initialRotorVel)
 {
 	p_imp->drivetrain.Init(initialRotorVel, gearboxRatio, damping, stiffness, rotorMOI, genMOI);
-	p_imp->drivetrainStates_hold = p_imp->drivetrain.GetStates();
+	p_imp->drivetrainStates_pred = p_imp->drivetrain.GetStates();
 
 #ifdef LOG_ACTIVITY
 	p_imp->fout_funcCalls << "InitDriveTrain( " << rotorMOI << ", " << genMOI << ", " << stiffness << ", " << damping << ", " << gearboxRatio << ", " << initialRotorVel << " );" << std::endl;
@@ -171,16 +192,6 @@ void FASTInterface::InitControllers_BladedDLL(const std::string& bladed_dll_fnam
 #ifdef LOG_ACTIVITY
 	p_imp->fout_funcCalls << "InitControllers_BladedDLL( " << bladed_dll_fname << " );" << std::endl;
 #endif
-}
-
-void FASTInterface::InitControllers_InputFile(const std::string& inputfilename, double initBladePitch)
-{
-	InputFile inputfile;
-	inputfile.Load(inputfilename.c_str());
-
-	std::string genControllerInputFile = inputfile.ReadString("GeneratorControllerFile");
-	std::string pitchControllerInputFile = inputfile.ReadString("PitchControllerFile");
-	p_imp->mcont.Init_InputFile(genControllerInputFile.c_str(), p_imp->drivetrain.GetGenShaftSpeed(), initBladePitch);
 }
 
 // Note, this must be called after the drive train and controllers have been initialized because it 
@@ -301,7 +312,6 @@ void FASTInterface::SetNacelleStates(double time, const double nacellePos[3], co
 
 	// Send these estimated values to AeroDyn so the caller can get the blade node positions
 	PImp::HubMotion hm = p_imp->CalculateHubMotion(nm, dtStates_withAcc.rotor);
-	p_imp->aerodyn.Advance_InputWindow(false);
 	p_imp->aerodyn.Set_Inputs_Hub(time, hm.position, hm.orientation, hm.velocity, hm.acceleration, hm.angularVel, hm.angularAcc, bladePitch, false);
 }
 
@@ -327,7 +337,7 @@ DriveTrain::ModelStates FASTInterface::PImp::IntegrateDriveTrain_Euler(double t,
 	dtStates_np1.gen.vel += s.gen.acc * dt;
 
 	// Save this so that we can retrieve it with get methods
-	drivetrainStates_hold = dtStates_np1;
+	drivetrainStates_pred = dtStates_np1;
 
 	// Return updated states
 	return dtStates_np1;
@@ -428,7 +438,7 @@ DriveTrain::ModelStates FASTInterface::PImp::IntegrateDriveTrain_RK4(double t, c
 	state_fin.rotor.theta = state_n.rotor.theta + (1.0 / 6.0) * (rot_k_1x + 2.0 * rot_k_2x + 2.0 * rot_k_3x + rot_k_4x);
 
 	// Save this so that we can retrieve it with get methods
-	drivetrainStates_hold = state_fin;
+	drivetrainStates_pred = state_fin;
 
 	return state_fin;
 }
@@ -441,7 +451,7 @@ void FASTInterface::GetBladeNodePositions(std::vector<double>& p)
 
 void FASTInterface::SetInflows(const std::vector<double>& inflowVel, const std::vector<double>& inflowAcc)
 {
-	// Don't actually update Aerodyn with these inflows, just save them
+	// Don't actually update Aerodyn with these inflows yet, just save them
 	for (unsigned int i = 0; i < p_imp->inflowVel.size(); ++i)
 	{
 		p_imp->inflowVel[i] = inflowVel[i];
@@ -460,6 +470,9 @@ void FASTInterface::SetCalcOutputCallback(std::function<void(const double*, cons
 	p_imp->CalcOutput_callback = calcOutput;
 }
 
+// Q: What is the drivetrain state when this should be called??
+// A: 
+// Note: Uses pointer arithmetic for now just to save on code length
 FASTInterface::PDSAccOutputs FASTInterface::SolveForInputs_And_Outputs(const double nacelleAcc[3], const double nacelleRotationAcc[3])
 {
 	// hard-code here for now
@@ -473,73 +486,131 @@ FASTInterface::PDSAccOutputs FASTInterface::SolveForInputs_And_Outputs(const dou
 
 	// Use the function arguments as the initial inputs to start off the 
 	// rootfinding process
-	HubMotion hm = p_imp->CalculateHubMotion()
-	Vector3d hubAcc = p_imp->CalculateHubMotion()
-	u.segment(6,9) = Vector
+	
+	// Must transfer the given nacelle accelerations into hub accelerations
+	PImp::HubAcc ha = p_imp->CalculateHubAcc(
+		Vector3d(nacelleAcc), 
+		Vector3d(nacelleRotationAcc), 
+		p_imp->nacelleOrient,
+		p_imp->drivetrain.GetRotorShaftAcc());
+
+	u.segment(6, 3) = ha.acceleration;
+	u.segment(9, 3) = ha.angularAcc;
+
+	p_imp->aerodyn.Set_Inputs_HubAcceleration(ha.acceleration, ha.angularAcc, false);
+	Vector3d hubForce, hubMoment;
+
+	p_imp->aerodyn.CalcOutput(hubForce, hubMoment, false);
+
+	// Transfer from hub coordinate system to nacelle
+	Vector3d nacForce = p_imp->TransformHubToNacelle(hubForce,p_imp->nacelleOrient, p_imp->hubOrient);
+	Vector3d nacMoment = p_imp->TransformHubToNacelle(hubMoment, p_imp->nacelleOrient, p_imp->hubOrient);
+
+	u.segment(0, 3) = nacForce;
+	u.segment(3, 3) = nacMoment;
 
 	int k = 0;
 	while (true) {
 		//------------------------------------------------------
 		// Calculate the outputs
 		//------------------------------------------------------
-		//		Note: Do pointer arithmetic here for now just to save on code length
 		p_imp->CalcOutput_callback(u.data() + 0, u.data() + 3, 
 								   y.data() + 0, y.data() + 3);
 
-		// Combine the drivetrain information and the inputs from PDS to calculate the AD inputs
-		/* IMPORTANT: this assumes that the drivetrain currently contains the current rotor acceleration and that hubOrient has 
-					  the current hub orientation */
-		Vector3d hubRotationAcc = Vector3d(y.data() + 3) + (p_imp->drivetrain.GetGenShaftAcc() * p_imp->hubOrient.col(0));
-		
 		p_imp->aerodyn.Set_Inputs_HubAcceleration(
 			Vector3d(u.data() + 6), 
 			Vector3d(u.data() + 9), 
 			false);
 
+		// calculate the outputs from AeroDyn
+		Vector3d hubForce, hubMoment;
 		p_imp->aerodyn.CalcOutput(
-			y + 6, 
-			y + 9, 
+			hubForce, 
+			hubMoment, 
 			false);
+
+		// Pack into the output vector
+		y.segment(6, 3) = hubForce;
+		y.segment(9, 3) = hubMoment;
 		//------------------------------------------------------
 
 		if (k >= solver_iterations)
 			break;
 
 		// At what point do we transfer the outputs from one to the 
-		// inputs of the other? Wait! We don't do that here. This part
-		// is all about root finding.
+		// inputs of the other? We do this in the residual function
 
 		//------------------------------------------------------
-		// Perturb inputs
+		// Perturb inputs, calculate partial derivatives, and fill 
+		// in the jacobian matrix
 		//------------------------------------------------------
 		Matrix<double, 12, 12> jacobian;
-		double u_perturb[12];
-		double y_perturb[12];
+		Vector<double, 12> u_residual = p_imp->CalcResidual(y, u);
 		
 		// PDS first
 		for (int i = 0; i < 6; i++) {
+			Vector<double, 12> u_perturb, y_perturb;
 
-		
+			// perturb the i'th input
+			u_perturb = u;
+			u_perturb(i) += perturb;
+
+			// then calculate the corresponding output
+			p_imp->CalcOutput_callback(u_perturb.data() + 0, u_perturb.data() + 3,
+				y_perturb.data() + 0, y_perturb.data() + 3);
+
+			Vector<double, 12> u_perturb_residual = p_imp->CalcResidual(y_perturb, u_perturb);
+			// Numerically calculate the partial derivative of wrt this input
+			Vector<double, 12> residual_func_partial_u = (u_perturb_residual - u_residual) / perturb;
+			// Add this entry into the jacobian as a column
+			jacobian.col(i) = residual_func_partial_u;
 		}
 
 		// AD second
-		for (int i = 0; i < 6; i++) {
-			Vector<double, 6> u_AD_perturb = p_imp->PerturbADInputs(i, perturb, u + 6, u + 9);
+		for (int i = 6; i < 12; i++) {
+			Vector<double, 12> u_perturb, y_perturb;
 
+			// perturb the i'th input
+			u_perturb = u;
+			u_perturb(i) += perturb;
+
+			// then calculate the corresponding output
 			p_imp->aerodyn.Set_Inputs_HubAcceleration(
-				Vector3d(u_AD_perturb.data() + 0),
-				Vector3d(u_AD_perturb.data() + 3),
+				Vector3d(u_perturb.data() + 6),
+				Vector3d(u_perturb.data() + 9),
 				false);
 
 			p_imp->aerodyn.CalcOutput(
-				y_perturb + 6, 
-				y_perturb + 9,
+				hubForce,
+				hubMoment,
 				false);
+
+			y_perturb.segment(6, 3) = hubForce;
+			y_perturb.segment(9, 3) = hubMoment;
+
+			Vector<double, 12> u_perturb_residual = p_imp->CalcResidual(y_perturb, u_perturb);
+			// Numerically calculate the partial derivative of wrt this input
+			Vector<double, 12> residual_func_partial_u = (u_perturb_residual - u_residual) / perturb;
+			// Add this entry into the jacobian as a column
+			jacobian.col(i) = residual_func_partial_u;
 		}
 		//------------------------------------------------------
+		// Do one step of Newton-Raphson (actually Secant method)
+		//------------------------------------------------------
+
 	}
+	PDSAccOutputs result;
+	Vector3d acc(0.0, 0.0, 0.0);
+	Vector3d rotAcc(0.0, 0.0, 0.0);
+	memcpy(result.nacelleAcc, acc.data(), 3 * sizeof(double));
+	memcpy(result.nacelleRotationAcc, rotAcc.data(), 3 * sizeof(double));
+	return result;
 }
 
+/*
+Transfers the outputs from one module to the inputs of the other, then these
+resulting inputs are subtracted from the inputs that generated the outputs
+*/
 Vector<double, 12> FASTInterface::PImp::CalcResidual(const Vector<double, 12>& y, const Vector<double, 12>& u)
 {
 	//----------------------------------------------------------------
@@ -550,7 +621,6 @@ Vector<double, 12> FASTInterface::PImp::CalcResidual(const Vector<double, 12>& y
 	Vector3d nacelleRotationAcc(y.data() + 3);
 	Vector3d hubRotationAcc = nacelleRotationAcc + (drivetrain.GetGenShaftAcc() * hubOrient.col(0));
 
-	// Can we just set the hub linear acc in global coords? I'm pretty sure, yes
 	Vector3d hubAcc = nacelleAcc;
 
 	/* second derive PDS's inputs from AD's outputs */
@@ -566,7 +636,7 @@ Vector<double, 12> FASTInterface::PImp::CalcResidual(const Vector<double, 12>& y
 		nacelleOrient,
 		hubOrient);
 	//------------------------------------------------------
-	// Pack these results in a vector
+	// Pack these results in a vector (TODO use .segment(i,n) for these instead)
 	//......................................................
 	Vector<double, 12> u_derived;
 	memcpy(u_derived.data() + 0, nacelleForce.data(), 3 * sizeof(double));
@@ -574,25 +644,9 @@ Vector<double, 12> FASTInterface::PImp::CalcResidual(const Vector<double, 12>& y
 	memcpy(u_derived.data() + 6, hubAcc.data(), 3 * sizeof(double));
 	memcpy(u_derived.data() + 9, hubRotationAcc.data(), 3 * sizeof(double));
 
-	/* Subtract the original inputs from the derived ones */
+	/* Subtract the derived inputs from the original ones */
 	return u - u_derived;
 }
-
-// n is the "input number" to perturb. This just makes it possible to use iteration
-// for perturbing all the individual inputs.
-Vector<double,6> FASTInterface::PImp::PerturbADInputs(int n, double perturb, const double* nacelleAcc, const double* nacelleRotationAcc)
-{
-	// Pack the inputs into a one-dimensional array
-	Vector<double, 6> u_AD_perturb;
-	memcpy(u_AD_perturb.data() + 0, nacelleAcc, 3 * sizeof(double));
-	memcpy(u_AD_perturb.data() + 3, nacelleRotationAcc, 3 * sizeof(double));
-
-	// perturb an input by the input index
-	u_AD_perturb(n) += perturb;
-
-	return u_AD_perturb;
-}
-
 
 FASTInterface::NacelleReactionLoads FASTInterface::Simulate()
 {
@@ -723,12 +777,12 @@ double FASTInterface::GetRotorSpeed() const
 
 double FASTInterface::GetRotorAngularDisp() const
 {
-	return p_imp->drivetrainStates_hold.rotor.theta;
+	return p_imp->drivetrainStates_pred.rotor.theta;
 }
 
 double FASTInterface::GetGeneratorAngularDisp() const
 {
-	return p_imp->drivetrainStates_hold.gen.theta;
+	return p_imp->drivetrainStates_pred.gen.theta;
 }
 
 // All three of GetForce, GetMoment, and GetAerodynamicTorque get their values from member

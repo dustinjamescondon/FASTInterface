@@ -10,7 +10,6 @@
 	states: using CalcDeriv and SetStates, and using UpdateStates. The first can be used to integrate the states 
 	using any given integrator, and the second can be used to have the drive train integrate its own states 
 	given some inputs.
-
  */
 
 

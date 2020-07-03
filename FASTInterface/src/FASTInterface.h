@@ -13,10 +13,8 @@ Initialization:
 	2) initialize the controllers, 
 	3) finally initialize AeroDyn.
 	
-	There is a choice for which method of control to use: external Bladed-style DLL, or input file 
-	specified generator and pitch controllers. The choice must be made when calling the initialization functions.
-	If using Bladed-style DLL, use InitControllers_BladedDLL(const std::string& bladed_dll_fname, double initialBladePitch);
-	If using input file specified controllers, use InitControllers_InputFiles(const char*)
+	The only controller option existing right now is a Bladed-style DLL.
+	Use InitControllers_BladedDLL(const std::string& bladed_dll_fname, double initialBladePitch);
 
 	There is also a choice for how to initialize the drive train: parameters describing the moment of inertias,
 	stiffness, and damping of the drive train model; or the location of a definition file that defines these things
@@ -104,11 +102,6 @@ public:
 	// \initialBladePitch: The initial blade pitch in radians
 	DECLDIR void InitControllers_BladedDLL(const std::string& bladed_dll_fname, double initialBladePitch);
 
-	// Initialize the controllers by input file
-	// \inputfile: filename and path to the data file that defines the generator and pitch controllers
-	// \initBladePitch: The initial blade pitch in radians
-	DECLDIR void InitControllers_InputFile(const std::string& inputfile, double initBladePitch);
-
 	// Must initialize AeroDyn last. This is because AeroDyn's initialization requires the rotor speed 
 	// from the drive train and blade pitch command from the controller.
 	// \inputFilename: the filename of the AeroDyn input file
@@ -140,8 +133,8 @@ public:
 
 	// This will simulate from the last simulation time up until the time passed to SetNacelleStates(...)
 	// and return the nacelle reaction loads at that time.
-	// If isRealStep was false for SetNacelleStates, then this doesn't update states permanently.
-	// If false, then this does update states perminantely.
+	// If isRealStep was false for SetNacelleStates, then this doesn't update states permanently;
+	// if true, then this does update states perminantely.
 	DECLDIR NacelleReactionLoads Simulate();
 
 	// Returns the blade node postion at the \time which was passed to SetNacelleMotion(...)

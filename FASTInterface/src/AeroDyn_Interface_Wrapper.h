@@ -120,9 +120,11 @@ public:
 	void Set_Inputs_Inflow(const std::vector<double>& inflowVel, const std::vector<double>& inflowAcc, bool isRealStep = true);
 
 	// TODO
-	void CalcOutput(double* force_out, double* moment_out, bool isRealStep);
+	void CalcOutput(Vector3d& force_out, Vector3d& moment_out, bool isRealStep);
 
-	// TODO
+	// TODO Don't need this at this point because Set_Inputs_Hub already advances
+	// the window. But if we switch to a more predictor-corrector structure, then this would
+	// probably be used at some point
 	void Advance_InputWindow(bool isRealStep);
 
 	// Once updateHubState has been called, we call this to get where those hub kinematics put the blade nodes

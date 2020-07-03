@@ -267,3 +267,12 @@ double DriveTrain::GetGenShaftSpeed() const
 	return states.gen.vel;
 }
 
+double DriveTrain::GetGenShaftAcc() const
+{
+	return states.gen.acc;
+}
+
+double DriveTrain::GetRotorShaftAcc() const
+{
+	return states.rotor.acc;
+}

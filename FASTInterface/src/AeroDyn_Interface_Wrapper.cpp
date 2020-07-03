@@ -212,9 +212,14 @@ void AeroDyn_Interface_Wrapper::Advance_InputWindow(bool isRealStep)
 	INTERFACE_ADVANCE_INPUTWINDOW(simulationInstance, &isRealStep);
 }
 
-void AeroDyn_Interface_Wrapper::CalcOutput(double* force_out, double* moment_out, bool isRealStep)
+void AeroDyn_Interface_Wrapper::CalcOutput(Vector3d& force_out, Vector3d& moment_out, bool isRealStep)
 {
-	INTERFACE_CALCOUTPUT(simulationInstance, &isRealStep, force_out, moment_out);
+	Vector3d force_AD;
+	Vector3d moment_AD;
+	INTERFACE_CALCOUTPUT(simulationInstance, &isRealStep, force_AD.data(), moment_AD.data());
+
+	force_out = Transform_ADtoPDS(force_AD);
+	moment_out = Transform_ADtoPDS(moment_AD);
 }
 
 // If isRealStep == false, the temporary instance of AeroDyn is updated; otherwise, the main instance of AeroDyn is 
