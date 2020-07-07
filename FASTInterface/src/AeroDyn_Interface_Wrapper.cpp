@@ -23,7 +23,7 @@ extern "C" {
 
 	void INTERFACE_SETINPUTS_HUBACCELERATION(void* simulationInstance, bool* isRealStep, const double linearAcc[3], const double rotationAcc[3]);
 
-	void INTERFACE_CALCOUTPUT(void* simulationInstance, bool* isRealStep, double* force, double* moment);
+	void INTERFACE_CALCOUTPUT(void* simulationInstance, bool* isRealStep, double* force_out, double* moment_out);
 
     void INTERFACE_UPDATESTATES(void* simulationInstance, bool* isRealStep, double* force_out, double* moment_out, double* power_out, double* tsr_out);
 
@@ -220,6 +220,9 @@ void AeroDyn_Interface_Wrapper::CalcOutput(Vector3d& force_out, Vector3d& moment
 
 	force_out = Transform_ADtoPDS(force_AD);
 	moment_out = Transform_ADtoPDS(moment_AD);
+
+	hubReactionLoads.force = force_out;
+	hubReactionLoads.moment = moment_out;
 }
 
 // If isRealStep == false, the temporary instance of AeroDyn is updated; otherwise, the main instance of AeroDyn is 
@@ -273,6 +276,10 @@ double AeroDyn_Interface_Wrapper::GetTurbineDiameter() const
 {
     return turbineDiameter;
 }
+AeroDyn_Interface_Wrapper::HubReactionLoads AeroDyn_Interface_Wrapper::GetHubReactionLoads() const {
+	return hubReactionLoads;
+}
+
 
 double AeroDyn_Interface_Wrapper::GetTSR() const
 {

@@ -60,6 +60,9 @@
     </ClInclude>
     <ClInclude Include="src\FASTInterface.h" />
     <ClInclude Include="src\FASTInterfaceExceptions.h" />
+    <ClInclude Include="src\Header.h">
+      <Filter>AeroDynTurbine</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Library Include="..\modules\openfast\build\bin\AeroDyn_Interface_Win32_Double.lib">
@@ -102,6 +105,9 @@
     </Filter>
     <Filter Include="Batch Scripts">
       <UniqueIdentifier>{46d778e7-4122-41da-b4dd-fc66e929c8a7}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="AeroDynTurbine">
+      <UniqueIdentifier>{65df7edf-d8db-4b21-be48-eea11793f0a1}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>

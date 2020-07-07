@@ -48,6 +48,7 @@
     <ClInclude Include="src\FASTInterfaceExceptions.h" />
     <ClInclude Include="src\FASTInterface.h" />
     <ClInclude Include="src\GenController.h" />
+    <ClInclude Include="src\Header.h" />
     <ClInclude Include="src\InputFile.h" />
     <ClInclude Include="src\LowPassFilter.h" />
     <ClInclude Include="src\MasterController.h" />

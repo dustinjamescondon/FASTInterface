@@ -13,8 +13,8 @@ Notes:
 This interface actually manages two sets of AeroDyn instances:
 one is the main instance, and the other is a temporary copy which can be updated without affecting the main states.
 The temporary states are accessed whenever the flag "isRealStep" is passed as false. The instances
-are defined in the FORTRAN layer of the code; that layer uses <FUNCTIONNAME>_FAKE to get/set
-the temporary AeroDyn instance, and <FUNCTIONNAME> to get/set the main AeroDyn instance.
+are defined in the FORTRAN layer of the code; that layer uses isRealStep=false argument to get/set
+the temporary AeroDyn instance, and isRealStep=true to get/set the main AeroDyn instance.
 
 When Set_Inputs_Hub is called with isRealStep=false, the main states are copied, and the copy's input is updated with the rest of the
 parameters of Set_Inputs_Hub.
@@ -26,7 +26,7 @@ The expected order of function calls is follows:
 
 1) InitAerodyn, passing driver input file name, hub kinematics, and blade pitch; receiving the total number of nodes used
 2) GetBladeNodePositions, receiving the positions of the blade nodes in global coordinate system
-3) InitInflows, passing the inflows at time=0
+3) InitInputs_Inflow, passing the inflows at time=0
 ----------- simulation loop -------------
 4) Set_Inputs_Hub, passing hubstate at time = 0
 5) GetBladeNodePositions, ...
@@ -109,7 +109,7 @@ public:
 		double bladePitch,
 		bool isRealStep = true);
 
-	// This is just like Set_Inputs_Hub, but it only sets the accelerations. 
+	// This is just like Set_Inputs_Hub, but it doesn't advance the input window and only sets the accelerations. 
 	// The expected use of this function is to use to calculate the partial derivatives 
 	void Set_Inputs_HubAcceleration(
 		const Vector3d& hubAcc,
@@ -146,6 +146,8 @@ public:
 	
 	// Then we call this, which returns the reaction loads (and other things) from AeroDyn
 	HubReactionLoads UpdateStates(bool isRealStep = true);
+
+	HubReactionLoads GetHubReactionLoads() const;
 
 	// Returns the TSR of the last call to UpdateStates (whether it was with isRealStep == true or false)
 	double GetTSR() const;
