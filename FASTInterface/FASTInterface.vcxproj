@@ -19,6 +19,7 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="src\AeroDynTurbine.cpp" />
     <ClCompile Include="src\AeroDyn_Interface_Wrapper.cpp" />
     <ClCompile Include="src\BladedInterface.cpp" />
     <ClCompile Include="src\CSVSpecFunction.cpp" />
@@ -48,7 +49,7 @@
     <ClInclude Include="src\FASTInterfaceExceptions.h" />
     <ClInclude Include="src\FASTInterface.h" />
     <ClInclude Include="src\GenController.h" />
-    <ClInclude Include="src\Header.h" />
+    <ClInclude Include="src\AeroDynTurbine.h" />
     <ClInclude Include="src\InputFile.h" />
     <ClInclude Include="src\LowPassFilter.h" />
     <ClInclude Include="src\MasterController.h" />

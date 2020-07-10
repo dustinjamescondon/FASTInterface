@@ -6,13 +6,12 @@
 
    Description:
 	This class implements a two-mass drivetrain model with a particular generator and rotor mass
-	moment of inertia, shaft stiffness and damping, and gearbox ratio. There are two methods to updating its
-	states: using CalcDeriv and SetStates, and using UpdateStates. The first can be used to integrate the states 
-	using any given integrator, and the second can be used to have the drive train integrate its own states 
-	given some inputs.
+	moment of inertia, shaft stiffness and damping, and gearbox ratio.
+
+	The inputs to this simulation module are the rotor and generator torque. The outputs are the shaft displacements, speeds, and accelerations
  */
 
-
+// TODO, keeping track of the times is kinda fuzzy right now
 class DriveTrain {
 public:
 
@@ -21,7 +20,7 @@ public:
 		double acc, vel, theta;
 	};
 
-	// By model I mean all the states of the model: rotor and generator shafts
+	// By model I mean all the states_pred of the model: rotor and generator shafts
 	struct ModelStates {
 		States rotor, gen;
 	};
@@ -34,34 +33,23 @@ public:
 	void Init(double initialRotorSpeed, double gearboxRatio, double dampingCoeff, double stiffnessCoeff,
 		double rotorMassMOI, double generatorMassMOI);
 
-	// updates states from previous time to "time" using results of previous calls to the RK4 step functions
-	ModelStates UpdateStates();
+	// This saves the current state of the turbine
+	void SaveCurrentStates();
+	// This restores the saved state of the turbine
+	void RestoreSavedStates();
 
-	// Loose coupling function which updates states from previous time to "time" using RK4 method without using results from RK4 step functions
-	// Assumes that the torques are constant for the whole time-step
-	ModelStates UpdateStates(double dt, double rotor_torque, double generator_torque);
+	// Uses inputs and calculates new states, storing them in the predicted states 
+	void UpdateStates();
 
-	ModelStates UpdateStates(double dt, double rotor_torque, double generator_torque, bool isRealStep);
+	// Moves the predicted states into the current states
+	void CopyStates_Pred_to_Curr();
 
-	// returns the current states
-	ModelStates GetStates() const;
+	void AdvanceInputWindow();
 
-	void SetStates(const ModelStates&);
+	void SetInputs(double time, double rotorTorque, double generatorTorque);
 
-	// returns the accelerations of both shafts given the states
-	ModelStates CalcDeriv(const ModelStates& states, double torque_rotor, double torque_gen) const;
-
-	// Pass torques at current time; returns temporary states at time + dt/2
-	ModelStates K1(double dt, double rotorTorque, double genTorque);
-
-	// Pass torques at time + dt/2 ; returns temporary states at time + dt/2
-	ModelStates K2(double dt, double rotorTorque, double genTorque);
-
-	// Pass torques at time + dt/2 ; returns temporary state at time + dt
-	ModelStates K3(double dt, double rotorTorque, double genTorque);
-
-	// Pass torques at time + dt   ; returns temporary states at time + dt
-	void K4(double dt, double rotorTorque, double genTorque);  
+	// calculates the accelerations and returns states_pred of both shafts
+	ModelStates CalcOutput();
 
 	void SetInitialRotorSpeed(double);
 	void SetInitialGenSpeed(double);
@@ -72,7 +60,6 @@ public:
 	void SetGearboxRatio(double);
 
 	ModelStates GetModelStates() const;
-
 
 	States GetRotorStates() const;
 	double GetRotorShaftSpeed() const;  // radians/sec
@@ -85,35 +72,23 @@ public:
 	double GetGenShaftAcc()   const;    // radians/sec^2
 
 private:
+	// maps LATEST and PREV to array indices for the time and inputs
+	enum {LATEST=0,PREV=1};
 
-	// By D I mean the different between the value at t and t + dt for some dt
-	// Holds the increment in each value for the final RK4 average
-	struct DStates {
-		double dVel, dTheta;
-	};
-
-	// By model I mean all the states of the model: rotor and generator shaft
-	struct ModelDStates {
-		DStates gen, rotor;
+	struct Input {
+		double rotorTorque, genTorque;
 	};
 
 	// Dynamic is using ODEs; Constant is just using a constant rotor speed
-	enum Mode { DYNAMIC, CONSTANT };
-	Mode mode;
+	enum Mode { DYNAMIC, CONSTANT } mode;
 
-	// The core code of each K function with parameters for their differences
-	ModelStates K(int i, double dt, double dState_coeff, const ModelStates& _states, double rotor_torque, double gen_torque);
-	
-	// Calculates the weighted average of the results of the four K function calls
-	ModelDStates CalcWeightedAverage(const ModelDStates s[4]) const;
-
-	// Save the states calculated after each K_() call
-	ModelDStates dStates_k[4];
-	ModelStates result_k[4];
+	ModelStates CalcOutput(const ModelStates& s, const Input& u) const;
 
 	double gearbox_ratio;
 	double damping_coeff, stiffness_coeff;
 	double gen_moi, rotor_moi;              // moment of inertia for generator mass and rotor mass
-	ModelStates states;
-	double time;
+	ModelStates states_pred, states_curr, saved_states;
+	double time, saved_time; // The time that the states_pred are currently at
+	double inputTime[2], saved_inputTime[2];
+	Input input[2], saved_input[2];
 };

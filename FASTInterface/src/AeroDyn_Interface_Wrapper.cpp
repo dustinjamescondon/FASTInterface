@@ -14,20 +14,28 @@ extern "C" {
 
     void INTERFACE_INITINPUTS_INFLOW(void* simulationInstance, int* nBlades, int* nNodes, const double inflowVel[], const double inflowAcc[]);
 
-    void INTERFACE_SETINPUTS_HUB(void* simulationInstance, bool* isRealStep, double* time, double hubPos[3], double hubOri[3*3], double hubVel[3], double hubAcc[3],
+	void INTERFACE_SAVECURRENTSTATES(void* simulationInstance);
+
+	void INTERFACE_RESTORESAVEDSTATES(void* simulationInstance);
+
+    void INTERFACE_SETINPUTS_HUB(void* simulationInstance, double* time, double hubPos[3], double hubOri[3*3], double hubVel[3], double hubAcc[3],
 				double hubRotVel[3], double hubRotAcc[3], double* bladePitch);
 
-    void INTERFACE_SETINPUTS_INFLOW(void* simulationInstance, bool* isRealStep, int* nBlades, int* nNodes, double* inflowVel, double* inflowAcc);
+    void INTERFACE_SETINPUTS_INFLOW(void* simulationInstance, int* nBlades, int* nNodes, double* inflowVel, double* inflowAcc);
 
-	void INTERFACE_ADVANCE_INPUTWINDOW(void* simulationInstance, bool* isRealStep);
+	void INTERFACE_ADVANCE_INPUTWINDOW(void* simulationInstance);
 
-	void INTERFACE_SETINPUTS_HUBACCELERATION(void* simulationInstance, bool* isRealStep, const double linearAcc[3], const double rotationAcc[3]);
+	void INTERFACE_COPYSTATES_PRED_TO_CURR(void* simulationInstance);
 
-	void INTERFACE_CALCOUTPUT(void* simulationInstance, bool* isRealStep, double* force_out, double* moment_out);
+	void INTERFACE_SETINPUTS_HUBACCELERATION(void* simulationInstance, const double linearAcc[3], const double rotationAcc[3]);
 
-    void INTERFACE_UPDATESTATES(void* simulationInstance, bool* isRealStep, double* force_out, double* moment_out, double* power_out, double* tsr_out);
+	void INTERFACE_CALCOUTPUT(void* simulationInstance, double* force_out, double* moment_out, double* power, double* tsr);
 
-    void INTERFACE_GETBLADENODEPOS(void* simulationInstance, bool* isRealStep, double* nodePos);
+	void INTERFACE_WRITEOUTPUTLINE(void* simulationInstance);
+
+    void INTERFACE_UPDATESTATES(void* simulationInstance);
+
+    void INTERFACE_GETBLADENODEPOS(void* simulationInstance, double* nodePos);
 
     void INTERFACE_END(void* simulationInstance);
 }
@@ -50,12 +58,6 @@ Matrix3d AeroDyn_Interface_Wrapper::TransformOrientation(const Matrix3d& orienta
     trans.row(2) = -1.0 * orientation.row(2);
 
     return trans;
-}
-
-Matrix6d AeroDyn_Interface_Wrapper::Transform_ADtoPDS_MassMatrix(const Matrix6d& m) const
-{
-    // TODO figure out how to transform a mass matrix from positive-up to positive-down (roll pi radians)
-    return m;
 }
 
 // Returns the inflows transformed from PDS' coordinate system to that of AD's
@@ -146,7 +148,7 @@ void AeroDyn_Interface_Wrapper::InitAerodyn(
     aerodynInflowVel.resize(totalNodes * 3);
     aerodynInflowAcc.resize(totalNodes * 3);
 
-    // Save the pitch at this time for later
+    // Save the pitch at this time_act for later
     pitch = bladePitch;
 }
 
@@ -161,6 +163,26 @@ void AeroDyn_Interface_Wrapper::InitInflows(const std::vector<double>& pdsInflow
     INTERFACE_INITINPUTS_INFLOW(simulationInstance, &nBlades, &nNodes, &aerodynInflowVel[0], &aerodynInflowAcc[0]);
 }
 
+void AeroDyn_Interface_Wrapper::SaveCurrentStates()
+{
+	INTERFACE_SAVECURRENTSTATES(simulationInstance);
+	
+	pitch_saved = pitch;
+	hubReactionLoads_saved = hubReactionLoads;
+	aerodynInflowVel_saved = aerodynInflowVel;
+	aerodynInflowAcc_saved = aerodynInflowAcc;
+}
+
+void AeroDyn_Interface_Wrapper::RestoreSavedStates()
+{
+	INTERFACE_RESTORESAVEDSTATES(simulationInstance);
+
+	pitch = pitch_saved;
+	hubReactionLoads = hubReactionLoads_saved;
+	aerodynInflowVel = aerodynInflowVel_saved;
+	aerodynInflowAcc = aerodynInflowAcc_saved;
+}
+
 void AeroDyn_Interface_Wrapper::Set_Inputs_Hub(double time,
 					     const Vector3d& hubPosition,
 					     const Matrix3d& hubOrientation,
@@ -168,10 +190,8 @@ void AeroDyn_Interface_Wrapper::Set_Inputs_Hub(double time,
 					     const Vector3d& hubAcc,
 					     const Vector3d& hubAngularVel,
 					     const Vector3d& hubAngularAcc,
-					     double bladePitch,
-					     bool isRealStep)
+					     double bladePitch)
 {
-
     // transform them to Aerodyn's global coordinate system 
     Vector3d hubPos_trans = Transform_PDStoAD(hubPosition);
     Vector3d hubVel_trans = Transform_PDStoAD(hubVel);
@@ -180,74 +200,67 @@ void AeroDyn_Interface_Wrapper::Set_Inputs_Hub(double time,
     Vector3d hubAngAcc_trans = Transform_PDStoAD(hubAngularAcc);
     Matrix3d hubOri_trans = TransformOrientation(hubOrientation);
 
-    // If this is a fake-step, then we don't want this to be permanent, so we call the fake version
-	INTERFACE_SETINPUTS_HUB(simulationInstance, &isRealStep, &time, hubPos_trans.data(), hubOri_trans.data(), hubVel_trans.data(),
+	INTERFACE_SETINPUTS_HUB(simulationInstance, &time, hubPos_trans.data(), hubOri_trans.data(), hubVel_trans.data(),
 				    hubAcc_trans.data(), hubAngVel_trans.data(), hubAngAcc_trans.data(), &bladePitch);
   
-    // Otherwise we call the real version, which perminantly changes the inputs
 
     pitch = bladePitch;
 }
 
 // This is just like Set_Inputs_Hub, but it only sets the accelerations. 
 // The expected use of this function is to use to calculate the partial derivatives of AeroDyn's CalcOutput function
-void AeroDyn_Interface_Wrapper::Set_Inputs_HubAcceleration(const Vector3d& hubAcc, const Vector3d& hubAngularAcc, bool isRealStep)
+void AeroDyn_Interface_Wrapper::Set_Inputs_HubAcceleration(const Vector3d& hubAcc, const Vector3d& hubAngularAcc)
 {
 	Vector3d hubAcc_trans = Transform_PDStoAD(hubAcc);
 	Vector3d hubAngAcc_trans = Transform_PDStoAD(hubAngularAcc);
 
-	INTERFACE_SETINPUTS_HUBACCELERATION(simulationInstance, &isRealStep, hubAcc.data(), hubAngularAcc.data());
+	INTERFACE_SETINPUTS_HUBACCELERATION(simulationInstance, hubAcc.data(), hubAngularAcc.data());
 }
 
-void AeroDyn_Interface_Wrapper::Set_Inputs_Inflow(const std::vector<double>& inflowVel, const std::vector<double>& inflowAcc, bool isRealStep)
+void AeroDyn_Interface_Wrapper::Set_Inputs_Inflow(const std::vector<double>& inflowVel, const std::vector<double>& inflowAcc)
 {
     // Assigns the transformed inflows to aeroDynInflows
     TransformInflows_PDStoAD(inflowVel, inflowAcc);
 
-	INTERFACE_SETINPUTS_INFLOW(simulationInstance, &isRealStep, &nBlades, &nNodes, aerodynInflowVel.data(), aerodynInflowAcc.data());
+	// Note we're passing in the transformed inflows and not the ones passed directly as parameters
+	INTERFACE_SETINPUTS_INFLOW(simulationInstance, &nBlades, &nNodes, aerodynInflowVel.data(), aerodynInflowAcc.data());
 }
 
-void AeroDyn_Interface_Wrapper::Advance_InputWindow(bool isRealStep)
+void AeroDyn_Interface_Wrapper::Advance_InputWindow()
 {
-	INTERFACE_ADVANCE_INPUTWINDOW(simulationInstance, &isRealStep);
+	INTERFACE_ADVANCE_INPUTWINDOW(simulationInstance);
 }
 
-void AeroDyn_Interface_Wrapper::CalcOutput(Vector3d& force_out, Vector3d& moment_out, bool isRealStep)
+AeroDyn_Interface_Wrapper::HubReactionLoads AeroDyn_Interface_Wrapper::CalcOutput()
 {
+	HubReactionLoads r;
+
 	Vector3d force_AD;
 	Vector3d moment_AD;
-	INTERFACE_CALCOUTPUT(simulationInstance, &isRealStep, force_AD.data(), moment_AD.data());
+	INTERFACE_CALCOUTPUT(simulationInstance, force_AD.data(), moment_AD.data(), &r.power, &r.tsr);
 
-	force_out = Transform_ADtoPDS(force_AD);
-	moment_out = Transform_ADtoPDS(moment_AD);
+	r.force = Transform_ADtoPDS(force_AD);
+	r.moment = Transform_ADtoPDS(moment_AD);
 
-	hubReactionLoads.force = force_out;
-	hubReactionLoads.moment = moment_out;
+	// Save the results locally
+	hubReactionLoads = r;
 }
 
-// If isRealStep == false, the temporary instance of AeroDyn is updated; otherwise, the main instance of AeroDyn is 
-// updated. Once that is done, the resulting reaction loads are returned.
-AeroDyn_Interface_Wrapper::HubReactionLoads AeroDyn_Interface_Wrapper::UpdateStates(bool isRealStep)
+void AeroDyn_Interface_Wrapper::UpdateStates()
 {
-	// Note, we're passing our transformed inflows here, not the inflows from the 
-	// function parameter.
-	INTERFACE_UPDATESTATES(simulationInstance, &isRealStep, hubReactionLoads.force.data(), hubReactionLoads.moment.data(), &hubReactionLoads.power,
-				    &hubReactionLoads.tsr);
-
-    // Transform the results into PDS' coordinate system
-    hubReactionLoads.force = Transform_ADtoPDS(hubReactionLoads.force);
-    hubReactionLoads.moment = Transform_ADtoPDS(hubReactionLoads.moment);
-    hubReactionLoads.massMatrix = Transform_ADtoPDS_MassMatrix(hubReactionLoads.massMatrix);
-    hubReactionLoads.addedMassMatrix = Transform_ADtoPDS_MassMatrix(hubReactionLoads.addedMassMatrix);
-
-    return hubReactionLoads;
+	INTERFACE_UPDATESTATES(simulationInstance);
 }
 
-// Communicates blade node positions to ProteusDS. This needs to be separate from the other outputs so that it can be used to get inflow values at the current time step.
-void AeroDyn_Interface_Wrapper::GetBladeNodePositions(std::vector<double>& nodePos, bool isRealStep)
+void AeroDyn_Interface_Wrapper::CopyStates_Pred_to_Curr()
+{
+	INTERFACE_COPYSTATES_PRED_TO_CURR(simulationInstance);
+}
+
+// Communicates blade node positions to ProteusDS. This needs to be separate from the other outputs so that it can be used to get inflow values at the current time_act step.
+void AeroDyn_Interface_Wrapper::GetBladeNodePositions(std::vector<double>& nodePos)
 {
 	// fills nodePos with node positions. Note! It assumes enough elements have been allocated
-	INTERFACE_GETBLADENODEPOS(simulationInstance, &isRealStep, nodePos.data());
+	INTERFACE_GETBLADENODEPOS(simulationInstance, nodePos.data());
 
     // copy node positions into the vector<double> for ProteusDS, including coordinate system conversion
     for (int i = 0; i < totalNodes; ++i) {
@@ -279,7 +292,6 @@ double AeroDyn_Interface_Wrapper::GetTurbineDiameter() const
 AeroDyn_Interface_Wrapper::HubReactionLoads AeroDyn_Interface_Wrapper::GetHubReactionLoads() const {
 	return hubReactionLoads;
 }
-
 
 double AeroDyn_Interface_Wrapper::GetTSR() const
 {

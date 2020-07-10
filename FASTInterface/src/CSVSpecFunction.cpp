@@ -141,7 +141,7 @@ double CSVSpecFunction::GetMinSpecX() const
 // TODO update this comment
 // This is considered an elevator-style algorithm.
 // We leverage the fact that the rotational velocity isn't going to change drastically
-// from time-step to time-step. This means the current rotational velocity is close
+// from time_act-step to time_act-step. This means the current rotational velocity is close
 // to the previous one; so we start our search from there. The upper bound
 // for the complexity of this function (after the initial call) is therefore some constant, which depends on the timestep
 // length and the type of inflows the turbine is experiencing. 
@@ -172,7 +172,7 @@ double CSVSpecFunction::F(double x) const
 	// interpolate
 	double result = Interpolate(pairs[index], pairs[i], x);
 
-	// save the index so we can start from here for next time
+	// save the index so we can start from here for next time_act
 	index = i;
 	return result;
       }

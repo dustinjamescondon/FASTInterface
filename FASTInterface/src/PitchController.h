@@ -21,7 +21,7 @@ public:
 private:
 	bool engaged;
 	double lastTime;
-	double prevTime;              // holds the previous time passed to calculate(...)
+	double prevTime;              // holds the previous time_act passed to calculate(...)
 	double bias;				  // should be the value of the pitch angle before controller was turned on
 	double targetGenSpeed;
 	double lastPitchCommand;      // the current blade pitch

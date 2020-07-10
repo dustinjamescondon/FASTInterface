@@ -24,17 +24,17 @@ Initialization:
 	of steps 1 and 2 (initializing the drive train and controllers): InitWithConstantRotorSpeedAndPitch(double, double)
 
 Usage during simulation:
-	1) SetNacelleMotion(double time, ..., bool isRealStep)
+	1) SetNacelleMotion(double time_act, ..., bool isRealStep)
 	2) GetBladeNodePositions(...)
 	3) SetInflowVelocities(...)
-	4) Simulate()
+	4) AdvanceStates()
 
-	If this process was done with isRealStep == true, then the turbine's states will be updated to "time".
-	However, if isRealStep == false, then the turbine's states remain at the previous time.
+	If this process was done with isRealStep == true, then the turbine's states_pred will be updated to "time_act".
+	However, if isRealStep == false, then the turbine's states_pred remain at the previous time_act.
 
 	In any case, whether isRealStep is true or false, after UpdateStates has been called, the nacelle reaction
-	forces at "time" are returned; also any call to GetForce, GetMoment, GetGeneratorSpeed, GetRotorSpeed, will
-	return the value at "time" as well.
+	forces at "time_act" are returned; also any call to GetForce, GetMoment, GetGeneratorSpeed, GetRotorSpeed, will
+	return the value at "time_act" as well.
 */
 
 #pragma once
@@ -70,7 +70,7 @@ public:
 		double nacelleRotationAcc[3];
 	};
 
-	struct FASTOutput {
+	struct TurbineOutput {
 		double nacelleForce[3];
 		double nacelleMoment[3];
 	};
@@ -131,13 +131,13 @@ public:
 	DECLDIR void InitInflows(const std::vector<double>& inflowVel, const std::vector<double>& inflowAcc);
 	//-----------------------------------------------------------
 
-	// This will simulate from the last simulation time up until the time passed to SetNacelleStates(...)
-	// and return the nacelle reaction loads at that time.
-	// If isRealStep was false for SetNacelleStates, then this doesn't update states permanently;
-	// if true, then this does update states perminantely.
-	DECLDIR NacelleReactionLoads Simulate();
+	// This will simulate from the last simulation time_act up until the time_act passed to SetNacelleStates(...)
+	// and return the nacelle reaction loads at that time_act.
+	// If isRealStep was false for SetNacelleStates, then this doesn't update states_pred permanently;
+	// if true, then this does update states_pred perminantely.
+	DECLDIR NacelleReactionLoads AdvanceStates();
 
-	// Returns the blade node postion at the \time which was passed to SetNacelleMotion(...)
+	// Returns the blade node postion at the \time_act which was passed to SetNacelleMotion(...)
 	// Sets the pass-by-reference parameters with the blade node positions. Assumes enough space has been allocated.
 	DECLDIR void GetBladeNodePositions(std::vector<double>&);
 
@@ -184,15 +184,15 @@ public:
 	// Returns the current angular displacement of the generator shaft
 	DECLDIR double GetGeneratorAngularDisp() const;
 
-	// Begin an update to simulation states to bring them to \time
-	// \time: the time to update to
+	// Begin an update to simulation states_pred to bring them to \time_act
+	// \time_act: the time_act to update to
 	// \nacellePos: the position of the nacelle
 	// \nacelleEulerAngles: the orientation in Euler angles 
 	// \nacelleVel: the nacelle velocity
 	// \nacelleAngularVel: the nacelle angular velocity of the nacelle represented as axis-angle vector	
-	// \isRealStep: if true, the turbines states will be permanently updated to \time; if false, 
-	//              the turbines states will only be temporarily updated to \time. In both cases
-	//				the reaction forces at /time are reported
+	// \isRealStep: if true, the turbines states_pred will be permanently updated to \time_act; if false, 
+	//              the turbines states_pred will only be temporarily updated to \time_act. In both cases
+	//				the reaction forces at /time_act are reported
 	DECLDIR void SetNacelleStates(
 		double time,
 		const double nacellePos[3],
@@ -203,7 +203,7 @@ public:
 		const double nacelleAngularAcc[3],
 		bool isRealStep = true);
 
-	// Sets the inflow velocities at the \time passed to SetNacelleMotion(...)
+	// Sets the inflow velocities at the \time_act passed to SetNacelleMotion(...)
 	DECLDIR void SetInflows(const std::vector<double>& inflowVel, const std::vector<double>& inflowAcc);
 
 	DECLDIR void SetCalcOutputCallback(std::function<void(const double*, const double*, double*, double*)> calcOutput);

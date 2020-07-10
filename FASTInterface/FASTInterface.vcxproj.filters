@@ -29,6 +29,9 @@
       <Filter>Input</Filter>
     </ClCompile>
     <ClCompile Include="src\FASTInterface.cpp" />
+    <ClCompile Include="src\AeroDynTurbine.cpp">
+      <Filter>AeroDynTurbine</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\DriveTrain.h">
@@ -60,7 +63,7 @@
     </ClInclude>
     <ClInclude Include="src\FASTInterface.h" />
     <ClInclude Include="src\FASTInterfaceExceptions.h" />
-    <ClInclude Include="src\Header.h">
+    <ClInclude Include="src\AeroDynTurbine.h">
       <Filter>AeroDynTurbine</Filter>
     </ClInclude>
   </ItemGroup>

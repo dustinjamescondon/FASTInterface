@@ -57,7 +57,7 @@ int main()
 	//--------------------------
 	// Initialization
 
-	// Simple real-time visualizations of simulation values
+	// Simple real-time_act visualizations of simulation values
 	TimePlot pitchPlot(0, 0, 200, 100, 0.0, 2.0);
 	TimePlot genPlot(0, 102, 200, 100, 0.0, 47402.91);
 	TimePlot genSpeedPlot(0, 204, 200, 100, 0.0, 300.0);
@@ -169,7 +169,7 @@ int main()
 		//---------------------------------------------------------------------
 		// Using the FASTTurbine
 
-		// Begin a simulation update to time by passing nacelle state at time
+		// Begin a simulation update to time_act by passing nacelle state at time_act
 		turb.SetNacelleStates(time, 
 			nacellePosition,
 			nacelleEulerAngles,
@@ -185,8 +185,8 @@ int main()
 		// Set the inflows at those positions
 		turb.SetInflows(inflowVel, inflowAcc);
 
-		// And update the states to time, returning the nacelle reaction forces
-		rf = turb.Simulate();
+		// And update the states to time_act, returning the nacelle reaction forces
+		rf = turb.AdvanceStates();
 
 		//---------------------------------------------------------------------
 		// Value visualization code

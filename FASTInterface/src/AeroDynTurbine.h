@@ -4,7 +4,8 @@
 #include "MasterController.h"
 #include <Eigen/Dense>
 
-/* This class adds a controller and drivetrain overtop of AeroDyn */
+/* This class coordinates AeroDyn, the drivetrain, and the controller. It also implements
+the input-output solver for when added mass is enabled. */
 class AeroDynTurbine
 {
 public:
@@ -52,6 +53,7 @@ public:
 		const Vector3d& nacelleAngularVel,
 		const Vector3d& nacelleAngularAcc);
 	void InitInputs_Inflow(const std::vector<double>& inflowVel, const std::vector<double>& inflowAcc);
+
 	void SetInputs_Nacelle(
 		double time,
 		const Vector3d& nacellePos,
@@ -59,15 +61,19 @@ public:
 		const Vector3d& nacelleVel,
 		const Vector3d& nacelleAcc,
 		const Vector3d& nacelleAngularVel,
-		const Vector3d& nacelleAngularAcc,
-		bool isRealStep = true);
+		const Vector3d& nacelleAngularAcc);
 
-	// Sets the inflow velocities at the \time passed to SetNacelleMotion(...)
+	void SetInputs_NacelleAcc(
+		const Vector3d& nacelleAcc,
+		const Vector3d& nacelleRotationAcc);
+
+	// Sets the inflow velocities at the \time_act passed to SetNacelleMotion(...)
 	void SetInputs_Inflow(const std::vector<double>& inflowVel, const std::vector<double>& inflowAcc);
 	NacelleReactionLoads_Vec AdvanceStates();
 	NacelleReactionLoads_Vec CalcOutput();
 
-	NacelleReactionLoads_Vec GetNacelleReactionLoads() const { return nacelleReactionLoads;  }
+	void GetBladeNodePositions(std::vector<double>& nodePositions) { aerodyn.GetBladeNodePositions(nodePositions); }
+	NacelleReactionLoads_Vec GetNacelleReactionLoads() const { return nacelleReactionLoads; }
 	Vector3d GetNacelleReactionForce() const { return nacelleReactionLoads.force; }
 	Vector3d GetNacelleReactionMoment() const { return nacelleReactionLoads.moment; }
 	double GetPower() const { return nacelleReactionLoads.power; }
@@ -79,7 +85,7 @@ private:
 	DriveTrain::ModelStates IntegrateDriveTrain_RK4(double time, const AeroDynTurbine::NacelleMotion&, const std::vector<double>& inflowVel,
 		const std::vector<double>& inflowAcc);
 
-	NacelleReactionLoads_Vec UpdateAeroDynStates(bool isRealStep);
+	NacelleReactionLoads_Vec UpdateAeroDynStates();
 	HubMotion CalculateHubMotion(const NacelleMotion&, const DriveTrain::States&);
 	HubAcc CalculateHubAcc(const Vector3d& nacAcc, const Vector3d& nacRotAcc, const Matrix3d& nacOri, double rotorShaftAcc);
 
@@ -88,7 +94,6 @@ private:
 	Vector3d InterpExtrapVector(double target_time, const Vector3d& vect_1, double time_1, const Vector3d& vect_2, double time_2) const;
 
 	//---------------------
-	bool onRealStep;
 	double time, targetTime;
 
 	/* AeroDyn stuff */
@@ -100,8 +105,7 @@ private:
 	Vector3d nacelleForce, nacelleMoment;
 
 	/* Drivetrain stuff */
-	DriveTrain::ModelStates drivetrainStates_pred; // Holds drivetrain states on non-real state updates
-	DriveTrain		      drivetrain;
+	DriveTrain				drivetrain;
 
 	/* Controller stuff */
 	MasterController	      mcont;

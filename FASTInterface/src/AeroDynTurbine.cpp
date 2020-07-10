@@ -26,7 +26,8 @@ AeroDynTurbine::HubMotion AeroDynTurbine::CalculateHubMotion(const NacelleMotion
 	hm.angularVel = rs.vel * hubOrient.col(0); // rotation axis in the global coordinate system
 
 	HubAcc ha = CalculateHubAcc(nm.acceleration, nm.angularAcc, nacelleOrient, rs.acc);
-
+	hm.acceleration = ha.acceleration;
+	hm.angularAcc = ha.angularAcc;
 	return hm;
 }
 
@@ -41,7 +42,7 @@ AeroDynTurbine::HubAcc AeroDynTurbine::CalculateHubAcc(
 
 	ha.acceleration = nacAcc;
 
-	ha.angularAcc = rotorShaftAcc * hubOrient.col(0); // rotation axis in the global coordinate system
+	ha.angularAcc = nacRotAcc + rotorShaftAcc * hubOrient.col(0); // rotation axis in the global coordinate system
 
 	return ha;
 }
@@ -51,7 +52,6 @@ void AeroDynTurbine::InitWithConstantRotorSpeedAndPitch(double constantRotorSpee
 {
 	drivetrain.Init(constantRotorSpeed);
 	mcont.Init(constantBladePitch);
-	drivetrainStates_pred = drivetrain.GetStates();
 }
 
 // Sets all the necessary parameters for the drive train in order. Note, the gearbox ratio must be 
@@ -59,7 +59,6 @@ void AeroDynTurbine::InitWithConstantRotorSpeedAndPitch(double constantRotorSpee
 void AeroDynTurbine::InitDriveTrain(double rotorMOI, double genMOI, double stiffness, double damping, double gearboxRatio, double initialRotorVel)
 {
 	drivetrain.Init(initialRotorVel, gearboxRatio, damping, stiffness, rotorMOI, genMOI);
-	drivetrainStates_pred = drivetrain.GetStates();
 }
 
 void AeroDynTurbine::InitControllers_BladedDLL(const std::string& bladed_dll_fname, double initialBladePitch)
@@ -132,10 +131,10 @@ void AeroDynTurbine::InitInputs_Inflow(const std::vector<double>& inflowVel, con
 	aerodyn.InitInflows(inflowVel, inflowAcc);
 }
 
-// Begin updating the model's state by first setting the nacelle states at point in future
+/*// Begin updating the model's state by first setting the nacelle states_pred at point in future
 void AeroDynTurbine::SetInputs_Nacelle(double time, const Vector3d& nacellePos, const Vector3d& nacelleEulerAngles,
 	const Vector3d& nacelleVel, const Vector3d& nacelleAcc, const Vector3d& nacelleAngularVel,
-	const Vector3d& nacelleAngularAcc, bool isRealStep)
+	const Vector3d& nacelleAngularAcc)
 {
 	NacelleMotion nm;
 	nm.position = nacellePos;
@@ -145,8 +144,7 @@ void AeroDynTurbine::SetInputs_Nacelle(double time, const Vector3d& nacellePos, 
 	nm.angularVel = nacelleAngularVel;
 	nm.angularAcc = nacelleAngularAcc;
 
-	targetTime = time; // Save the target time to update to
-	onRealStep = isRealStep; // Save whether this is a call for a real update or not
+	targetTime = time; // Save the target time_act to update to
 
 	// Save the nacelle motion for the UpdateStates function
 	nacelleMotion = nm;
@@ -159,18 +157,29 @@ void AeroDynTurbine::SetInputs_Nacelle(double time, const Vector3d& nacellePos, 
 	double genTorque = mcont.GetGeneratorTorqueCommand();
 	double bladePitch = mcont.GetBladePitchCommand();
 
-	DriveTrain::ModelStates dtStates_withAcc = drivetrain.CalcDeriv(dtStates_n, aerodynamicTorque, genTorque);
+	DriveTrain::ModelStates dtStates_withAcc = drivetrain.CalcOutput(dtStates_n, aerodynamicTorque, genTorque);
 
-	// Integrate the drive train states using Euler's method for our estimate of the rotor state
+	// Integrate the drive train states_pred using Euler's method for our estimate of the rotor state
 	dtStates_withAcc.rotor.theta += dtStates_withAcc.rotor.vel * dt;
 	dtStates_withAcc.rotor.vel += dtStates_withAcc.rotor.acc * dt;
 
 	dtStates_withAcc.gen.theta += dtStates_withAcc.gen.vel * dt;
 	dtStates_withAcc.gen.vel += dtStates_withAcc.gen.acc * dt;
 
+	// In the input solver, Advance States is called before the solver, so that will set the drivetrain states_pred anyway.
+	// So I'm thinking we don't actually have to save the states_pred here 
+	// Save these (maybe)
+	//drivetrainStates_pred = drivetrain.CalcOutput(dtStates_withAcc, aerodynamicTorque, genTorque);
+
 	// Send these estimated values to AeroDyn so the caller can get the blade node positions
 	HubMotion hm = CalculateHubMotion(nm, dtStates_withAcc.rotor);
-	aerodyn.Set_Inputs_Hub(time, hm.position, hm.orientation, hm.velocity, hm.acceleration, hm.angularVel, hm.angularAcc, bladePitch, false);
+	aerodyn.Set_Inputs_Hub(time, hm.position, hm.orientation, hm.velocity, hm.acceleration, hm.angularVel, hm.angularAcc, bladePitch);
+}
+
+void AeroDynTurbine::SetInputs_NacelleAcc(const Vector3d& nacelleAcc, const Vector3d& nacelleRotationAcc) 
+{
+	// Where should I get the rotor shaft information from?? Use the _pred states_pred first. 
+	HubAcc ha = CalculateHubAcc(nacelleAcc, nacelleRotationAcc, nacelleOrient, drivetrainStates_pred.rotor.acc);
 }
 
 void AeroDynTurbine::SetInputs_Inflow(const std::vector<double>& inflowVel, const std::vector<double>& inflowAcc)
@@ -184,60 +193,53 @@ void AeroDynTurbine::SetInputs_Inflow(const std::vector<double>& inflowVel, cons
 
 }
 
-AeroDynTurbine::NacelleReactionLoads AeroDynTurbine::AdvanceStates()
+AeroDynTurbine::NacelleReactionLoads_Vec AeroDynTurbine::AdvanceStates()
 {
 	// Integrate to find the drive train state
 	//-------------------------------------------
-	DriveTrain::ModelStates states;
+	DriveTrain::ModelStates states_pred;
 
-	// If we're performing a permanent step, then take more care by using the RK4 integrator
-	if (onRealStep) {
-		states = IntegrateDriveTrain_RK4(targetTime, nacelleMotion, inflowVel, inflowAcc);
-	}
-	// Otherwise just use Euler to save some time
-	else {
-		states = IntegrateDriveTrain_Euler(targetTime, nacelleMotion);
-	}
+	states_pred = IntegrateDriveTrain_RK4(targetTime, nacelleMotion, inflowVel, inflowAcc);
 
 	double bladePitch = mcont.GetBladePitchCommand();
 
 	// Use drive train state to update aerodyn
-	HubMotion hm = CalculateHubMotion(nacelleMotion, states.rotor);
+	HubMotion hm = CalculateHubMotion(nacelleMotion, states_pred.rotor);
 	aerodyn.Set_Inputs_Hub(time, hm.position, hm.orientation, hm.velocity, hm.acceleration,
-		hm.angularVel, hm.angularAcc, bladePitch, onRealStep);
+		hm.angularVel, hm.angularAcc, bladePitch);
 
-	aerodyn.Set_Inputs_Inflow(inflowVel, inflowAcc, onRealStep);
-	NacelleReactionLoads rf = UpdateAeroDynStates(onRealStep);
+	aerodyn.Set_Inputs_Inflow(inflowVel, inflowAcc);
+	NacelleReactionLoads_Vec rf = UpdateAeroDynStates();
 
-	// If we're taking an actual step, then save the updated drivetrain state and simulation time
+	// If we're taking an actual step, then save the updated drivetrain state and simulation time_act
 	if (onRealStep) {
-		drivetrain.SetStates(states);
+		drivetrain.SetStates(states_pred);
 		time = targetTime;
 		mcont.UpdateController(time, drivetrain.GetGenShaftSpeed(), aerodyn.GetBladePitch());
 	}
 
 	// Overwrite the nacelle x moment to be the generator torque
-	/*
-	   Note that only when onRealStep == true is the generator torque reported at current time;
-	   if onRealStep == false, then UpdateController isn't called and the generator torque given by
-	   GetGeneratorTorqueCommand() is at the previous time.
+	//
+	//   Note that only when onRealStep == true is the generator torque reported at current time_act;
+	//   if onRealStep == false, then UpdateController isn't called and the generator torque given by
+	//   GetGeneratorTorqueCommand() is at the previous time_act.
 
-	   I do see this as a problem, but I think it may be unavoidable with the given Bladed-style DLL because
-	   it is written to be loosely coupled to, meaning all calls to it are permanent, and therefore we
-	   can't call it when onRealStep == false
-	*/
+	//   I do see this as a problem, but I think it may be unavoidable with the given Bladed-style DLL because
+	//   it is written to be loosely coupled to, meaning all calls to it are permanent, and therefore we
+	//   can't call it when onRealStep == false
+	
 	rf.moment[0] = mcont.GetGeneratorTorqueCommand();
 
 	return rf;
 }
-
+*/
 // Calculates the outputs from AeroDyn and translates them in terms of the nacelle
-AeroDynTurbine::NacelleReactionLoads AeroDynTurbine::CalcOutput() {
+AeroDynTurbine::NacelleReactionLoads_Vec AeroDynTurbine::CalcOutput() {
 	Vector3d force, moment;
-	aerodyn.CalcOutput(force, moment, onRealStep);
+	aerodyn.CalcOutput();
 
 	auto hrl = aerodyn.GetHubReactionLoads();
-	NacelleReactionLoads nrl;
+	NacelleReactionLoads_Vec nrl;
 	nrl.force = force;
 	nrl.moment = moment;
 	nrl.power = hrl.power;
@@ -246,18 +248,18 @@ AeroDynTurbine::NacelleReactionLoads AeroDynTurbine::CalcOutput() {
 	return nrl;
 }
 
-// Updates AeroDyn's state up to time + dt and will return the forces and moments at that time
-AeroDynTurbine::NacelleReactionLoads AeroDynTurbine::UpdateAeroDynStates(bool isRealStep)
+// Updates AeroDyn's state up to time_act + dt and will return the forces and moments at that time_act
+/*AeroDynTurbine::NacelleReactionLoads_Vec AeroDynTurbine::UpdateAeroDynStates()
 {
 	// Hub reaction loads
-	AeroDyn_Interface_Wrapper::HubReactionLoads hrl = aerodyn.UpdateStates(isRealStep);
+	AeroDyn_Interface_Wrapper::HubReactionLoads hrl = aerodyn.UpdateStates();
 
 	// Transform the force and moment in from the hub coordinate system to the nacelle coordinate system
 	Vector3d trans_force_vec = TransformHubToNacelle(hrl.force, nacelleOrient, hubOrient);
 	Vector3d trans_moment_vec = TransformHubToNacelle(hrl.moment, nacelleOrient, hubOrient);
 
 	// Get the results into the NacelleReactionForces structure so we can return it
-	NacelleReactionLoads r;
+	NacelleReactionLoads_Vec r;
 	r.power = hrl.power;
 	r.tsr = hrl.tsr;
 	r.force = trans_force_vec;
@@ -266,18 +268,18 @@ AeroDynTurbine::NacelleReactionLoads AeroDynTurbine::UpdateAeroDynStates(bool is
 	return r;
 }
 
-// Uses aerodyn to calculate drive train states at t. Doesn't set drivetrain or Aerodyn's states permanently
+// Uses aerodyn to calculate drive train states_pred at t. Doesn't set drivetrain or Aerodyn's states_pred permanently
 DriveTrain::ModelStates AeroDynTurbine::IntegrateDriveTrain_Euler(double t, const NacelleMotion& nm)
 {
 	double dt = t - time;
 
-	// First we get the drive train shaft's accelerations using CalcDeriv
+	// First we get the drive train shaft's accelerations using CalcOutput
 	DriveTrain::ModelStates dtStates_n = drivetrain.GetStates();
 	double aerodynamicTorque = aerodyn.GetTorque();
 	double genTorque = mcont.GetGeneratorTorqueCommand();
-	DriveTrain::ModelStates s = drivetrain.CalcDeriv(dtStates_n, aerodynamicTorque, genTorque);
+	DriveTrain::ModelStates s = drivetrain.CalcOutput();
 
-	// Integrate the drive train states using Euler's method
+	// Integrate the drive train states_pred using Euler's method
 	DriveTrain::ModelStates dtStates_np1 = dtStates_n;
 
 	dtStates_np1.rotor.theta += dtStates_n.rotor.vel * dt;
@@ -289,12 +291,12 @@ DriveTrain::ModelStates AeroDynTurbine::IntegrateDriveTrain_Euler(double t, cons
 	// Save this so that we can retrieve it with get methods
 	drivetrainStates_pred = dtStates_np1;
 
-	// Return updated states
+	// Return updated states_pred
 	return dtStates_np1;
-}
+}*/
 
-// Uses aerodyn to calculate drive train states at t. Doesn't set drivetrain or Aerodyn's states permenantly
-DriveTrain::ModelStates AeroDynTurbine::IntegrateDriveTrain_RK4(double t, const NacelleMotion& nm,
+// Uses aerodyn to calculate drive train states_pred at t. Doesn't set drivetrain or Aerodyn's states_pred permenantly
+/*DriveTrain::ModelStates AeroDynTurbine::IntegrateDriveTrain_RK4(double t, const NacelleMotion& nm,
 	const std::vector<double>& inflowVel, const std::vector<double>& inflowAcc)
 {
 	double dt = t - time;
@@ -306,7 +308,7 @@ DriveTrain::ModelStates AeroDynTurbine::IntegrateDriveTrain_RK4(double t, const 
 	double bladePitch = mcont.GetBladePitchCommand();
 
 	// K1
-	DriveTrain::ModelStates s = drivetrain.CalcDeriv(state_n, aerodynamicTorque, genTorque);
+	DriveTrain::ModelStates s = drivetrain.CalcOutput(state_n, aerodynamicTorque, genTorque);
 
 	double gen_k_1v = s.gen.acc * dt;
 	double gen_k_1x = state_n.gen.vel * dt;
@@ -330,7 +332,7 @@ DriveTrain::ModelStates AeroDynTurbine::IntegrateDriveTrain_RK4(double t, const 
 	AeroDyn_Interface_Wrapper::HubReactionLoads hrl = aerodyn.UpdateStates(false);
 
 	// K2
-	s = drivetrain.CalcDeriv(state_n1, hrl.moment.x(), genTorque);
+	s = drivetrain.CalcOutput(state_n1, hrl.moment.x(), genTorque);
 
 	double gen_k_2v = s.gen.acc * dt;
 	double gen_k_2x = s.gen.vel * dt;
@@ -351,7 +353,7 @@ DriveTrain::ModelStates AeroDynTurbine::IntegrateDriveTrain_RK4(double t, const 
 	hrl = aerodyn.UpdateStates(false);
 
 	// K3
-	s = drivetrain.CalcDeriv(state_n2, hrl.moment.x(), genTorque);
+	s = drivetrain.CalcOutput(state_n2, hrl.moment.x(), genTorque);
 
 	double gen_k_3v = s.gen.acc * dt;
 	double gen_k_3x = s.gen.vel * dt;
@@ -371,7 +373,7 @@ DriveTrain::ModelStates AeroDynTurbine::IntegrateDriveTrain_RK4(double t, const 
 	hrl = aerodyn.UpdateStates(false);
 
 	// K4
-	s = drivetrain.CalcDeriv(state_n3, hrl.moment.x(), genTorque);
+	s = drivetrain.CalcOutput(state_n3, hrl.moment.x(), genTorque);
 
 	double gen_k_4v = s.gen.acc * dt;
 	double gen_k_4x = s.gen.vel * dt;
@@ -390,20 +392,20 @@ DriveTrain::ModelStates AeroDynTurbine::IntegrateDriveTrain_RK4(double t, const 
 	drivetrainStates_pred = state_fin;
 
 	return state_fin;
-}
+}*/
 
 Matrix3d AeroDynTurbine::InterpExtrapOrientation(double target_time, const Matrix3d& orient_1, double time_1,
 	const Matrix3d& orient_2, double time_2) const
 {
-	// TODO
-	return Matrix3d();
+	// TODO just return the ealier of the two for now
+	return orient_1;
 }
 
 Vector3d AeroDynTurbine::InterpExtrapVector(double target_time, const Vector3d& vect_1, double time_1,
 	const Vector3d& vect_2, double time_2) const
 {
-	// TODO
-	return Vector3d();
+	// TODO just return the earlier of the two for now
+	return vect_1;
 }
 
 // 
