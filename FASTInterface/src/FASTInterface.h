@@ -208,9 +208,6 @@ public:
 
 	DECLDIR void SetCalcOutputCallback(std::function<void(const double*, const double*, double*, double*)> calcOutput);
 
-	// TODO rename this: it's only solving for the acceleration/force inputs and outputs
-	DECLDIR PDSAccOutputs SolveForInputs_And_Outputs(const double nacelleAcc[3], const double nacelleRotationAcc[3]);
-
 private:
 	// Pointer to implementation class to hide implementation
 	class PImp;

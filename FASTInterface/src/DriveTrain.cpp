@@ -42,6 +42,8 @@ void DriveTrain::Init(double constantRotorSpeed)
 	states_pred.gen.acc = 0.0;
 	states_pred.gen.vel = 0.0;
 	states_pred.gen.theta = 0.0;
+
+	CopyStates_Pred_to_Curr();
 }
 
 // Initialize the drive train using the connected two-mass model
@@ -78,7 +80,7 @@ void DriveTrain::RestoreSavedStates()
 	inputTime[1] = saved_inputTime[1];
 }
 
-// Calculates the accelerations given the states_pred s
+// Calculates the accelerations given the states_pred 
 DriveTrain::ModelStates DriveTrain::CalcOutput()
 {
 	states_pred = CalcOutput(states_pred, input[LATEST]);
@@ -156,6 +158,11 @@ void DriveTrain::UpdateStates()
 	states_pred.gen.vel = 0.5 * (tmp.gen.vel + tmp2.gen.vel);
 }
 
+void DriveTrain::CopyStates_Pred_to_Curr()
+{
+	states_curr = states_pred;
+}
+
 void DriveTrain::SetInputs(double time, double rotorTorque, double genTorque)
 {
 	inputTime[LATEST] = time;
@@ -209,6 +216,21 @@ void DriveTrain::SetGearboxRatio(double x)
 	gearbox_ratio = x;
 }
 
+DriveTrain::ModelStates DriveTrain::GetStates() const
+{
+	return states_pred;
+}
+
+double DriveTrain::GetInput_RotorTorque() const
+{
+	return input[LATEST].rotorTorque;
+}
+
+double DriveTrain::GetInput_GenTorque() const
+{
+	return input[LATEST].genTorque;
+}
+
 DriveTrain::States DriveTrain::GetRotorStates() const
 {
 	return states_pred.rotor;
@@ -224,9 +246,19 @@ double DriveTrain::GetRotorShaftSpeed() const
 	return states_pred.rotor.vel;
 }
 
+double DriveTrain::GetRotorShaftTheta() const
+{
+	return states_pred.rotor.theta;
+}
+
 double DriveTrain::GetGenShaftSpeed() const
 {
 	return states_pred.gen.vel;
+}
+
+double DriveTrain::GetGenShaftTheta() const
+{
+	return states_pred.gen.theta;
 }
 
 double DriveTrain::GetGenShaftAcc() const

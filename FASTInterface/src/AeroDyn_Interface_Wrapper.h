@@ -9,7 +9,7 @@ system to AeroDyn's z-positive-up coordinate system.
 
 Notes:
 ------
-TODO if they're going to work for the project's purposes, describe save states and restore states function
+TODO if they're going to work for the project's purposes, describe save states_pred and restore states_pred function
 
 Example:
 --------
@@ -112,7 +112,14 @@ public:
 	// TODO
 	HubReactionLoads CalcOutput();
 
+	HubReactionLoads GetOutput() const;
+
 	void Advance_InputWindow();
+
+	// Only need these for now (used in the input solver in the coordinating class)
+	Vector3d GetInput_HubAcc() const { return input.hubAcc; }
+	Vector3d GetInput_HubRotAcc() const { return input.hubRotAcc; }
+	Matrix3d GetInput_HubOrient() const { return input.hubOrient; }
 
 	// Once updateHubState has been called, we call this to get where those hub kinematics put the blade nodes
 	void GetBladeNodePositions(
@@ -136,7 +143,7 @@ public:
 	// TODO
 	void CopyStates_Pred_to_Curr();
 
-	// TOD
+	// TODO
 	void PrintOutputLine();
 	
 	HubReactionLoads GetHubReactionLoads() const;
@@ -158,6 +165,12 @@ public:
 
 private:
 
+	struct Input {
+		Vector3d hubPos, hubVel, hubRotVel, hubAcc, hubRotAcc;
+		Matrix3d hubOrient;
+		double bladePitch;
+	};
+
 	// Transforms a vector expressed in a z-positive-down coordinate system, to a z-positive-up coordinate system
 	Vector3d Transform_PDStoAD(const Vector3d& v) const;
 
@@ -175,8 +188,13 @@ private:
 	void* simulationInstance;
 
 	HubReactionLoads hubReactionLoads, hubReactionLoads_saved; // Saved reaction loads from last call to UpdateStates
+
+	// Save the inputs 
+	Input input, input_saved;
 	std::vector<double> aerodynInflowVel, aerodynInflowVel_saved;
 	std::vector<double> aerodynInflowAcc, aerodynInflowAcc_saved;
+
+
 	double turbineDiameter;
 	double pitch, pitch_saved;
 	int totalNodes;

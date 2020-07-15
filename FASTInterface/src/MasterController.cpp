@@ -75,7 +75,7 @@ void MasterController::UpdateController(double time, double genSpeed, double cur
 
 		bladePitchCommand = pitcont.GetLastPitchCommand();
 
-		// Don't need to update the gen controller because it doesn't have any internal states
+		// Don't need to update the gen controller because it doesn't have any internal states_pred
 		// to update; it's just a lookup table
 		break;
 	default:

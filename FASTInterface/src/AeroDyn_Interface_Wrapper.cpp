@@ -168,6 +168,7 @@ void AeroDyn_Interface_Wrapper::SaveCurrentStates()
 	INTERFACE_SAVECURRENTSTATES(simulationInstance);
 	
 	pitch_saved = pitch;
+	input_saved = input;
 	hubReactionLoads_saved = hubReactionLoads;
 	aerodynInflowVel_saved = aerodynInflowVel;
 	aerodynInflowAcc_saved = aerodynInflowAcc;
@@ -178,6 +179,7 @@ void AeroDyn_Interface_Wrapper::RestoreSavedStates()
 	INTERFACE_RESTORESAVEDSTATES(simulationInstance);
 
 	pitch = pitch_saved;
+	input = input_saved;
 	hubReactionLoads = hubReactionLoads_saved;
 	aerodynInflowVel = aerodynInflowVel_saved;
 	aerodynInflowAcc = aerodynInflowAcc_saved;
@@ -192,6 +194,17 @@ void AeroDyn_Interface_Wrapper::Set_Inputs_Hub(double time,
 					     const Vector3d& hubAngularAcc,
 					     double bladePitch)
 {
+	// Save the inputs before transforming them.
+	// Note: this is for the get functions, so the inputs can be retrieved in the 
+	//		 same coordinate system that they were set in
+	input.hubPos = hubPosition;
+	input.hubOrient = hubOrientation;
+	input.hubVel = hubVel;
+	input.hubRotVel = hubAngularVel;
+	input.hubAcc = hubAcc;
+	input.hubRotAcc = hubAngularAcc;
+	input.bladePitch = bladePitch;
+
     // transform them to Aerodyn's global coordinate system 
     Vector3d hubPos_trans = Transform_PDStoAD(hubPosition);
     Vector3d hubVel_trans = Transform_PDStoAD(hubVel);
@@ -244,6 +257,12 @@ AeroDyn_Interface_Wrapper::HubReactionLoads AeroDyn_Interface_Wrapper::CalcOutpu
 
 	// Save the results locally
 	hubReactionLoads = r;
+	return hubReactionLoads;
+}
+
+AeroDyn_Interface_Wrapper::HubReactionLoads AeroDyn_Interface_Wrapper::GetOutput() const
+{
+	return hubReactionLoads;
 }
 
 void AeroDyn_Interface_Wrapper::UpdateStates()
@@ -254,6 +273,11 @@ void AeroDyn_Interface_Wrapper::UpdateStates()
 void AeroDyn_Interface_Wrapper::CopyStates_Pred_to_Curr()
 {
 	INTERFACE_COPYSTATES_PRED_TO_CURR(simulationInstance);
+}
+
+void AeroDyn_Interface_Wrapper::PrintOutputLine()
+{
+	INTERFACE_WRITEOUTPUTLINE(simulationInstance);
 }
 
 // Communicates blade node positions to ProteusDS. This needs to be separate from the other outputs so that it can be used to get inflow values at the current time_act step.

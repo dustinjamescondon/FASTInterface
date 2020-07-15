@@ -59,7 +59,10 @@ public:
 	void SetRotorMassMomentOfInertia(double);
 	void SetGearboxRatio(double);
 
-	ModelStates GetModelStates() const;
+	ModelStates GetStates() const;
+
+	double GetInput_RotorTorque() const;
+	double GetInput_GenTorque() const;
 
 	States GetRotorStates() const;
 	double GetRotorShaftSpeed() const;  // radians/sec
@@ -80,7 +83,8 @@ private:
 	};
 
 	// Dynamic is using ODEs; Constant is just using a constant rotor speed
-	enum Mode { DYNAMIC, CONSTANT } mode;
+	enum Mode { DYNAMIC, CONSTANT };
+	Mode mode;
 
 	ModelStates CalcOutput(const ModelStates& s, const Input& u) const;
 

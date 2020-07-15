@@ -43,7 +43,7 @@ int main()
 
 	//-------------------------
 	// Local variables
-	double time = 0.0;
+	double time = 0;
 
 	std::vector<double> inflowVel;
 	std::vector<double> inflowAcc;
@@ -75,7 +75,7 @@ int main()
 
 	nacelleAngularVel[0] = 0.0;
 	nacelleAngularVel[1] = 0.0;
-	nacelleAngularVel[2] = 0.0;
+	nacelleAngularVel[2] = InitialRotorSpeed;
 
 	nacelleAngularAcc[0] = 0.0;
 	nacelleAngularAcc[1] = 0.0;
@@ -185,7 +185,7 @@ int main()
 		// Set the inflows at those positions
 		turb.SetInflows(inflowVel, inflowAcc);
 
-		// And update the states to time_act, returning the nacelle reaction forces
+		// And update the states_pred to time_act, returning the nacelle reaction forces
 		rf = turb.AdvanceStates();
 
 		//---------------------------------------------------------------------

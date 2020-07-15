@@ -3,7 +3,7 @@
 #include "..\..\FASTInterface\src\AeroDyn_Interface_Wrapper.h"
 #include <vector>
 
-// states that are a derivative of time_act which we will be integrating
+// states_pred that are a derivative of time_act which we will be integrating
 struct States_dydt {
 	Eigen::Vector3d hubVel, hubAngVel;
 };
@@ -29,7 +29,7 @@ struct DriverStates {
 DriverStates UpdateDriverStates(DriverStates states, std::vector<double>& bladeNodePos,
 	std::vector<double>& inflows, AeroDyn_Interface_Wrapper& ad, double time, double dt);
 
-// Uses Euler method to update states in time_act by dt, returning the results
+// Uses Euler method to update states_pred in time_act by dt, returning the results
 DriverStates EulerStep(DriverStates states, std::vector<double>& bladeNodePos, std::vector<double>& inflows, AeroDyn_Interface_Wrapper& ad, double time, double dt);
 
 void GenerateInflowVelocities(const std::vector<double>& nodePositions, int totalNodes, 
