@@ -44,6 +44,17 @@ void DriveTrain::Init(double constantRotorSpeed)
 	states_pred.gen.theta = 0.0;
 
 	CopyStates_Pred_to_Curr();
+
+	// extrapolate back for the inputs
+	input[PREV].genTorque = 0;
+	input[PREV].rotorTorque = 0;
+	input[LATEST].genTorque = 0;
+	input[LATEST].rotorTorque = 0;
+
+	// Setting them equal at zero will mean dt in Advance States will be, so the states will remain unchanged for 
+	// the first call to Advance States
+	inputTime[PREV] = 0.0;
+	inputTime[LATEST] = 0.0;
 }
 
 // Initialize the drive train using the connected two-mass model

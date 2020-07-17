@@ -1,6 +1,84 @@
 #include "AeroDynTurbine.h"
 using namespace Eigen;
 
+// a build-in subroutine in FORTRAN. Multiply abs(a) by the sign of b
+double sign(double a, double b)
+{
+	if (b > 0) return a;
+	else return -a;
+}
+
+// taken from Aerodyn's subroutine of the same name
+Vector3d EulerExtract(const Matrix3d& m)
+{
+	static const double epsilon = 1.0e-5;
+
+	double cx, cy, cz, sx, sy, sz;
+	Vector3d theta;
+
+	cy = sqrt(pow(m(0, 0), 2) + pow(m(1, 0), 2));
+
+	if (cy < epsilon) {
+
+		theta(1) = atan2(m(2, 0), cy);
+		theta(2) = 0.0;
+		theta(0) = atan2(m(1, 2), m(1, 1));
+	}
+	else {
+		theta(2) = atan2(-m(1, 0), m(0, 0));
+		cz = cos(theta(2));
+		sz = sin(theta(2));
+
+		if (cz < epsilon) {
+			cy = sign(cy, -m(1, 0) / sz);
+		}
+
+		else {
+			cy = sign(cy, m(0, 0) / cz);
+
+		}
+		theta(1) = atan2(m(2, 0), cy);
+
+		cz = cos(theta(2));
+		sz = sin(theta(2));
+
+		cx = sz * m(0, 1) + cz * m(1, 1);
+		sx = sz * m(0, 2) + cz * m(1, 2);
+
+		theta(0) = atan2(sx, cx);
+	}
+
+	return theta;
+}
+
+Matrix3d EulerConstruct(const Vector3d& theta)
+{
+	double cx = cos(theta.x());
+	double sx = sin(theta.x());
+
+	double cy = cos(theta.y());
+	double sy = sin(theta.y());
+
+	double cz = cos(theta.z());
+	double sz = sin(theta.z());
+
+	Matrix3d m;
+	m(0, 0) = cy * cz;
+	m(1, 0) = -cy * sz;
+	m(2, 0) = sy;
+	
+	m(0, 1) = cx * sz + sx * sy*cz;
+	m(1, 1) = cx * cz - sx * sy*sz;
+	m(2, 1) = -sx * cy;
+
+	m(0, 2) = sx * sz - cx * sy*cz;
+	m(1, 2) = sx * cz + cx * sy*sz;
+	m(2, 2) = cx * cy;
+
+	return m;
+}
+
+
 AeroDynTurbine::AeroDynTurbine()
 {
 	time_curr = 0; 
@@ -21,7 +99,10 @@ AeroDynTurbine::HubMotion AeroDynTurbine::CalculateHubMotion(const NacelleMotion
 	Matrix3d rotorRotation = AngleAxisd(rs.theta, Vector3d::UnitX()).toRotationMatrix();
 
 	// Combine the two rotation matrices
-	Matrix3d hubOrient = nm.orientation * rotorRotation;
+	//Matrix3d hubOrient = nm.orientation * rotorRotation;
+	Vector3d hubEulerAngles = nm.EulerAngles;
+	hubEulerAngles.x() += rs.theta;
+	Matrix3d hubOrient = EulerConstruct(hubEulerAngles).transpose();
 
 	hm.orientation = hubOrient;
 
@@ -550,9 +631,10 @@ Matrix3d AeroDynTurbine::CalculateNacelleOrientation(const Vector3d& nacelleEule
 {
 	// Use Nacelle orientation and rotor.theta to update hub orientation for AeroDyn
 	Matrix3d nacelleOrient;
-	nacelleOrient = AngleAxisd(nacelleEulerAngles.x(), Vector3d::UnitX())
-		* AngleAxisd(nacelleEulerAngles.y(), Vector3d::UnitY())
-		* AngleAxisd(nacelleEulerAngles.z(), Vector3d::UnitZ());
+	//nacelleOrient = AngleAxisd(nacelleEulerAngles.x(), Vector3d::UnitX())
+	//	* AngleAxisd(nacelleEulerAngles.y(), Vector3d::UnitY())
+	//	* AngleAxisd(nacelleEulerAngles.z(), Vector3d::UnitZ());
+	nacelleOrient = EulerConstruct(nacelleEulerAngles).transpose();
 
 	return nacelleOrient;
 }

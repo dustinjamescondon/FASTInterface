@@ -16,7 +16,7 @@ using namespace Eigen;
 
 //----------------------------
 // main routine
-int main()
+int main(int argc, char* argv[])
 {	
 	sf::RenderWindow window(sf::VideoMode(800, 800), "Node position test");
 
@@ -26,7 +26,7 @@ int main()
 	int numBlades = 3;
 	double hubRadius = 1.5;
 	double precone = 0.0;
-	static const double dt = 0.01;
+	static const double dt = 0.0125;
 	static const int NSteps = (int)(EndTime / dt);
 
 	static const double InflowSpeed = 20.0;    // in metres/sec
@@ -75,7 +75,7 @@ int main()
 
 	nacelleAngularVel[0] = 0.0;
 	nacelleAngularVel[1] = 0.0;
-	nacelleAngularVel[2] = InitialRotorSpeed;
+	nacelleAngularVel[2] = 0.0;
 
 	nacelleAngularAcc[0] = 0.0;
 	nacelleAngularAcc[1] = 0.0;
@@ -86,7 +86,7 @@ int main()
 	nacelleEulerAngles[2] = 0.0;
 
 	nacellePosition[0] = 0.0;
-	nacellePosition[1] = nacellePosition[2] = 75.0;
+	nacellePosition[1] = nacellePosition[2] = 0.0;
 
 	nacelleVel[0] = 0.0;
 	nacelleVel[1] = 0.0; 
