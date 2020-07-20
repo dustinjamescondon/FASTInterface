@@ -67,6 +67,7 @@ public:
 		double fluidDensity,                   // kg/m^3
 		double kinematicFluidVisc,             // m^2/sec
 		bool useAddedMass,                     // have AeroDyn include added mass effects
+		double coeffAddedMass,                 // coefficient of added mass (only used when useAddedMass is true)
 		const Vector3d& hubPosition,	       // metres
 		const Matrix3d& hubOrientation,        // 3x3 orientation matrix
 		const Vector3d& hubVel,	               // metres/sec

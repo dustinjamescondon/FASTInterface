@@ -14,6 +14,14 @@
 // used to define vectors and matrices in this small example
 using namespace Eigen;
 
+// Just a dummy function that always results in zero vectors
+void CalcOutput_dummy(const double *, const double *, double *acc_out, double *rotAcc_out)
+{
+	double zero[3] = { 0.0, 0.0, 0.0 };
+	memcpy(acc_out, zero, 3 * sizeof(double));
+	memcpy(rotAcc_out, zero, 3 * sizeof(double));
+}
+
 //----------------------------
 // main routine
 int main(int argc, char* argv[])
@@ -29,10 +37,10 @@ int main(int argc, char* argv[])
 	static const double dt = 0.0125;
 	static const int NSteps = (int)(EndTime / dt);
 
-	static const double InflowSpeed = 20.0;    // in metres/sec
+	static const double InflowSpeed = 10.0;    // in metres/sec
 	static const double FluidDensity = 1.225;
 	static const double KinematicFluidVisc = 1.4639e-05;
-	static const double InitialRotorSpeed = 1.2;
+	static const double InitialRotorSpeed = 10 * M_PI / 30; // Converts from RPM to rads/sec
 	static const double InitialPitch = 0.0;
 	static const double GearboxRatio = 97.0;				// From NREL's OC3 report
 	static const double DriveTrainDamping = 6215000.0;      // "
@@ -40,6 +48,8 @@ int main(int argc, char* argv[])
 	static const double GenMOI = 534.116;					// "
 	static const double LPFCornerFreq = 1.570796;			// "
 	static const double RotorMOI = 38829739.1;				// " (Used parallel axis theorem to calculate this using NREL's specification of MOI relative to root)
+	static const bool useAddedMass = true;
+	static const double coeffAddedMass = 0.0;
 
 	//-------------------------
 	// Local variables
@@ -86,7 +96,7 @@ int main(int argc, char* argv[])
 	nacelleEulerAngles[2] = 0.0;
 
 	nacellePosition[0] = 0.0;
-	nacellePosition[1] = nacellePosition[2] = 0.0;
+	nacellePosition[1] = nacellePosition[2] = 75.0;
 
 	nacelleVel[0] = 0.0;
 	nacelleVel[1] = 0.0; 
@@ -106,6 +116,8 @@ int main(int argc, char* argv[])
 
 		turb.InitAeroDyn("../modules/openfast/reg_tests/r-test/glue-codes/openfast/5MW_OC4Semi_WSt_WavesWN/NRELOffshrBsline5MW_OC3Hywind_AeroDyn15.dat",
 			"output",
+			useAddedMass,
+			coeffAddedMass,
 			dt,
 			numBlades,
 			hubRadius,
@@ -118,6 +130,14 @@ int main(int argc, char* argv[])
 			nacelleAcc,
 			nacelleAngularVel,
 			nacelleAngularAcc);
+	
+		using std::placeholders::_1;
+		using std::placeholders::_2;
+		using std::placeholders::_3;
+		using std::placeholders::_4;
+
+		std::function<void(const double*, const double*, double*, double*)> f = std::bind(&CalcOutput_dummy, _1, _2, _3, _4);
+		turb.SetCalcOutputCallback(f);
 	}
 	catch (FileNotFoundException& e) {
 		std::cout << e.what();

@@ -90,6 +90,8 @@ int main(int argc, char* argv[])
 
 		turb.InitAeroDyn("../modules/openfast/reg_tests/r-test/glue-codes/openfast/5MW_OC4Semi_WSt_WavesWN/NRELOffshrBsline5MW_OC3Hywind_AeroDyn15.dat",
 			"output",
+			false,
+			0.0,
 			params.timestep,
 			params.numBlades,
 			params.hubRadius,

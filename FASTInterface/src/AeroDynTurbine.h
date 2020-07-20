@@ -43,6 +43,8 @@ public:
 	void InitAeroDyn(
 		const std::string& inputFilename,
 		const std::string& outputFilename,
+		bool useAddedMass,
+		double coeffAddedMass,
 		double timestep,
 		int numBlades,
 		double hubRadius,

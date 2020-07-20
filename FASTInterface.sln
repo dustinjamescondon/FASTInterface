@@ -24,6 +24,9 @@ EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "DriveTrain_Test", "tests\DriveTrain_Test\DriveTrain_Test.vcxproj", "{9D64210D-B4F5-46EE-AAC0-C962610AF9C0}"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "AD_Interface_Test", "tests\AD_Interface_Test\AD_Interface_Test.vcxproj", "{6164E365-2AC4-4866-B354-2ACD73DFAB16}"
+	ProjectSection(ProjectDependencies) = postProject
+		{DF95312E-6B08-47CA-A5EF-7E083F33D97C} = {DF95312E-6B08-47CA-A5EF-7E083F33D97C}
+	EndProjectSection
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

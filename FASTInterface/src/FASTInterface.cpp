@@ -105,6 +105,8 @@ void FASTInterface::InitControllers_BladedDLL(const std::string& bladed_dll_fnam
 void FASTInterface::InitAeroDyn(
 	const std::string& inputFilename,
 	const std::string& outputFilename,
+	bool useAddedMass,
+	double coeffAddedMass,
 	double timestep,
 	int numBlades,
 	double hubRadius,
@@ -125,7 +127,7 @@ void FASTInterface::InitAeroDyn(
 	Vector3d nacelleAngVel_v(nacelleAngularVel);
 	Vector3d nacelleAngAcc_v(nacelleAngularAcc);
 
-	p_imp->InitAeroDyn(inputFilename, outputFilename, timestep, numBlades, hubRadius,
+	p_imp->InitAeroDyn(inputFilename, outputFilename, useAddedMass, coeffAddedMass, timestep, numBlades, hubRadius,
 		precone, fluidDensity, kinematicFluidVisc, nacellePos_v, nacelleEuler_v,
 		nacelleVel_v, nacelleAcc_v, nacelleAngVel_v, nacelleAngAcc_v);
 }

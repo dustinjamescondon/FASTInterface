@@ -154,6 +154,8 @@ void AeroDynTurbine::InitControllers_BladedDLL(const std::string& bladed_dll_fna
 void AeroDynTurbine::InitAeroDyn(
 	const std::string& inputFilename,
 	const std::string& outputFilename,
+	bool useAddedMass,
+	double coeffAddedMass,
 	double timestep,
 	int numBlades,
 	double hubRadius,
@@ -181,9 +183,6 @@ void AeroDynTurbine::InitAeroDyn(
 	DriveTrain::States rotorState = drivetrain.GetRotorStates();
 	AeroDynTurbine::HubMotion hm = CalculateHubMotion(nm, rotorState);
 
-	// Hard-code this to false because added mass in AeroDyn isn't complete
-	useAddedMass = false;
-
 	aerodyn.InitAerodyn(
 		inputFilename.c_str(),
 		outputFilename.c_str(),
@@ -194,6 +193,7 @@ void AeroDynTurbine::InitAeroDyn(
 		fluidDensity,
 		kinematicFluidVisc,
 		useAddedMass,
+		coeffAddedMass,
 		hm.position,
 		hm.orientation,
 		hm.velocity,
@@ -201,6 +201,8 @@ void AeroDynTurbine::InitAeroDyn(
 		hm.angularVel,
 		hm.angularAcc,
 		mcont.GetBladePitchCommand());
+
+	this->useAddedMass = useAddedMass;
 
 	// Resize our container for the inflow velocities to the appropriate size
 	inflowVel.resize(aerodyn.GetNumNodes() * 3, 0.0);
@@ -552,6 +554,7 @@ AeroDynTurbine::NacelleReactionLoads_Vec AeroDynTurbine::CalcOutputs_And_SolveIn
 		//------------------------------------------------------
 		aerodyn.Set_Inputs_HubAcceleration(u.segment(U_AD_HUB_ACC, 3), u.segment(U_AD_HUB_ROTACC, 3));
 		drivetrain.SetInputs(time_next, u(U_DT_ROTOR_TORQUE), mcont.GetGeneratorTorqueCommand());
+		k++;
 	}
 
 	// TODO, still not sure what is the right thing to return from this function
@@ -631,9 +634,6 @@ Matrix3d AeroDynTurbine::CalculateNacelleOrientation(const Vector3d& nacelleEule
 {
 	// Use Nacelle orientation and rotor.theta to update hub orientation for AeroDyn
 	Matrix3d nacelleOrient;
-	//nacelleOrient = AngleAxisd(nacelleEulerAngles.x(), Vector3d::UnitX())
-	//	* AngleAxisd(nacelleEulerAngles.y(), Vector3d::UnitY())
-	//	* AngleAxisd(nacelleEulerAngles.z(), Vector3d::UnitZ());
 	nacelleOrient = EulerConstruct(nacelleEulerAngles).transpose();
 
 	return nacelleOrient;
