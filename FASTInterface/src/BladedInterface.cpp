@@ -19,8 +19,12 @@ BladedInterface::~BladedInterface()
 }
 
 
-void BladedInterface::Init(const char* fname)
+void BladedInterface::Init(int p_numBlades, const char* fname)
 {
+	// Put the number of blades in the swap index
+	numBlades = p_numBlades;
+	swap[SwapIndex::NumBl] = (float)numBlades;
+
 	// Link to the DLL
 	hInstance = LoadLibraryA(fname);
 	

@@ -100,7 +100,7 @@ public:
 	// (Bladed-style DLL controller initialization)
 	// \bladed_dll_fname: the filename and path to the bladed-style DLL
 	// \initialBladePitch: The initial blade pitch in radians
-	DECLDIR void InitControllers_BladedDLL(const std::string& bladed_dll_fname, double initialBladePitch);
+	DECLDIR void InitControllers_BladedDLL(int numBlades, const std::string& bladed_dll_fname, double initialBladePitch);
 
 	// Must initialize AeroDyn last. This is because AeroDyn's initialization requires the rotor speed 
 	// from the drive train and blade pitch command from the controller.

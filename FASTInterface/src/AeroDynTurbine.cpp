@@ -8,7 +8,9 @@ double sign(double a, double b)
 	else return -a;
 }
 
-// taken from Aerodyn's subroutine of the same name
+// Extracts the Euler angles that will generate the passed orientation matrix
+// Note: Copied from openfast's FORTRAN subroutine of the same name
+
 Vector3d EulerExtract(const Matrix3d& m)
 {
 	static const double epsilon = 1.0e-5;
@@ -51,6 +53,8 @@ Vector3d EulerExtract(const Matrix3d& m)
 	return theta;
 }
 
+// Construct the orientation matrix from the passed Euler angles
+// Note: Copied from openfast's FORTRAN subroutine of the same name
 Matrix3d EulerConstruct(const Vector3d& theta)
 {
 	double cx = cos(theta.x());
@@ -144,9 +148,9 @@ void AeroDynTurbine::InitDriveTrain(double rotorMOI, double genMOI, double stiff
 	drivetrain.Init(initialRotorVel, gearboxRatio, damping, stiffness, rotorMOI, genMOI);
 }
 
-void AeroDynTurbine::InitControllers_BladedDLL(const std::string& bladed_dll_fname, double initialBladePitch)
+void AeroDynTurbine::InitControllers_BladedDLL(int numBlades, const std::string& bladed_dll_fname, double initialBladePitch)
 {
-	mcont.Init_BladedDLL(bladed_dll_fname.c_str(), initialBladePitch);
+	mcont.Init_BladedDLL(numBlades, bladed_dll_fname.c_str(), initialBladePitch);
 }
 
 // Note, this must be called after the drive train and controllers have been initialized because it 
@@ -394,7 +398,7 @@ AeroDynTurbine::NacelleReactionLoads_Vec AeroDynTurbine::CalcOutputs_And_SolveIn
 {
 	// hard-code here for now
 	int solver_iterations = 2;
-	const double perturb = 0.01;
+	const double perturb = 1.0;
 
 	/* Input vector layout:
 	-----------------------
@@ -434,9 +438,12 @@ AeroDynTurbine::NacelleReactionLoads_Vec AeroDynTurbine::CalcOutputs_And_SolveIn
 	// Setup serialized vector of outputs
 	Vector<double, 13> y;
 
+	// Update the nacelle reaction loads stored in this object. It derives it from AeroDyn and the controller.
+	CalcNacelleReactionLoads();
+
 	// Pack the initial inputs that were used to generate the current states at time_next into the serialized input vector
-	u.segment(U_DVR_NAC_FORCE, 3) = nacelleMotion.acceleration;
-	u.segment(U_DVR_NAC_MOMENT, 3) = nacelleMotion.angularAcc;
+	u.segment(U_DVR_NAC_FORCE, 3) = nacelleReactionLoads.force; // (updated when CalcNacelleReactionLoads() was called above)
+	u.segment(U_DVR_NAC_MOMENT, 3) = nacelleReactionLoads.moment; // ^
 	u.segment(U_AD_HUB_ACC, 3) = aerodyn.GetInput_HubAcc();
 	u.segment(U_AD_HUB_ROTACC, 3) = aerodyn.GetInput_HubRotAcc();
 	u(U_DT_ROTOR_TORQUE) = drivetrain.GetInput_RotorTorque();
@@ -483,6 +490,7 @@ AeroDynTurbine::NacelleReactionLoads_Vec AeroDynTurbine::CalcOutputs_And_SolveIn
 
 			// perturb the i'th input
 			u_perturb = u;
+			y_perturb = y; // TODO this is okay right? AeroDyn's outputs aren't going to be affected by perturbing Dvr's
 			u_perturb(i) += perturb;
 
 			// then calculate the corresponding output
@@ -502,6 +510,7 @@ AeroDynTurbine::NacelleReactionLoads_Vec AeroDynTurbine::CalcOutputs_And_SolveIn
 
 			// perturb the i'th input
 			u_perturb = u;
+			y_perturb = y; // TODO this is okay, right?
 			u_perturb(i) += perturb;
 
 			// then calculate the corresponding output
@@ -527,13 +536,13 @@ AeroDynTurbine::NacelleReactionLoads_Vec AeroDynTurbine::CalcOutputs_And_SolveIn
 
 			// perturb the last input
 			u_perturb = u;
+			y_perturb = y;
 			u_perturb(U_DT_ROTOR_TORQUE) += perturb;
 
 			// Calculate the corresponding output
 			drivetrain.SetInputs(time_next, u_perturb(U_DT_ROTOR_TORQUE), mcont.GetGeneratorTorqueCommand());
 			auto dt_output = drivetrain.CalcOutput();
 			
-			y_perturb = y;
 			y_perturb(Y_DT_ROTOR_ACC) = dt_output.rotor.acc;
 			Vector<double,13> u_perturb_residual = CalcResidual(y_perturb, u_perturb);
 			Vector<double, 13> residual_func_partial_u = (u_perturb_residual - u_residual) / perturb;
@@ -605,6 +614,7 @@ AeroDynTurbine::SerializedVector AeroDynTurbine::CalcResidual(const SerializedVe
 	memcpy(u_derived.data() + U_DVR_NAC_MOMENT, nacelleMoment.data(), 3 * sizeof(double));
 	memcpy(u_derived.data() + U_AD_HUB_ACC, hubAcc.data(), 3 * sizeof(double));
 	memcpy(u_derived.data() + U_AD_HUB_ROTACC, hubRotationAcc.data(), 3 * sizeof(double));
+	u_derived(U_DT_ROTOR_TORQUE) = rotorTorque;
 
 	/* Subtract the derived inputs from the original ones */
 	return u - u_derived;
@@ -637,4 +647,14 @@ Matrix3d AeroDynTurbine::CalculateNacelleOrientation(const Vector3d& nacelleEule
 	nacelleOrient = EulerConstruct(nacelleEulerAngles).transpose();
 
 	return nacelleOrient;
+}
+
+//
+AeroDynTurbine::NacelleReactionLoads_Vec AeroDynTurbine::CalcNacelleReactionLoads()
+{
+	nacelleReactionLoads.force = TransformHubToNacelle(aerodyn.GetForce(), nacelleMotion.orientation, aerodyn.GetInput_HubOrient());
+	nacelleReactionLoads.moment = TransformHubToNacelle(aerodyn.GetMoment(), nacelleMotion.orientation, aerodyn.GetInput_HubOrient());
+	nacelleReactionLoads.moment.x() = mcont.GetGeneratorTorqueCommand();
+
+	return nacelleReactionLoads;
 }

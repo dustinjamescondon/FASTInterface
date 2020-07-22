@@ -28,7 +28,7 @@ public:
 	BladedInterface();
 	~BladedInterface();
 
-	void Init(const char* fname);
+	void Init(int numBlades, const char* fname);
 
 	void UpdateController(double time, float blPitch1, float blPitch2, float blPitch3, float genSp, float horWindV);
 	float GetBlPitchCommand() const;
@@ -44,6 +44,7 @@ private:
 	int fail;
 	int iStatus;
 	std::string accINFILE, avcOUTNAME, avcMSG;
+	int numBlades;
 
 	// Results from DLL
 	float bladePitchCommand;

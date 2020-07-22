@@ -88,9 +88,9 @@ void FASTInterface::InitDriveTrain(double rotorMOI, double genMOI, double stiffn
 // (Bladed-style DLL controller initialization)
 // \bladed_dll_fname: the filename and path to the bladed-style DLL
 // \initialBladePitch: The initial blade pitch in radians
-void FASTInterface::InitControllers_BladedDLL(const std::string& bladed_dll_fname, double initialBladePitch)
+void FASTInterface::InitControllers_BladedDLL(int numBlades, const std::string& bladed_dll_fname, double initialBladePitch)
 {
-	p_imp->InitControllers_BladedDLL(bladed_dll_fname, initialBladePitch);
+	p_imp->InitControllers_BladedDLL(numBlades, bladed_dll_fname, initialBladePitch);
 }
 
 // Must initialize AeroDyn last. This is because AeroDyn's initialization requires the rotor speed 

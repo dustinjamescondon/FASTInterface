@@ -13,12 +13,12 @@ void MasterController::Init(double bladePitch)
 	bladePitchCommand = bladePitch;
 }
 
-void MasterController::Init_BladedDLL(const char* fname, double initBladePitch)
+void MasterController::Init_BladedDLL(int numBlades, const char* fname, double initBladePitch)
 {
 	controlMode = BLADED_DLL;
 	bladePitchCommand = initBladePitch;
 
-	bladedcont.Init(fname);
+	bladedcont.Init(numBlades, fname);
 }
 
 void MasterController::Init_InputFile(const char* inputfile_fname, double initGenSpeed, double initRotorSpeed)

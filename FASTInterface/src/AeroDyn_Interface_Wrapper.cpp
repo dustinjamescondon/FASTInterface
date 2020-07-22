@@ -222,7 +222,7 @@ void AeroDyn_Interface_Wrapper::Set_Inputs_Hub(double time,
 }
 
 // This is just like Set_Inputs_Hub, but it only sets the accelerations. 
-// The expected use of this function is to use to calculate the partial derivatives of AeroDyn's CalcOutput function
+// The expected use of this function is to use to calculate the partial derivatives of AeroDyn's CalcSpringForce function
 void AeroDyn_Interface_Wrapper::Set_Inputs_HubAcceleration(const Vector3d& hubAcc, const Vector3d& hubAngularAcc)
 {
 	Vector3d hubAcc_trans = Transform_PDStoAD(hubAcc);

@@ -23,7 +23,7 @@ public:
 	void Init(double bladePitch);
 
 	// Initialization function for the controllers when using a Bladed-style DLL
-	void Init_BladedDLL(const char* bladed_dll_fname, double initBladePitch);
+	void Init_BladedDLL(int numBlades, const char* bladed_dll_fname, double initBladePitch);
 
 	// Initialization function for the controllers when using parameters from CSV and parameter files
 	void Init_InputFile(const char* inputfile_fname, double initGenSpeed, double initBladePitch);

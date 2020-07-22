@@ -185,7 +185,7 @@ int main(int argc, char* argv[])
 			}
 		}
 
-		bool isRealStep = true;
+		bool isTempUpdate = false;
 		//---------------------------------------------------------------------
 		// Using the FASTTurbine
 
@@ -197,7 +197,7 @@ int main(int argc, char* argv[])
 			nacelleAcc,
 			nacelleAngularVel,
 			nacelleAngularAcc,
-			isRealStep);
+			isTempUpdate);
 
 		// Now the rotor orientation has been set, so Aerodyn can report where the node positions are
 		turb.GetBladeNodePositions(bladeNodePositions);
