@@ -8,6 +8,11 @@ double sign(double a, double b)
 	else return -a;
 }
 
+Vector3d project(const Vector3d& v1, const Vector3d& v2)
+{
+	return (v1.dot(v2) / v2.dot(v2)) * v2;
+}
+
 // Extracts the Euler angles that will generate the passed orientation matrix
 // Note: Copied from openfast's FORTRAN subroutine of the same name
 
@@ -208,10 +213,6 @@ void AeroDynTurbine::InitAeroDyn(
 
 	this->useAddedMass = useAddedMass;
 
-	// Resize our container for the inflow velocities to the appropriate size
-	inflowVel.resize(aerodyn.GetNumNodes() * 3, 0.0);
-	inflowAcc.resize(aerodyn.GetNumNodes() * 3, 0.0);
-
 	// Do the initial call for the controller
 	mcont.UpdateController(time_next, drivetrain.GetGenShaftSpeed(), aerodyn.GetBladePitch());
 }
@@ -294,14 +295,7 @@ void AeroDynTurbine::SetInputs_NacelleAcc(const Vector3d& nacelleAcc, const Vect
 
 void AeroDynTurbine::SetInputs_Inflow(const std::vector<double>& inflowVel, const std::vector<double>& inflowAcc)
 {
-	// Don't actually update Aerodyn with these inflows yet, just save them
-	// TODO explain why we don't actually set them in AeroDyn yet
-	for (unsigned int i = 0; i < inflowVel.size(); ++i)
-	{
-		this->inflowVel[i] = inflowVel[i];
-		this->inflowAcc[i] = inflowAcc[i];
-	}
-
+	aerodyn.Set_Inputs_Inflow(inflowVel, inflowAcc);
 }
 
 // Performs the predictor-corrector method, and uses the input-output solver for each corrector iteration
@@ -352,7 +346,6 @@ AeroDynTurbine::NacelleReactionLoads_Vec AeroDynTurbine::AdvanceStates()
 	//   I do see this as a problem, but I think it may be unavoidable with the given Bladed-style DLL because
 	//   it is written to be loosely coupled to, meaning all calls to it are permanent, and therefore we
 	//   can't call it when onTempUpdate == true
-	nrl.moment[0] = mcont.GetGeneratorTorqueCommand();
 
 	time_curr = time_next;
 
@@ -383,6 +376,7 @@ AeroDynTurbine::NacelleReactionLoads_Vec AeroDynTurbine::CalcOutputs_And_DeriveI
 		nacelleMotion.orientation,
 		aerodyn.GetInput_HubOrient());
 	nacelleMoment.x() = mcont.GetGeneratorTorqueCommand();
+	// This ^ would be right if the moment vector were in the local body coordinate system, but it's in the global coordinate system
 
 	NacelleReactionLoads_Vec dvr_input;
 	dvr_input.force = nacelleForce;
@@ -398,7 +392,13 @@ AeroDynTurbine::NacelleReactionLoads_Vec AeroDynTurbine::CalcOutputs_And_SolveIn
 {
 	// hard-code here for now
 	int solver_iterations = 2;
-	const double perturb = 1.0;
+	
+	// TODO initialize this somewhere in the constructor
+	// Some inputs are more sensitive to perturbations, so perturb differently
+	// depending on the output. The acceleration inputs for AD are particularly sensitive.
+	SerializedVector perturb_vec;
+	perturb_vec.fill(1.0);
+	//perturb_vec.segment(U_AD_HUB_ACC, 6).fill(0.0125);
 
 	/* Input vector layout:
 	-----------------------
@@ -434,9 +434,9 @@ AeroDynTurbine::NacelleReactionLoads_Vec AeroDynTurbine::CalcOutputs_And_SolveIn
 	*/
 
 	// Setup serialized vector of inputs
-	Vector<double, 13> u;
+	SerializedVector u;
 	// Setup serialized vector of outputs
-	Vector<double, 13> y;
+	SerializedVector y;
 
 	// Update the nacelle reaction loads stored in this object. It derives it from AeroDyn and the controller.
 	CalcNacelleReactionLoads();
@@ -485,67 +485,79 @@ AeroDynTurbine::NacelleReactionLoads_Vec AeroDynTurbine::CalcOutputs_And_SolveIn
 		SerializedVector u_residual = CalcResidual(y, u);
 
 		// Driver program first
+		// Note: Why perturb the nacelle x moment when we can't change it 
+		// (the controller isn't updated at all in this process because it's loosely coupled without the ability to take 
+		// temporary updates)
 		for (int i = 0; i < 6; i++) {
-			Vector<double, 13> u_perturb, y_perturb;
+			// TEMP: Debugging by always having nacelle x moment be 0
+			if (i == 3) {
+				// Fill in the jacobian entry for the x moment of the nacelle to zero
+				SerializedVector zero;
+				zero.fill(0.0);
+				jacobian.col(3) = zero;
+			}
+			else {
+				SerializedVector u_perturb, y_perturb;
 
-			// perturb the i'th input
-			u_perturb = u;
-			y_perturb = y; // TODO this is okay right? AeroDyn's outputs aren't going to be affected by perturbing Dvr's
-			u_perturb(i) += perturb;
+				// perturb the i'th input
+				u_perturb = u;
+				y_perturb = y; // TODO this is okay right? AeroDyn's outputs aren't going to be affected by perturbing Dvr's
+				u_perturb(i) += perturb_vec(i);
 
-			// then calculate the corresponding output
-			CalcOutput_callback(u_perturb.data() + U_DVR_NAC_FORCE, u_perturb.data() + U_DVR_NAC_MOMENT,
-				y_perturb.data() + Y_DVR_NAC_ACC, y_perturb.data() + Y_DVR_NAC_ROTACC);
+				// then calculate the corresponding output
+				CalcOutput_callback(u_perturb.data() + U_DVR_NAC_FORCE, u_perturb.data() + U_DVR_NAC_MOMENT,
+					y_perturb.data() + Y_DVR_NAC_ACC, y_perturb.data() + Y_DVR_NAC_ROTACC);
 
-			SerializedVector u_perturb_residual = CalcResidual(y_perturb, u_perturb);
-			// Numerically calculate the partial derivative of wrt this input
-			SerializedVector residual_func_partial_u = (u_perturb_residual - u_residual) / perturb;
-			// Add this entry into the jacobian as a column
-			jacobian.col(i) = residual_func_partial_u;
+				SerializedVector u_perturb_residual = CalcResidual(y_perturb, u_perturb);
+				// Numerically calculate the partial derivative of wrt this input
+				SerializedVector residual_func_partial_u = (u_perturb_residual - u_residual) / perturb_vec(i);
+				// Add this entry into the jacobian as a column
+				jacobian.col(i) = residual_func_partial_u;
+			}
 		}
 
 		// AD second
 		for (int i = 6; i < 12; i++) {
-			Vector<double, 13> u_perturb, y_perturb;
+			SerializedVector u_perturb, y_perturb;
 
 			// perturb the i'th input
 			u_perturb = u;
 			y_perturb = y; // TODO this is okay, right?
-			u_perturb(i) += perturb;
+			u_perturb(i) += perturb_vec(i);
 
 			// then calculate the corresponding output
 			aerodyn.Set_Inputs_HubAcceleration(
-				Vector3d(u_perturb.data() + U_AD_HUB_ACC),
-				Vector3d(u_perturb.data() + U_AD_HUB_ROTACC));
+				u_perturb.segment(U_AD_HUB_ACC, 3),
+				u_perturb.segment(U_AD_HUB_ROTACC, 3));
 
-			auto ad_output = aerodyn.CalcOutput();
+			ad_output = aerodyn.CalcOutput();
 
 			y_perturb.segment(Y_AD_HUB_FORCE, 3) = ad_output.force;
 			y_perturb.segment(Y_AD_HUB_MOMENT, 3) = ad_output.moment;
 
-			Vector<double, 13> u_perturb_residual = CalcResidual(y_perturb, u_perturb);
+			SerializedVector u_perturb_residual = CalcResidual(y_perturb, u_perturb);
 			// Numerically calculate the partial derivative of wrt this input
-			Vector<double, 13> residual_func_partial_u = (u_perturb_residual - u_residual) / perturb;
+			SerializedVector residual_func_partial_u = (u_perturb_residual - u_residual) / perturb_vec(i);
 			// Add this entry into the jacobian as a column
 			jacobian.col(i) = residual_func_partial_u;
 		}
 
 		// Drivetrain third
 		{
-			Vector<double, 13> u_perturb, y_perturb;
+			SerializedVector u_perturb, y_perturb;
 
 			// perturb the last input
 			u_perturb = u;
 			y_perturb = y;
-			u_perturb(U_DT_ROTOR_TORQUE) += perturb;
+			u_perturb(U_DT_ROTOR_TORQUE) += perturb_vec(U_DT_ROTOR_TORQUE);
 
 			// Calculate the corresponding output
 			drivetrain.SetInputs(time_next, u_perturb(U_DT_ROTOR_TORQUE), mcont.GetGeneratorTorqueCommand());
 			auto dt_output = drivetrain.CalcOutput();
 			
 			y_perturb(Y_DT_ROTOR_ACC) = dt_output.rotor.acc;
-			Vector<double,13> u_perturb_residual = CalcResidual(y_perturb, u_perturb);
-			Vector<double, 13> residual_func_partial_u = (u_perturb_residual - u_residual) / perturb;
+			SerializedVector u_perturb_residual = CalcResidual(y_perturb, u_perturb);
+			SerializedVector residual_func_partial_u = (u_perturb_residual - u_residual) / perturb_vec(U_DT_ROTOR_TORQUE);
 			jacobian.col(Y_DT_ROTOR_ACC) = residual_func_partial_u;
 		}
 
@@ -554,7 +566,7 @@ AeroDynTurbine::NacelleReactionLoads_Vec AeroDynTurbine::CalcOutputs_And_SolveIn
 		//------------------------------------------------------
 		FullPivLU<Matrix<double, 13, 13>> lu = jacobian.fullPivLu();
 
-		Vector<double, 13> u_delta = -lu.inverse() * u_residual;
+		SerializedVector u_delta = -lu.inverse() * u_residual;
 
 		u = u + u_delta;
 		
@@ -565,6 +577,9 @@ AeroDynTurbine::NacelleReactionLoads_Vec AeroDynTurbine::CalcOutputs_And_SolveIn
 		drivetrain.SetInputs(time_next, u(U_DT_ROTOR_TORQUE), mcont.GetGeneratorTorqueCommand());
 		k++;
 	}
+
+	// Just calc this here for debug purposes to see if it's finding the zeros
+	SerializedVector u_residual = CalcResidual(y, u);
 
 	// TODO, still not sure what is the right thing to return from this function
 	NacelleReactionLoads_Vec result;
@@ -586,7 +601,7 @@ AeroDynTurbine::SerializedVector AeroDynTurbine::CalcResidual(const SerializedVe
 	/* first start with deriving AD's inputs from ProteusDS's and the drivetrain's outputs */
 	Vector3d nacelleAcc(y.data() + Y_DVR_NAC_ACC);
 	Vector3d nacelleRotationAcc(y.data() + Y_DVR_NAC_ROTACC);
-	Vector3d hubRotationAcc = nacelleRotationAcc + (y(Y_DT_ROTOR_ACC) * aerodyn.GetInput_HubOrient().col(0));
+	Vector3d hubRotationAcc = nacelleRotationAcc + (y(Y_DT_ROTOR_ACC) * nacelleMotion.orientation.col(0));
 	Vector3d hubAcc = nacelleAcc;
 
 	/* second derive PDS's inputs from AD's outputs */
@@ -602,18 +617,19 @@ AeroDynTurbine::SerializedVector AeroDynTurbine::CalcResidual(const SerializedVe
 		nacelleMotion.orientation,
 		aerodyn.GetInput_HubOrient());
 	nacelleMoment.x() = mcont.GetGeneratorTorqueCommand();
+
 	/* third derive the drivetrain's input from Aerodyn's output */
 	//	 Note: the first element counting from Y_AD_HUB_MOMENT is the x-component
 	double rotorTorque = y(Y_AD_HUB_MOMENT);
 
 	//------------------------------------------------------
-	// Pack these results in a vector (TODO use .segment(i,n) for these instead)
+	// Pack these results in a vector
 	//......................................................
 	SerializedVector u_derived;
-	memcpy(u_derived.data() + U_DVR_NAC_FORCE, nacelleForce.data(), 3 * sizeof(double));
-	memcpy(u_derived.data() + U_DVR_NAC_MOMENT, nacelleMoment.data(), 3 * sizeof(double));
-	memcpy(u_derived.data() + U_AD_HUB_ACC, hubAcc.data(), 3 * sizeof(double));
-	memcpy(u_derived.data() + U_AD_HUB_ROTACC, hubRotationAcc.data(), 3 * sizeof(double));
+	u_derived.segment(U_DVR_NAC_FORCE, 3) = nacelleForce;
+	u_derived.segment(U_DVR_NAC_MOMENT, 3) = nacelleMoment;
+	u_derived.segment(U_AD_HUB_ACC, 3) = hubAcc;
+	u_derived.segment(U_AD_HUB_ROTACC, 3) = hubRotationAcc;
 	u_derived(U_DT_ROTOR_TORQUE) = rotorTorque;
 
 	/* Subtract the derived inputs from the original ones */
@@ -654,7 +670,17 @@ AeroDynTurbine::NacelleReactionLoads_Vec AeroDynTurbine::CalcNacelleReactionLoad
 {
 	nacelleReactionLoads.force = TransformHubToNacelle(aerodyn.GetForce(), nacelleMotion.orientation, aerodyn.GetInput_HubOrient());
 	nacelleReactionLoads.moment = TransformHubToNacelle(aerodyn.GetMoment(), nacelleMotion.orientation, aerodyn.GetInput_HubOrient());
-	nacelleReactionLoads.moment.x() = mcont.GetGeneratorTorqueCommand();
+
+	nacelleReactionLoads.moment.x() = mcont.GetGeneratorTorqueCommand(); 
+	// ^ - the moment is in nacelle coordinate system, so just 
+	// overwriting the x component works
+	// -----
+	// BUT! If we switch the loads to be expressed in global coordinate system, then we have to do something else.
+	// This version fixes it by projection and cancellation
+	// Vector3d sub = project(nacelleReactionLoads.moment, nacelleMotion.orientation.col(0));
+	// nacelleReactionLoads.moment -= sub;
+	// nacelleReactionLoads.moment += nacelleMotion.orientation.col(0) * mcont.GetGeneratorTorqueCommand();
+
 
 	return nacelleReactionLoads;
 }

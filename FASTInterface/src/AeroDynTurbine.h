@@ -132,7 +132,6 @@ private:
 
 	/* AeroDyn stuff */
 	AeroDyn_Interface_Wrapper aerodyn;
-	std::vector<double> inflowVel, inflowAcc; // holds the blade node inflows
 	AeroDynTurbine::NacelleMotion nacelleMotion;
 	NacelleReactionLoads_Vec nacelleReactionLoads; // Stores the most recent load results
 	Vector3d nacelleForce, nacelleMoment;

@@ -46,7 +46,8 @@ void MassSpringDamper::InitFASTInterface()
 	turb.InitControllers_BladedDLL(num_blades, bladed_dll_fname, initial_pitch);
 
 	// AeroDyn last
-	const char* ad_input_file = "..\\modules\\openfast\\reg_tests\\r-test\\glue-codes\\openfast\\5MW_OC4Semi_WSt_WavesWN\\NRELOffshrBsline5MW_OC3Hywind_AeroDyn15.dat";
+	// TODO the input file is non-standard right now
+	const char* ad_input_file = "..\\modules\\openfast\\reg_tests\\r-test\\glue-codes\\openfast\\5MW_OC4Semi_WSt_WavesWN\\NRELOffshrBsline5MW_OC3Hywind_AeroDyn15_Water.dat";
 	const char* ad_output_file = "mass_spring_damper_test";
 	const bool use_added_mass = true; // TODO set to true once I figure out the right parameters
 	const double added_mass_coeff = 1.0; // TODO ^
@@ -56,7 +57,7 @@ void MassSpringDamper::InitFASTInterface()
 	const double kinematic_fluid_visc = 1.4639e-05;
 	const double inflow_speed = 10.0;
 	const double nacelle_pos[3] = { displacement, 0.0, 0.0 };
-	const double nacelle_euler_angles[3] = { 0.0, 0.0,0.0 };
+	const double nacelle_euler_angles[3] = { 0.0, 0.0, 0.0 };
 	const double nacelle_vel[3] = { 0.0,0.0,0.0 };
 	const double nacelle_acc[3] = { acceleration,0.0,0.0 };
 	const double nacelle_rotvel[3] = { 0.0,0.0,0.0 };

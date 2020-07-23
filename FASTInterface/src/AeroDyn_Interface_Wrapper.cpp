@@ -162,6 +162,9 @@ void AeroDyn_Interface_Wrapper::InitInflows(const std::vector<double>& pdsInflow
     
     // call inflow initialization subroutine in FORTRAN DLL with these transformed inflows
     INTERFACE_INITINPUTS_INFLOW(simulationInstance, &nBlades, &nNodes, &aerodynInflowVel[0], &aerodynInflowAcc[0]);
+
+	// TODO confirm this is a good idea - want to be able to get the loads right away
+	CalcOutput();
 }
 
 void AeroDyn_Interface_Wrapper::SaveCurrentStates()

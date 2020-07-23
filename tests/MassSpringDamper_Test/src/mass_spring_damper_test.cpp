@@ -27,8 +27,6 @@ int main(int argc, char* argv[])
 	SimulationParameters params = ParseCommandLineArgs(argc, argv);
 
 	double time = 0.0;
-	double dt = 0.0125;
-	double end_time = 10.0;
 
 	double mass = 100000.0; // TODO
 	double stiffness = 10000.0;
@@ -41,11 +39,11 @@ int main(int argc, char* argv[])
 	std::ofstream fout("msd_timeseries.out");
 	PrintHeader(fout);
 
-	while (time <= end_time) {
+	while (time <= params.simulation_time) {
 		msd.Simulate(time);
 		PrintOutputLine(fout, time, msd.GetDisp(), msd.GetVel());
 
-		time += dt;
+		time += params.timestep;
 	}
 
 	fout.close();

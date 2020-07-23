@@ -7,7 +7,7 @@ Description:
 	class must provide the nacelle position, velocity, orientation, and angular velocity, as well 
 	as inflow velocities.
 
-Initialization:
+Initialization: TODO REWRITE THESE COMMENTS
 	Note there are three parts to initialization which must happen in the following order: 
 	1) initialize the drive train,
 	2) initialize the controllers, 
@@ -29,8 +29,8 @@ Usage during simulation:
 	3) SetInflowVelocities(...)
 	4) AdvanceStates()
 
-	If this process was done with isRealStep == true, then the turbine's states_pred will be updated to "time_act".
-	However, if isRealStep == false, then the turbine's states_pred remain at the previous time_act.
+	If this process was done with isTempUpdate == false, then the turbine's states_pred will be updated to "time_act".
+	However, if isTempUpdate == true, then the turbine's states remain at the previous time_act.
 
 	In any case, whether isRealStep is true or false, after UpdateStates has been called, the nacelle reaction
 	forces at "time_act" are returned; also any call to GetForce, GetMoment, GetGeneratorSpeed, GetRotorSpeed, will
@@ -133,10 +133,10 @@ public:
 	DECLDIR void InitInflows(const std::vector<double>& inflowVel, const std::vector<double>& inflowAcc);
 	//-----------------------------------------------------------
 
-	// This will simulate from the last simulation time_act up until the time_act passed to SetNacelleStates(...)
+	// This will simulate from the last simulation time up until the time_act passed to SetNacelleStates(...)
 	// and return the nacelle reaction loads at that time_act.
-	// If isRealStep was false for SetNacelleStates, then this doesn't update states_pred permanently;
-	// if true, then this does update states_pred perminantely.
+	// If isTempStep was true for SetNacelleStates, then this doesn't update states_pred permanently;
+	// if false, then this does update states_pred permanentely.
 	DECLDIR NacelleReactionLoads AdvanceStates();
 
 	// Returns the blade node postion at the \time_act which was passed to SetNacelleMotion(...)

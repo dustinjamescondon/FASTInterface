@@ -1,4 +1,6 @@
 /*
+
+TODO REWRITE THIS DESCRIPTION
 Description:
 ------------
 
@@ -178,7 +180,7 @@ private:
 	// Transforms a vector expressed in a z-positive-up coordinate system, to a z-positive-down coordinate system
 	Vector3d Transform_ADtoPDS(const Vector3d& v) const;
 
-	// Transforms the global to local orientation matrix from z-down to z-up coordinate system
+	// Transforms the local to global orientation matrix from z-down to z-up coordinate system
 	// Note 
 	Matrix3d TransformOrientation(const Matrix3d& orientation) const;
 
