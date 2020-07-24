@@ -4,7 +4,7 @@
 class MassSpringDamper
 {
 public:
-	MassSpringDamper(double timestep, double mass, double stiffness_coeff, double damping_coeff, double initial_disp);
+	MassSpringDamper(bool enable_added_mass, double timestep, double mass, double stiffness_coeff, double damping_coeff, double initial_disp);
 
 	void InitFASTInterface();
 
@@ -13,6 +13,10 @@ public:
 
 	double GetDisp() const { return displacement; }
 	double GetVel() const { return velocity; }
+	double GetRotorDisp() const { return turb.GetRotorAngularDisp(); }
+	double GetRotorVel() const { return turb.GetRotorSpeed(); }
+	double GetGenDisp() const { return turb.GetGeneratorAngularDisp(); }
+	double GetGenVel() const { return turb.GetGeneratorSpeed(); }
 
 private:
 	
@@ -23,6 +27,7 @@ private:
 
 	FASTInterface  turb;
 
+	bool enable_added_mass;
 	double damping_coeff;
 	double stiffness_coeff;
 	double displacement;

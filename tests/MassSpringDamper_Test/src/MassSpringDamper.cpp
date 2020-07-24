@@ -3,8 +3,9 @@
 #include <math.h>
 #include <functional>
 
-MassSpringDamper::MassSpringDamper(double p_timestep, double p_mass, double p_stiffness_coeff, double p_damping_coeff, double p_initial_disp)
+MassSpringDamper::MassSpringDamper(bool p_enable_added_mass, double p_timestep, double p_mass, double p_stiffness_coeff, double p_damping_coeff, double p_initial_disp)
 {
+	enable_added_mass = p_enable_added_mass;
 	timestep = p_timestep;
 	time_curr = 0.0;
 	mass = p_mass;
@@ -34,28 +35,28 @@ void MassSpringDamper::InitFASTInterface()
 	const double stiffness = 867637000.0;
 	const double damping = 6215000.0;
 	const double gearbox_ratio = 97.0;
-	const double initial_rotor_speed = 10 * M_PI / 30;
+	const double initial_rotor_speed = 3 * M_PI / 30;
 	const int num_blades = 3;
 
-	turb.InitDriveTrain(rotorMOI, genMOI, stiffness, damping, gearbox_ratio, initial_rotor_speed);
+	//turb.InitDriveTrain(rotorMOI, genMOI, stiffness, damping, gearbox_ratio, initial_rotor_speed);
 
 	// Controller second
 	const char* bladed_dll_fname = "Discon_OC3Hywind.dll";
 	const double initial_pitch = 0.0;
 
-	turb.InitControllers_BladedDLL(num_blades, bladed_dll_fname, initial_pitch);
+	//turb.InitControllers_BladedDLL(num_blades, bladed_dll_fname, initial_pitch);
+	turb.InitWithConstantRotorSpeedAndPitch(initial_rotor_speed, 0.0);
 
 	// AeroDyn last
 	// TODO the input file is non-standard right now
-	const char* ad_input_file = "..\\modules\\openfast\\reg_tests\\r-test\\glue-codes\\openfast\\5MW_OC4Semi_WSt_WavesWN\\NRELOffshrBsline5MW_OC3Hywind_AeroDyn15_Water.dat";
+	const char* ad_input_file = "..\\modules\\openfast\\reg_tests\\r-test\\glue-codes\\openfast\\5MW_OC4Semi_WSt_WavesWN\\NRELOffshrBsline5MW_OC3Hywind_AeroDyn15.dat";
 	const char* ad_output_file = "mass_spring_damper_test";
-	const bool use_added_mass = true; // TODO set to true once I figure out the right parameters
-	const double added_mass_coeff = 1.0; // TODO ^
+	const double added_mass_coeff = 0.5; // TODO ^
 	const double hub_radius = 1.5;
 	const double precone = 0.0;
 	const double fluid_density = 1.225;
 	const double kinematic_fluid_visc = 1.4639e-05;
-	const double inflow_speed = 10.0;
+	const double inflow_speed = 1.0;
 	const double nacelle_pos[3] = { displacement, 0.0, 0.0 };
 	const double nacelle_euler_angles[3] = { 0.0, 0.0, 0.0 };
 	const double nacelle_vel[3] = { 0.0,0.0,0.0 };
@@ -64,7 +65,7 @@ void MassSpringDamper::InitFASTInterface()
 	const double nacelle_rotacc[3] = { 0.0,0.0,0.0 };
 
 
-	turb.InitAeroDyn(ad_input_file, ad_output_file, use_added_mass, added_mass_coeff, timestep, num_blades,
+	turb.InitAeroDyn(ad_input_file, ad_output_file, enable_added_mass, added_mass_coeff, timestep, num_blades,
 		hub_radius, precone, fluid_density, kinematic_fluid_visc, nacelle_pos, nacelle_euler_angles, nacelle_vel,
 		nacelle_acc, nacelle_rotvel, nacelle_rotacc);
 

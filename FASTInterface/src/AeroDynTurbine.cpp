@@ -104,13 +104,10 @@ AeroDynTurbine::HubMotion AeroDynTurbine::CalculateHubMotion(const NacelleMotion
 	hm.position = Vector3d(nm.position);
 	hm.velocity = Vector3d(nm.velocity);
 
-	// Create rotation matrix for the rotor angle
-	Matrix3d rotorRotation = AngleAxisd(rs.theta, Vector3d::UnitX()).toRotationMatrix();
-
 	// Combine the two rotation matrices
 	//Matrix3d hubOrient = nm.orientation * rotorRotation;
 	Vector3d hubEulerAngles = nm.EulerAngles;
-	hubEulerAngles.x() += rs.theta;
+	hubEulerAngles(0) += rs.theta;
 	Matrix3d hubOrient = EulerConstruct(hubEulerAngles).transpose();
 
 	hm.orientation = hubOrient;
@@ -375,7 +372,7 @@ AeroDynTurbine::NacelleReactionLoads_Vec AeroDynTurbine::CalcOutputs_And_DeriveI
 		ad_output.moment,
 		nacelleMotion.orientation,
 		aerodyn.GetInput_HubOrient());
-	nacelleMoment.x() = mcont.GetGeneratorTorqueCommand();
+	nacelleMoment(0) = mcont.GetGeneratorTorqueCommand();
 	// This ^ would be right if the moment vector were in the local body coordinate system, but it's in the global coordinate system
 
 	NacelleReactionLoads_Vec dvr_input;
@@ -397,8 +394,8 @@ AeroDynTurbine::NacelleReactionLoads_Vec AeroDynTurbine::CalcOutputs_And_SolveIn
 	// Some inputs are more sensitive to perturbations, so perturb differently
 	// depending on the output. The acceleration inputs for AD are particularly sensitive.
 	SerializedVector perturb_vec;
-	perturb_vec.fill(1.0);
-	//perturb_vec.segment(U_AD_HUB_ACC, 6).fill(0.0125);
+	perturb_vec.fill(100.0);
+	perturb_vec.segment(U_AD_HUB_ACC, 6).fill(0.00125);
 
 	/* Input vector layout:
 	-----------------------
@@ -487,7 +484,7 @@ AeroDynTurbine::NacelleReactionLoads_Vec AeroDynTurbine::CalcOutputs_And_SolveIn
 		// Driver program first
 		// Note: Why perturb the nacelle x moment when we can't change it 
 		// (the controller isn't updated at all in this process because it's loosely coupled without the ability to take 
-		// temporary updates)
+		// temporary updates, but also because acclerations don't affect the generator torque)
 		for (int i = 0; i < 6; i++) {
 			// TEMP: Debugging by always having nacelle x moment be 0
 			if (i == 3) {
@@ -579,7 +576,7 @@ AeroDynTurbine::NacelleReactionLoads_Vec AeroDynTurbine::CalcOutputs_And_SolveIn
 	}
 
 	// Just calc this here for debug purposes to see if it's finding the zeros
-	SerializedVector u_residual = CalcResidual(y, u);
+	SerializedVector u_residual_check = CalcResidual(y, u);
 
 	// TODO, still not sure what is the right thing to return from this function
 	NacelleReactionLoads_Vec result;
@@ -616,7 +613,7 @@ AeroDynTurbine::SerializedVector AeroDynTurbine::CalcResidual(const SerializedVe
 		hubMoment,
 		nacelleMotion.orientation,
 		aerodyn.GetInput_HubOrient());
-	nacelleMoment.x() = mcont.GetGeneratorTorqueCommand();
+	nacelleMoment(0) = mcont.GetGeneratorTorqueCommand();
 
 	/* third derive the drivetrain's input from Aerodyn's output */
 	//	 Note: the first element counting from Y_AD_HUB_MOMENT is the x-component
@@ -671,7 +668,7 @@ AeroDynTurbine::NacelleReactionLoads_Vec AeroDynTurbine::CalcNacelleReactionLoad
 	nacelleReactionLoads.force = TransformHubToNacelle(aerodyn.GetForce(), nacelleMotion.orientation, aerodyn.GetInput_HubOrient());
 	nacelleReactionLoads.moment = TransformHubToNacelle(aerodyn.GetMoment(), nacelleMotion.orientation, aerodyn.GetInput_HubOrient());
 
-	nacelleReactionLoads.moment.x() = mcont.GetGeneratorTorqueCommand(); 
+	nacelleReactionLoads.moment(0) = mcont.GetGeneratorTorqueCommand(); 
 	// ^ - the moment is in nacelle coordinate system, so just 
 	// overwriting the x component works
 	// -----

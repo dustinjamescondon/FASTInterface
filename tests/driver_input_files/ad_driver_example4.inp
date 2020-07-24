@@ -2,7 +2,7 @@
 UAE Phase 3 turbine (BEM)
 -----  Input Configuration  ----------------------------------------------------
 True          Echo            -  Echo input parameters to "<rootname>.ech"?  
-"..\..\modules\openfast\reg_tests\r-test\glue-codes\openfast\5MW_OC4Semi_WSt_WavesWN\NRELOffshrBsline5MW_OC3Hywind_AeroDyn15.dat"   AD_InputFile    -  Name of the primary AeroDyn input file
+"..\..\modules\openfast\reg_tests\r-test\glue-codes\openfast\5MW_OC4Semi_WSt_WavesWN\NRELOffshrBsline5MW_OC3Hywind_AeroDyn15_Water.dat"   AD_InputFile    -  Name of the primary AeroDyn input file
 -----  Turbine Data  -----------------------------------------------------------
        3     NumBlades       - Number of blades (-)
        1.5   HubRad          - Hub radius (m)

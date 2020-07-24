@@ -230,6 +230,10 @@ void AeroDyn_Interface_Wrapper::Set_Inputs_HubAcceleration(const Vector3d& hubAc
 {
 	Vector3d hubAcc_trans = Transform_PDStoAD(hubAcc);
 	Vector3d hubAngAcc_trans = Transform_PDStoAD(hubAngularAcc);
+	
+	// Save the inputs so they can be retrieved by the get routine
+	input.hubAcc = hubAcc;
+	input.hubRotAcc = hubAngularAcc;
 
 	INTERFACE_SETINPUTS_HUBACCELERATION(simulationInstance, hubAcc.data(), hubAngularAcc.data());
 }

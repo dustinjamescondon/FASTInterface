@@ -3,9 +3,11 @@
 #include "MassSpringDamper.h"
 #include <fstream>
 #include <iostream>
+#include <stdio.h>
 
 struct SimulationParameters
 {
+	bool enable_added_mass;
 	float simulation_time; // How much time will be simulated
 	float timestep;
 	float mass;
@@ -20,20 +22,16 @@ struct SimulationParameters
 SimulationParameters ParseCommandLineArgs(int argc, char** argv);
 void PrintHelpMenu();
 void PrintHeader(std::ofstream& p_ofs);
-void PrintOutputLine(std::ofstream& p_ofs, double time, double disp, double vel);
+void PrintOutputLine(std::ofstream& p_ofs, double time, double disp, double vel, double rotor_disp, double rotor_vel,
+	double gen_disp, double gen_vel);
 
 int main(int argc, char* argv[])
 {
 	SimulationParameters params = ParseCommandLineArgs(argc, argv);
 
 	double time = 0.0;
-
-	double mass = 100000.0; // TODO
-	double stiffness = 10000.0;
-	double damping = 10000.0;
-	double initial_disp = 1.0;
 	
-	MassSpringDamper msd(params.timestep, params.mass, params.spring_coeff, params.damping_coeff, params.initial_disp);
+	MassSpringDamper msd(params.enable_added_mass, params.timestep, params.mass, params.spring_coeff, params.damping_coeff, params.initial_disp);
 
 	// Open an output stream to the output file
 	std::ofstream fout("msd_timeseries.out");
@@ -41,7 +39,7 @@ int main(int argc, char* argv[])
 
 	while (time <= params.simulation_time) {
 		msd.Simulate(time);
-		PrintOutputLine(fout, time, msd.GetDisp(), msd.GetVel());
+		PrintOutputLine(fout, time, msd.GetDisp(), msd.GetVel(), msd.GetRotorDisp(), msd.GetRotorVel(), msd.GetGenDisp(), msd.GetGenVel());
 
 		time += params.timestep;
 	}
@@ -56,7 +54,7 @@ int main(int argc, char* argv[])
 //---------------------------------------------------------
 SimulationParameters ParseCommandLineArgs(int argc, char** argv)
 {
-	const int n_params = 6;
+	const int n_params = 7;
 
 	SimulationParameters r;
 
@@ -65,7 +63,8 @@ SimulationParameters ParseCommandLineArgs(int argc, char** argv)
 		exit(1);
 	}
 
-	const char* parameter_names[6] = {
+	const char* parameter_names[7] = {
+		"added mass enabled",
 		"simulation time     ",
 		"timestep            ",
 		"mass                ",
@@ -79,24 +78,25 @@ SimulationParameters ParseCommandLineArgs(int argc, char** argv)
 	}
 
 	// Assumes the values are valid
-	r.simulation_time = strtof(argv[1], NULL);
-	r.timestep = strtof(argv[2], NULL);
-	r.mass = strtof(argv[3], NULL);
-	r.initial_disp = strtof(argv[4], NULL);
-	r.spring_coeff = strtof(argv[5], NULL);
-	r.damping_coeff = strtof(argv[6], NULL);
+	r.enable_added_mass = bool(atoi(argv[1]));
+	r.simulation_time = strtof(argv[2], NULL);
+	r.timestep = strtof(argv[3], NULL);
+	r.mass = strtof(argv[4], NULL);
+	r.initial_disp = strtof(argv[5], NULL);
+	r.spring_coeff = strtof(argv[6], NULL);
+	r.damping_coeff = strtof(argv[7], NULL);
 
 	return r;
 }
 
 void PrintHeader(std::ofstream& p_ofs)
 {
-	p_ofs << "Time\tDisp\tVel\n";
+	p_ofs << "Time\tDisp\tVel\tRotorDisp\tRotorVel\tGenDisp\tGenVel\n";
 }
 
-void PrintOutputLine(std::ofstream& p_ofs, double time, double disp, double vel)
+void PrintOutputLine(std::ofstream& p_ofs, double time, double disp, double vel, double rot_disp, double rot_vel, double gen_disp, double gen_vel)
 {
-	p_ofs << time << '\t' << disp << '\t' << vel << '\n';
+	p_ofs << time << '\t' << disp << '\t' << vel << '\t' << rot_disp << '\t' << rot_vel << '\t' << gen_disp << '\t' << gen_vel << '\n';
 }
 
 void PrintHelpMenu()
@@ -104,7 +104,7 @@ void PrintHelpMenu()
 	using namespace std;
 
 	cout << "Incorrect command line arguments!" << endl <<
-		"Correct input has " << 6 << " parameters:" << endl <<
-		"[Simulation time] [timestep] [mass] [displacement] [spring coefficient] [damping coefficient]" <<
+		"Correct input has " << 7 << " parameters:" << endl <<
+		"[Added mass enabled] [Simulation time] [timestep] [mass] [displacement] [spring coefficient] [damping coefficient]" <<
 		endl;
 }
