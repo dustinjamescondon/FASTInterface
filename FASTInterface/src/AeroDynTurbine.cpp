@@ -394,8 +394,9 @@ AeroDynTurbine::NacelleReactionLoads_Vec AeroDynTurbine::CalcOutputs_And_SolveIn
 	// Some inputs are more sensitive to perturbations, so perturb differently
 	// depending on the output. The acceleration inputs for AD are particularly sensitive.
 	SerializedVector perturb_vec;
-	perturb_vec.fill(100.0);
+	perturb_vec.fill(1000.0);
 	perturb_vec.segment(U_AD_HUB_ACC, 6).fill(0.00125);
+	double jac_scale_factor = 1000000.0; // Scale down the force/moments to be of similar magnitude to accelerations
 
 	/* Input vector layout:
 	-----------------------
@@ -431,9 +432,16 @@ AeroDynTurbine::NacelleReactionLoads_Vec AeroDynTurbine::CalcOutputs_And_SolveIn
 	*/
 
 	// Setup serialized vector of inputs
-	SerializedVector u;
+	SerializedVector u;      // collection of all inputs (scaled so that loads are similar magnitude to accelerations)
+	Vector<double, 6> u_dvr; // driver input
+	Vector<double, 6> u_ad;  // aerodyn inputs
+	Vector<double, 1> u_dt;  // drivetrain inputs
 	// Setup serialized vector of outputs
 	SerializedVector y;
+	Vector<double, 6> y_dvr;
+	Vector<double, 6> y_ad;
+	Vector<double, 1> y_dt;
+
 
 	// Update the nacelle reaction loads stored in this object. It derives it from AeroDyn and the controller.
 	CalcNacelleReactionLoads();
@@ -486,31 +494,23 @@ AeroDynTurbine::NacelleReactionLoads_Vec AeroDynTurbine::CalcOutputs_And_SolveIn
 		// (the controller isn't updated at all in this process because it's loosely coupled without the ability to take 
 		// temporary updates, but also because acclerations don't affect the generator torque)
 		for (int i = 0; i < 6; i++) {
-			// TEMP: Debugging by always having nacelle x moment be 0
-			if (i == 3) {
-				// Fill in the jacobian entry for the x moment of the nacelle to zero
-				SerializedVector zero;
-				zero.fill(0.0);
-				jacobian.col(3) = zero;
-			}
-			else {
-				SerializedVector u_perturb, y_perturb;
+			SerializedVector u_perturb, y_perturb;
 
-				// perturb the i'th input
-				u_perturb = u;
-				y_perturb = y; // TODO this is okay right? AeroDyn's outputs aren't going to be affected by perturbing Dvr's
-				u_perturb(i) += perturb_vec(i);
+			// perturb the i'th input
+			u_perturb = u;
+			y_perturb = y; // TODO this is okay right? AeroDyn's outputs aren't going to be affected by perturbing Dvr's
+			u_perturb(i) += perturb_vec(i);
 
-				// then calculate the corresponding output
-				CalcOutput_callback(u_perturb.data() + U_DVR_NAC_FORCE, u_perturb.data() + U_DVR_NAC_MOMENT,
-					y_perturb.data() + Y_DVR_NAC_ACC, y_perturb.data() + Y_DVR_NAC_ROTACC);
+			// then calculate the corresponding output
+			CalcOutput_callback(u_perturb.data() + U_DVR_NAC_FORCE, u_perturb.data() + U_DVR_NAC_MOMENT,
+				y_perturb.data() + Y_DVR_NAC_ACC, y_perturb.data() + Y_DVR_NAC_ROTACC);
 
-				SerializedVector u_perturb_residual = CalcResidual(y_perturb, u_perturb);
-				// Numerically calculate the partial derivative of wrt this input
-				SerializedVector residual_func_partial_u = (u_perturb_residual - u_residual) / perturb_vec(i);
-				// Add this entry into the jacobian as a column
-				jacobian.col(i) = residual_func_partial_u;
-			}
+			SerializedVector u_perturb_residual = CalcResidual(y_perturb, u_perturb);
+			// Numerically calculate the partial derivative of wrt this input
+			SerializedVector residual_func_partial_u = (u_perturb_residual - u_residual) / perturb_vec(i);
+			// Add this entry into the jacobian as a column
+			jacobian.col(i) = residual_func_partial_u;
+
 		}
 
 		// AD second

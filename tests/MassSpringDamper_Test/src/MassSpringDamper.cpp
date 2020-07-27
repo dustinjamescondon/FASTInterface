@@ -49,7 +49,7 @@ void MassSpringDamper::InitFASTInterface()
 
 	// AeroDyn last
 	// TODO the input file is non-standard right now
-	const char* ad_input_file = "..\\modules\\openfast\\reg_tests\\r-test\\glue-codes\\openfast\\5MW_OC4Semi_WSt_WavesWN\\NRELOffshrBsline5MW_OC3Hywind_AeroDyn15.dat";
+	const char* ad_input_file = "..\\modules\\openfast\\reg_tests\\r-test\\glue-codes\\openfast\\5MW_OC4Semi_WSt_WavesWN\\NRELOffshrBsline5MW_OC3Hywind_AeroDyn15_Water.dat";
 	const char* ad_output_file = "mass_spring_damper_test";
 	const double added_mass_coeff = 0.5; // TODO ^
 	const double hub_radius = 1.5;
