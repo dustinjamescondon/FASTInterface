@@ -35,7 +35,7 @@ void MassSpringDamper::InitFASTInterface()
 	const double stiffness = 867637000.0;
 	const double damping = 6215000.0;
 	const double gearbox_ratio = 97.0;
-	const double initial_rotor_speed = 3 * M_PI / 30;
+	const double initial_rotor_speed = 5 * M_PI / 30;
 	const int num_blades = 3;
 
 	//turb.InitDriveTrain(rotorMOI, genMOI, stiffness, damping, gearbox_ratio, initial_rotor_speed);

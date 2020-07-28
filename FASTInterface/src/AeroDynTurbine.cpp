@@ -388,7 +388,7 @@ AeroDynTurbine::NacelleReactionLoads_Vec AeroDynTurbine::CalcOutputs_And_DeriveI
 AeroDynTurbine::NacelleReactionLoads_Vec AeroDynTurbine::CalcOutputs_And_SolveInputs()
 {
 	// hard-code here for now
-	int solver_iterations = 2;
+	int solver_iterations = 1;
 	
 	// TODO initialize this somewhere in the constructor
 	// Some inputs are more sensitive to perturbations, so perturb differently
@@ -396,7 +396,6 @@ AeroDynTurbine::NacelleReactionLoads_Vec AeroDynTurbine::CalcOutputs_And_SolveIn
 	SerializedVector perturb_vec;
 	perturb_vec.fill(1000.0);
 	perturb_vec.segment(U_AD_HUB_ACC, 6).fill(0.00125);
-	double jac_scale_factor = 1000000.0; // Scale down the force/moments to be of similar magnitude to accelerations
 
 	/* Input vector layout:
 	-----------------------
@@ -561,9 +560,9 @@ AeroDynTurbine::NacelleReactionLoads_Vec AeroDynTurbine::CalcOutputs_And_SolveIn
 		//------------------------------------------------------
 		// Do one step of Newton-Raphson (actually Secant method)
 		//------------------------------------------------------
-		FullPivLU<Matrix<double, 13, 13>> lu = jacobian.fullPivLu();
+		//FullPivLU<Matrix<double, 13, 13>> lu = jacobian.fullPivLu();
 
-		SerializedVector u_delta = -lu.inverse() * u_residual;
+		SerializedVector u_delta = -jacobian.inverse() * u_residual;
 
 		u = u + u_delta;
 		
