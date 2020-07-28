@@ -49,8 +49,6 @@ public:
 		int numBlades,
 		double hubRadius,
 		double precone,
-		double fluidDensity,
-		double kinematicFluidVisc,
 		const Vector3d& nacellePos,
 		const Vector3d& nacelleEulerAngles,
 		const Vector3d& nacelleVel,
@@ -126,7 +124,9 @@ private:
 	NacelleReactionLoads_Vec CalcNacelleReactionLoads();
 
 	//---------------------
-	double time_curr, time_next;
+	/* Common stuff */
+	double time_curr, time_next; // times associated with AeroDyn and Drivetrain
+	double timestep; // the timestep for AeroDyn and Drivetrain
 	bool onTempUpdate;
 	bool useAddedMass;
 
@@ -142,6 +142,9 @@ private:
 	/* Controller stuff */
 	MasterController	      mcont;
 
-	/* Caller stuff */
+	/* Driver program stuff (ProteusDS) */
+	double dvr_time_curr, dvr_time_next; // times associated with the driver program (PDS)
+	// takes the inputs at dvr_time_
 	std::function<void(const double*, const double*, double*, double*)> CalcOutput_callback;
+
 };

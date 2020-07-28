@@ -35,9 +35,6 @@ int main(int argc, char* argv[])
 	// Simulation parameters
 	static const int NSteps = (int)(params.simTime / params.timestep);
 
-	static const double FluidDensity = 1.225;
-	static const double KinematicFluidVisc = 1.4639e-05;
-
 	//-------------------------
 	// Local variables
 	double time = 0;
@@ -96,8 +93,6 @@ int main(int argc, char* argv[])
 			params.numBlades,
 			params.hubRadius,
 			params.precone,
-			FluidDensity,
-			KinematicFluidVisc,
 			nacellePosition,
 			nacelleEulerAngles,
 			nacelleVel,

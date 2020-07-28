@@ -166,8 +166,6 @@ void AeroDynTurbine::InitAeroDyn(
 	int numBlades,
 	double hubRadius,
 	double precone,
-	double fluidDensity,
-	double kinematicFluidVisc,
 	const Vector3d& nacellePos,
 	const Vector3d& nacelleEulerAngles,
 	const Vector3d& nacelleVel,
@@ -196,8 +194,6 @@ void AeroDynTurbine::InitAeroDyn(
 		numBlades,
 		hubRadius,
 		precone,
-		fluidDensity,
-		kinematicFluidVisc,
 		useAddedMass,
 		coeffAddedMass,
 		hm.position,
@@ -373,7 +369,6 @@ AeroDynTurbine::NacelleReactionLoads_Vec AeroDynTurbine::CalcOutputs_And_DeriveI
 		nacelleMotion.orientation,
 		aerodyn.GetInput_HubOrient());
 	nacelleMoment(0) = mcont.GetGeneratorTorqueCommand();
-	// This ^ would be right if the moment vector were in the local body coordinate system, but it's in the global coordinate system
 
 	NacelleReactionLoads_Vec dvr_input;
 	dvr_input.force = nacelleForce;
@@ -392,7 +387,7 @@ AeroDynTurbine::NacelleReactionLoads_Vec AeroDynTurbine::CalcOutputs_And_SolveIn
 	
 	// TODO initialize this somewhere in the constructor
 	// Some inputs are more sensitive to perturbations, so perturb differently
-	// depending on the output. The acceleration inputs for AD are particularly sensitive.
+	// depending on the input. The acceleration inputs for AD are particularly sensitive.
 	SerializedVector perturb_vec;
 	perturb_vec.fill(1000.0);
 	perturb_vec.segment(U_AD_HUB_ACC, 6).fill(0.00125);
@@ -431,15 +426,9 @@ AeroDynTurbine::NacelleReactionLoads_Vec AeroDynTurbine::CalcOutputs_And_SolveIn
 	*/
 
 	// Setup serialized vector of inputs
-	SerializedVector u;      // collection of all inputs (scaled so that loads are similar magnitude to accelerations)
-	Vector<double, 6> u_dvr; // driver input
-	Vector<double, 6> u_ad;  // aerodyn inputs
-	Vector<double, 1> u_dt;  // drivetrain inputs
+	SerializedVector u; 
 	// Setup serialized vector of outputs
 	SerializedVector y;
-	Vector<double, 6> y_dvr;
-	Vector<double, 6> y_ad;
-	Vector<double, 1> y_dt;
 
 
 	// Update the nacelle reaction loads stored in this object. It derives it from AeroDyn and the controller.

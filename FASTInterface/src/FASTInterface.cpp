@@ -111,8 +111,6 @@ void FASTInterface::InitAeroDyn(
 	int numBlades,
 	double hubRadius,
 	double precone,
-	double fluidDensity,
-	double kinematicFluidVisc,
 	const double nacellePos[3],
 	const double nacelleEulerAngles[3],
 	const double nacelleVel[3],
@@ -128,7 +126,7 @@ void FASTInterface::InitAeroDyn(
 	Vector3d nacelleAngAcc_v(nacelleAngularAcc);
 
 	p_imp->InitAeroDyn(inputFilename, outputFilename, useAddedMass, coeffAddedMass, timestep, numBlades, hubRadius,
-		precone, fluidDensity, kinematicFluidVisc, nacellePos_v, nacelleEuler_v,
+		precone, nacellePos_v, nacelleEuler_v,
 		nacelleVel_v, nacelleAcc_v, nacelleAngVel_v, nacelleAngAcc_v);
 }
 

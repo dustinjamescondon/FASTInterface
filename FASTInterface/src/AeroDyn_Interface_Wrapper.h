@@ -66,8 +66,6 @@ public:
 		int numBlades,                         //
 		double hubRadius,                      //
 		double precone,                        // in radians
-		double fluidDensity,                   // kg/m^3
-		double kinematicFluidVisc,             // m^2/sec
 		bool useAddedMass,                     // have AeroDyn include added mass effects
 		double coeffAddedMass,                 // coefficient of added mass (only used when useAddedMass is true)
 		const Vector3d& hubPosition,	       // metres

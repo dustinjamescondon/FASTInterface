@@ -38,8 +38,6 @@ int main(int argc, char* argv[])
 	static const int NSteps = (int)(EndTime / dt);
 
 	static const double InflowSpeed = 10.0;    // in metres/sec
-	static const double FluidDensity = 1.225;
-	static const double KinematicFluidVisc = 1.4639e-05;
 	static const double InitialRotorSpeed = 10 * M_PI / 30; // Converts from RPM to rads/sec
 	static const double InitialPitch = 0.0;
 	static const double GearboxRatio = 97.0;				// From NREL's OC3 report
@@ -122,8 +120,6 @@ int main(int argc, char* argv[])
 			numBlades,
 			hubRadius,
 			precone,
-			FluidDensity, 
-			KinematicFluidVisc,
 			nacellePosition,
 			nacelleEulerAngles,
 			nacelleVel,

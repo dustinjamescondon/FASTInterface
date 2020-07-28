@@ -66,7 +66,7 @@ void MassSpringDamper::InitFASTInterface()
 
 
 	turb.InitAeroDyn(ad_input_file, ad_output_file, enable_added_mass, added_mass_coeff, timestep, num_blades,
-		hub_radius, precone, fluid_density, kinematic_fluid_visc, nacelle_pos, nacelle_euler_angles, nacelle_vel,
+		hub_radius, precone, nacelle_pos, nacelle_euler_angles, nacelle_vel,
 		nacelle_acc, nacelle_rotvel, nacelle_rotacc);
 
 	// Set what the constant inflows should be 

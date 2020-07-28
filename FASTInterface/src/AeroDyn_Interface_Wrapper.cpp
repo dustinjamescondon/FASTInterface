@@ -8,7 +8,7 @@
 // declare the existence of the FORTRAN subroutines which are in the DLL
 extern "C" {
     void INTERFACE_INITAERODYN(const char* inputFilename, int* inputFile_len, const char* outputFilename, int* outputFile_len, double* timestep, bool* useAddedMass, 
-		double* coeffAddedMass, double* fluidDensity, double* kinematicFluidVisc, double* hubPos, double* hubOri, double* hubVel, double* hubAcc, double* hubRotVel, 
+		double* coeffAddedMass, double* hubPos, double* hubOri, double* hubVel, double* hubAcc, double* hubRotVel, 
 		double* hubRotAcc, int*nBlades, double* bladePitch, double* hubRadius, double* precone, int* nNodes_out, double* turbDiameter_out, 
 		void** simulationInstance_out, int* errStat, char* errMsg);
 
@@ -98,8 +98,6 @@ void AeroDyn_Interface_Wrapper::InitAerodyn(
 	int numBlades,
 	double hubRadius,
 	double precone,
-    double fluidDensity,
-    double kinematicFluidVisc,
     bool useAddedMass,
 	double coeffAddedMass,
     const Vector3d& hubPosition,
@@ -132,8 +130,8 @@ void AeroDyn_Interface_Wrapper::InitAerodyn(
 	nBlades = numBlades;
 
     // call the initialization subroutine in the FORTRAN DLL
-    INTERFACE_INITAERODYN(inputFilename, &inputFile_len, outputFilename, &outputFile_len, &timestep, &useAddedMass, &coeffAddedMass, &fluidDensity,
-		&kinematicFluidVisc, hubPosition_trans.data(), hubOrientation_trans.data(), hubVel_trans.data(), hubAcc_trans.data(),
+    INTERFACE_INITAERODYN(inputFilename, &inputFile_len, outputFilename, &outputFile_len, &timestep, &useAddedMass, &coeffAddedMass,
+		hubPosition_trans.data(), hubOrientation_trans.data(), hubVel_trans.data(), hubAcc_trans.data(),
 		hubAngVel_trans.data(), hubAngAcc_trans.data(), &numBlades, &bladePitch, &hubRadius, &precone, &nNodes, &turbineDiameter,
 		&simulationInstance, &errStat, errMsg);
 

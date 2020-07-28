@@ -120,8 +120,6 @@ public:
 		int numBlades,
 		double hubRadius,
 		double precone,
-		double fluidDensity,
-		double kinematicFluidVisc,
 		const double nacellePos[3],
 		const double nacelleEulerAngles[3],
 		const double nacelleVel[3],
