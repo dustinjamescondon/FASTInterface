@@ -8,7 +8,7 @@ public:
 
 	void InitFASTInterface();
 
-	// Bring the simulation's states up to time_next
+	// Bring the simulation's states up to global_time_next
 	void Simulate(double time_next);
 
 	double GetDisp() const { return displacement; }

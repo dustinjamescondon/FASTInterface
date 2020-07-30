@@ -7,7 +7,7 @@ MassSpringDamper::MassSpringDamper(bool p_enable_added_mass, double p_timestep, 
 {
 	enable_added_mass = p_enable_added_mass;
 	timestep = p_timestep;
-	time_curr = 0.0;
+	time_curr = 0.01;
 	mass = p_mass;
 	displacement = p_initial_disp;
 	damping_coeff = p_damping_coeff;
@@ -64,7 +64,6 @@ void MassSpringDamper::InitFASTInterface()
 	const double nacelle_rotvel[3] = { 0.0,0.0,0.0 };
 	const double nacelle_rotacc[3] = { 0.0,0.0,0.0 };
 
-
 	turb.InitAeroDyn(ad_input_file, ad_output_file, enable_added_mass, added_mass_coeff, timestep, num_blades,
 		hub_radius, precone, nacelle_pos, nacelle_euler_angles, nacelle_vel,
 		nacelle_acc, nacelle_rotvel, nacelle_rotacc);
@@ -105,7 +104,7 @@ void MassSpringDamper::Simulate(double time_next)
 	turb.SetNacelleStates(time_curr, nacelle_pos, nacelle_euler_angles, nacelle_vel, nacelle_acc, nacelle_rotvel, nacelle_rotacc, false);
 	turb.SetInflows(constant_inflow_vel, constant_inflow_acc);
 
-	// Advance its states to time_curr. Now this could either return the loads or the acceleration of the nacelle.
+	// Advance its states to global_time_curr. Now this could either return the loads or the acceleration of the nacelle.
 	// Doing the former means we have to calculate the acceleration, so the latter might be more straight-forward
 	auto output = turb.AdvanceStates();
 	acceleration = (spring_force + output.force[0]) / mass; // (spring force + aerodynamic force) / mass
@@ -114,11 +113,11 @@ void MassSpringDamper::Simulate(double time_next)
 	double dt = time_next - time_curr;
 	displacement += velocity * dt;
 	velocity += acceleration * dt;
-	/* can't really set the acceleration to what it should be at time_next, because the 
-	   input solver can only do that. So just leave it as the acceleration at time_curr,
+	/* can't really set the acceleration to what it should be at global_time_next, because the 
+	   input solver can only do that. So just leave it as the acceleration at global_time_curr,
 	   which will be the initial guess for the solver next time step. */
 	
-	// But we can know the spring force at time_next, so set it now
+	// But we can know the spring force at global_time_next, so set it now
 	spring_force = CalcSpringForce();
 	
 	time_curr = time_next;
@@ -149,10 +148,10 @@ void MassSpringDamper::CalcOutput_Callback(const double* nacelle_force, const do
 	double tmp_spring_force = CalcSpringForce();
 	double zero[3] = { 0.0, 0.0, 0.0 };
 
-	// Set nacelle rotation acc (always zero)
+	// Set nacelle rotation acceleration (always zero)
 	memcpy(nacelle_rotacc, zero, 3 * sizeof(double));
 
-	// Set nacelle acc (only setting the x component)
+	// Set nacelle acceleration (only setting the x component)
 	nacelle_acc[0] = (tmp_spring_force + nacelle_force[0]) / mass;
 	nacelle_acc[1] = 0.0;
 	nacelle_acc[2] = 0.0;

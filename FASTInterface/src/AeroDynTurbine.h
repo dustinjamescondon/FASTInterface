@@ -80,25 +80,28 @@ public:
 	// unlike the UpdateStates functions of AeroDyn and the drivetrain
 	NacelleReactionLoads_Vec AdvanceStates();
 
-	void GetBladeNodePositions(std::vector<double>& nodePositions) { aerodyn.GetBladeNodePositions(nodePositions); }
-	AeroDyn_Interface_Wrapper::HubReactionLoads GetHubReactionLoads() const { return aerodyn.GetHubReactionLoads(); }
-	NacelleReactionLoads_Vec GetNacelleReactionLoads() const { return nacelleReactionLoads; }
-	Vector3d GetNacelleReactionForce() const { return nacelleReactionLoads.force; }
-	Vector3d GetNacelleReactionMoment() const { return nacelleReactionLoads.moment; }
-	double GetPower() const { return nacelleReactionLoads.power; }
-	double GetTSR() const { return nacelleReactionLoads.tsr; }
-	int GetNumNodes() const { return aerodyn.GetNumNodes(); }
-	int GetNumBlades() const { return aerodyn.GetNumBlades(); }
-	double GetTurbineDiameter() const { return aerodyn.GetTurbineDiameter();  }
-	double GetBladePitch() const { return aerodyn.GetBladePitch(); }
-	double GetGenTorque() const { return mcont.GetGeneratorTorqueCommand(); }
-	double GetGenSpeed() const { return drivetrain.GetGenShaftSpeed(); }
-	double GetRotorSpeed() const { return drivetrain.GetRotorShaftSpeed(); }
-	DriveTrain::States GetRotorShaftState() const { return drivetrain.GetRotorStates(); }
-	DriveTrain::States GetGenShaftState() const { return drivetrain.GetGenStates(); }
+	inline void GetBladeNodePositions(std::vector<double>& nodePositions) { aerodyn.GetBladeNodePositions(nodePositions); }
+	inline AeroDyn_Interface_Wrapper::HubReactionLoads GetHubReactionLoads() const { return aerodyn.GetHubReactionLoads(); }
+	inline NacelleReactionLoads_Vec GetNacelleReactionLoads() const { return nacelleReactionLoads_at_global_time_next; }
+	inline Vector3d GetNacelleReactionForce() const { return nacelleReactionLoads_at_global_time_next.force; }
+	inline Vector3d GetNacelleReactionMoment() const { return nacelleReactionLoads_at_global_time_next.moment; }
+	inline double GetPower() const { return nacelleReactionLoads_at_global_time_next.power; }
+	inline double GetTSR() const { return nacelleReactionLoads_at_global_time_next.tsr; }
+	inline int GetNumNodes() const { return aerodyn.GetNumNodes(); }
+	inline int GetNumBlades() const { return aerodyn.GetNumBlades(); }
+	inline double GetTurbineDiameter() const { return aerodyn.GetTurbineDiameter();  }
+	inline double GetBladePitch() const { return aerodyn.GetBladePitch(); }
+	inline double GetGenTorque() const { return mcont.GetGeneratorTorqueCommand(); }
+	inline double GetGenSpeed() const { return drivetrain.GetGenShaftSpeed(); }
+	inline double GetRotorSpeed() const { return drivetrain.GetRotorShaftSpeed(); }
+	inline DriveTrain::States GetRotorShaftState() const { return drivetrain.GetRotorStates(); }
+	inline DriveTrain::States GetGenShaftState() const { return drivetrain.GetGenStates(); }
 
-protected:
 private:
+	struct NacelleAccelerations {
+		Vector3d acceleration, rotation_acceleration;
+	};
+
 	typedef Eigen::Vector<double,13> SerializedVector;
 
 	enum { Y_DVR_NAC_ACC = 0, Y_DVR_NAC_ROTACC = 3, Y_AD_HUB_FORCE = 6, Y_AD_HUB_MOMENT = 9, Y_DT_ROTOR_ACC = 12 };    // outputs
@@ -106,6 +109,10 @@ private:
 
 	void SaveCurrentStates();
 	void RestoreSavedStates();
+
+	void SetInputs_Nacelle_At_Global_Time_Next(const NacelleMotion& nm);
+
+	NacelleReactionLoads_Vec AdvanceStates_By_One_Global_Timestep();
 
 	// Parameters are the initial input guesses
 	NacelleReactionLoads_Vec CalcOutputs_And_SolveInputs();
@@ -118,23 +125,27 @@ private:
 	HubAcc CalculateHubAcc(const Vector3d& nacAcc, const Vector3d& nacRotAcc, const Matrix3d& nacOri, double rotorShaftAcc) const;
 	Matrix3d CalculateNacelleOrientation(const Vector3d& nacelleEulerAngles) const;
 
+	NacelleMotion InterpolateNacelleMotion_AtNextGlobalTime() const;
 	Vector3d TransformHubToNacelle(const Vector3d& v, const Matrix3d& nacelleOrienation, const Matrix3d& hubOrienation) const;
-	Matrix3d InterpExtrapOrientation(double time, const Matrix3d& orient_1, double time_1, const Matrix3d& orient_2, double time_2) const;
+	Matrix3d InterpOrientation(double time, const Matrix3d& orient_1, double time_1, const Matrix3d& orient_2, double time_2) const;
+	Matrix3d InterpOrientation_WithoutChecks(double time, const Matrix3d& orient_1, double time_1, const Matrix3d& orient_2, double time_2) const;
 	Vector3d InterpExtrapVector(double time, const Vector3d& vect_1, double time_1, const Vector3d& vect_2, double time_2) const;
+	Vector3d InterpExtrapVector_WithoutChecks(double time, const Vector3d& vect_1, double time_1, const Vector3d& vect_2, double time_2) const;
+
 	NacelleReactionLoads_Vec CalcNacelleReactionLoads();
 
 	//---------------------
 	/* Common stuff */
-	double time_curr, time_next; // times associated with AeroDyn and Drivetrain
-	double timestep; // the timestep for AeroDyn and Drivetrain
+	double global_time_curr, global_time_curr_saved; // the AD and DT's previous time
+	double global_time_next, global_time_next_saved; // the AD and DT's most recent time
+	double global_timestep; // the timestep for AeroDyn and Drivetrain
 	bool onTempUpdate;
 	bool useAddedMass;
+	NacelleReactionLoads_Vec nacelleReactionLoads_at_global_time_next, nacelleReactionLoads_at_global_time_next_saved;
+	NacelleReactionLoads_Vec nacelleReactionLoads_at_global_time_curr, nacelleReactionLoads_at_global_time_curr_saved;
 
 	/* AeroDyn stuff */
 	AeroDyn_Interface_Wrapper aerodyn;
-	AeroDynTurbine::NacelleMotion nacelleMotion;
-	NacelleReactionLoads_Vec nacelleReactionLoads; // Stores the most recent load results
-	Vector3d nacelleForce, nacelleMoment;
 
 	/* Drivetrain stuff */
 	DriveTrain				drivetrain;
@@ -143,8 +154,16 @@ private:
 	MasterController	      mcont;
 
 	/* Driver program stuff (ProteusDS) */
-	double dvr_time_curr, dvr_time_next; // times associated with the driver program (PDS)
-	// takes the inputs at dvr_time_
-	std::function<void(const double*, const double*, double*, double*)> CalcOutput_callback;
+	NacelleMotion nacelleMotion_at_global_time_next, nacelleMotion_at_global_time_next_saved;
+	NacelleMotion nacelleMotion_at_global_time_curr, nacelleMotion_at_global_time_curr_saved;
+	NacelleMotion nacelleMotion_at_dvr_time_next, nacelleMotion_at_dvr_time_next_saved;
+	NacelleAccelerations nacAccels_at_dvr_time_curr, nacAccels_at_dvr_time_curr_saved; // these states exist at dvr_time_curr
+	NacelleAccelerations nacAccels_at_dvr_time_next, nacAccels_at_dvr_time_next_saved; // save the previous result for interpolation
 
+	double dvr_time_curr, dvr_time_curr_saved;
+	double dvr_time_next, dvr_time_next_saved;
+	// assumes the inputs (the first two params) exists at dvr_time_next, and returns its output (next two params) at dvr_time_next
+	std::function<void(const double*, const double*, double*, double*)> CalcOutput_callback;
+	// This is a wrapper around CalcOutput_callback with small extra functionality: It interps/extraps the outputs to the appropriate times
+	NacelleAccelerations Dvr_CalcOutput(const Vector3d& nacelle_force, const Vector3d& nacelle_moment);
 };

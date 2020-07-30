@@ -152,7 +152,7 @@ int main(int argc, char* argv[])
 		// Set the inflows at those positions
 		turb.SetInflows(inflowVel, inflowAcc);
 
-		// And update the states to time_next, returning the nacelle reaction forces
+		// And update the states to global_time_next, returning the nacelle reaction forces
 		rf = turb.AdvanceStates();
 
 		time += params.timestep;

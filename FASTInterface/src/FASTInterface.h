@@ -27,7 +27,7 @@ Usage during simulation:
 	1) SetNacelleMotion(double time_act, ..., bool isRealStep)
 	2) GetBladeNodePositions(...)
 	3) SetInflowVelocities(...)
-	4) AdvanceStates()
+	4) AdvanceStates_By_One_Global_Timestep()
 
 	If this process was done with isTempUpdate == false, then the turbine's states_pred will be updated to "time_act".
 	However, if isTempUpdate == true, then the turbine's states remain at the previous time_act.

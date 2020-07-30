@@ -143,7 +143,7 @@ double CSVSpecFunction::GetMinSpecX() const
 // We leverage the fact that the rotational velocity isn't going to change drastically
 // from time_act-step to time_act-step. This means the current rotational velocity is close
 // to the previous one; so we start our search from there. The upper bound
-// for the complexity of this function (after the initial call) is therefore some constant, which depends on the timestep
+// for the complexity of this function (after the initial call) is therefore some constant, which depends on the global_timestep
 // length and the type of inflows the turbine is experiencing. 
 double CSVSpecFunction::F(double x) const
 {
