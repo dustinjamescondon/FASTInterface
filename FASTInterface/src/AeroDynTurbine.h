@@ -127,10 +127,6 @@ private:
 
 	NacelleMotion InterpolateNacelleMotion_AtNextGlobalTime() const;
 	Vector3d TransformHubToNacelle(const Vector3d& v, const Matrix3d& nacelleOrienation, const Matrix3d& hubOrienation) const;
-	Matrix3d InterpOrientation(double time, const Matrix3d& orient_1, double time_1, const Matrix3d& orient_2, double time_2) const;
-	Matrix3d InterpOrientation_WithoutChecks(double time, const Matrix3d& orient_1, double time_1, const Matrix3d& orient_2, double time_2) const;
-	Vector3d InterpExtrapVector(double time, const Vector3d& vect_1, double time_1, const Vector3d& vect_2, double time_2) const;
-	Vector3d InterpExtrapVector_WithoutChecks(double time, const Vector3d& vect_1, double time_1, const Vector3d& vect_2, double time_2) const;
 
 	NacelleReactionLoads_Vec CalcNacelleReactionLoads();
 

@@ -30,6 +30,7 @@
     <ClCompile Include="src\LowPassFilter.cpp" />
     <ClCompile Include="src\MasterController.cpp" />
     <ClCompile Include="src\PitchController.cpp" />
+    <ClCompile Include="src\Utilities.cpp" />
   </ItemGroup>
   <ItemGroup>
     <Library Include="..\modules\openfast\build\bin\AeroDyn_Interface_Win32_Debug_Double.lib">
@@ -54,6 +55,7 @@
     <ClInclude Include="src\LowPassFilter.h" />
     <ClInclude Include="src\MasterController.h" />
     <ClInclude Include="src\PitchController.h" />
+    <ClInclude Include="src\Utilities.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="FetchDLLs.bat" />

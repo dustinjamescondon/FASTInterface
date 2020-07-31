@@ -32,6 +32,9 @@
     <ClCompile Include="src\AeroDynTurbine.cpp">
       <Filter>AeroDynTurbine</Filter>
     </ClCompile>
+    <ClCompile Include="src\Utilities.cpp">
+      <Filter>Utilities</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\DriveTrain.h">
@@ -65,6 +68,9 @@
     <ClInclude Include="src\FASTInterfaceExceptions.h" />
     <ClInclude Include="src\AeroDynTurbine.h">
       <Filter>AeroDynTurbine</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Utilities.h">
+      <Filter>Utilities</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -111,6 +117,9 @@
     </Filter>
     <Filter Include="AeroDynTurbine">
       <UniqueIdentifier>{65df7edf-d8db-4b21-be48-eea11793f0a1}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Utilities">
+      <UniqueIdentifier>{c4962f2f-4da0-4d00-b7b2-c21b2aabbb00}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
