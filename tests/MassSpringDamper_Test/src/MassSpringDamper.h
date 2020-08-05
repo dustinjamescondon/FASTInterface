@@ -4,7 +4,8 @@
 class MassSpringDamper
 {
 public:
-	MassSpringDamper(bool enable_added_mass, double timestep, double mass, double stiffness_coeff, double damping_coeff, double initial_disp);
+	MassSpringDamper(bool enable_added_mass, double timestep, double mass, double stiffness_coeff, double damping_coeff, double initial_disp,
+		double rpm, double inflow_speed, std::string output_filename);
 
 	void InitFASTInterface();
 
@@ -24,6 +25,8 @@ private:
 	// Calculates the accelerations at current time given the nacelle loads
 	void CalcOutput_Callback(const double* in_nacelle_force, const double* in_nacelle_moment, double* out_nacelle_acc, double* out_nacelle_rotacc);
 	double CalcSpringForce() const;
+	double CalcSpringForce(double displacement, double velocity) const;
+
 
 	FASTInterface  turb;
 
@@ -36,6 +39,8 @@ private:
 	double mass;
 	double time_curr;
 	double timestep;
+	double rpm;
+	std::string output_filename;
 
 	double spring_force;
 

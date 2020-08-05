@@ -14,6 +14,9 @@ struct SimulationParameters
 	float initial_disp;
 	float spring_coeff;
 	float damping_coeff;
+	float rpm;
+	float flow_speed;
+	std::string output_filename;
 };
 
 //---------------------------------------------------------
@@ -31,10 +34,12 @@ int main(int argc, char* argv[])
 
 	double time = 0.0;
 	
-	MassSpringDamper msd(params.enable_added_mass, params.timestep, params.mass, params.spring_coeff, params.damping_coeff, params.initial_disp);
+	MassSpringDamper msd(params.enable_added_mass, params.timestep, params.mass, params.spring_coeff, params.damping_coeff, params.initial_disp,
+		params.rpm, params.flow_speed, params.output_filename);
 
 	// Open an output stream to the output file
-	std::ofstream fout("msd_timeseries.out");
+	std::string full_outputfilename = std::string(params.output_filename) + ".out";
+	std::ofstream fout(full_outputfilename);
 	PrintHeader(fout);
 
 	while (time <= params.simulation_time) {
@@ -54,7 +59,7 @@ int main(int argc, char* argv[])
 //---------------------------------------------------------
 SimulationParameters ParseCommandLineArgs(int argc, char** argv)
 {
-	const int n_params = 7;
+	const int n_params = 10;
 
 	SimulationParameters r;
 
@@ -63,14 +68,17 @@ SimulationParameters ParseCommandLineArgs(int argc, char** argv)
 		exit(1);
 	}
 
-	const char* parameter_names[7] = {
-		"added mass enabled",
+	const char* parameter_names[n_params] = {
+		"added mass enabled  ",
 		"simulation time     ",
 		"timestep            ",
 		"mass                ",
 		"initial displacement",
 		"spring coefficient  ",
-		"damping coefficient "
+		"damping coefficient ",
+		"rpm                 ",
+		"inflow speed        ",
+		"output filename     "
 	};
 
 	for (int i = 1; i < n_params + 1; i++) {
@@ -85,6 +93,9 @@ SimulationParameters ParseCommandLineArgs(int argc, char** argv)
 	r.initial_disp = strtof(argv[5], NULL);
 	r.spring_coeff = strtof(argv[6], NULL);
 	r.damping_coeff = strtof(argv[7], NULL);
+	r.rpm = strtof(argv[8], NULL);
+	r.flow_speed= strtof(argv[9], NULL);
+	r.output_filename = argv[10];
 
 	return r;
 }
@@ -104,7 +115,7 @@ void PrintHelpMenu()
 	using namespace std;
 
 	cout << "Incorrect command line arguments!" << endl <<
-		"Correct input has " << 7 << " parameters:" << endl <<
-		"[Added mass enabled] [Simulation time] [timestep] [mass] [displacement] [spring coefficient] [damping coefficient]" <<
+		"Correct input has " << 10 << " parameters:" << endl <<
+		"[Added mass enabled] [Simulation time] [timestep] [mass] [displacement] [spring coefficient] [damping coefficient] [rpm] [inflow speed]" <<
 		endl;
 }

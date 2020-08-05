@@ -64,8 +64,7 @@ public:
 		double power;
 	};
 
-	// TODO think of a better name
-	struct PDSAccOutputs {
+	struct NacelleAccelerations {
 		double nacelleAcc[3];
 		double nacelleRotationAcc[3];
 	};
@@ -148,6 +147,14 @@ public:
 
 	// Returns the moment of the nacelle
 	DECLDIR void GetNacelleMoment(double[3]) const;
+
+	// When using added mass, this returns the solved-for nacelle linear acceleration;
+	// when not using added mass, this just returns the linear acceleration passed to SetNacelleStates(...)
+	DECLDIR void GetNacelleAcc(double[3]) const;
+
+	// When using added mass, this returns the solved-for nacelle angular acceleration
+	// when not using added mass, this just returns the angular acceleration passed to SetNacelleStates(...)
+	DECLDIR void GetNacelleAngularAcc(double[3]) const;
 
 	// Returns the tip speed ratio
 	DECLDIR double GetTSR() const;

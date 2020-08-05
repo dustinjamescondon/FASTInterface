@@ -233,7 +233,7 @@ void AeroDynTurbine::SetInputs_Nacelle_At_Global_Time_Next(const NacelleMotion& 
 	double bladePitch = mcont.GetBladePitchCommand();
 	drivetrain.SetInputs(global_time_next, aerodynamicTorque, genTorque);
 
-	// Note: drivetrain.AdvanceInputWindow() nor drivetrain.CopyStates_Pred_to_Act() is called, so the results of AdvanceStates_By_One_Global_Timestep here
+	// Note: drivetrain.AdvanceInputWindow() nor drivetrain.CopyStates_Pred_to_Act() is called, so the results of UpdateStates here
 	// are predicted (or temporary)
 	drivetrain.UpdateStates();
 	auto drivetrain_states = drivetrain.CalcOutput(); // predicted drivetrain states at "global_time_next"
@@ -274,7 +274,12 @@ AeroDynTurbine::NacelleReactionLoads_Vec AeroDynTurbine::AdvanceStates()
 	nacAccels_at_dvr_time_curr = nacAccels_at_dvr_time_next;
 	dvr_time_curr = dvr_time_next;
 
-	return nacelleReactionLoads_at_global_time_next;
+	auto result = nacelleReactionLoads_at_global_time_next;
+
+	if(onTempUpdate)
+		RestoreSavedStates();
+
+	return result;
 }
 
 AeroDynTurbine::NacelleMotion AeroDynTurbine::InterpolateNacelleMotion_AtNextGlobalTime() const
@@ -325,10 +330,6 @@ AeroDynTurbine::NacelleReactionLoads_Vec AeroDynTurbine::AdvanceStates_By_One_Gl
 	// Copy the predicted states (what the predictor-corrector process has landed on) to the actual states
 	aerodyn.CopyStates_Pred_to_Curr();
 	drivetrain.CopyStates_Pred_to_Curr();
-
-	// TODO eventually remove this along with the output code in AeroDyn because PDS should be in charge of making output files
-	// (but right now its good for debugging)
-	aerodyn.PrintOutputLine();
 	
 	aerodyn.Advance_InputWindow();
 	drivetrain.AdvanceInputWindow();
@@ -336,6 +337,9 @@ AeroDynTurbine::NacelleReactionLoads_Vec AeroDynTurbine::AdvanceStates_By_One_Gl
 	// If this isn't a temporary update, then update the controller too
 	if (!onTempUpdate) {
 		mcont.UpdateController(global_time_next, drivetrain.GetGenShaftSpeed(), aerodyn.GetBladePitch());
+		// TODO eventually remove this along with the output code in AeroDyn because PDS should be in charge of making output files
+		// (but right now its good for debugging)
+		aerodyn.PrintOutputLine();
 	}
 
 	// Overwrite the nacelle x moment to be the generator torque
@@ -455,7 +459,7 @@ AeroDynTurbine::NacelleReactionLoads_Vec AeroDynTurbine::CalcOutputs_And_SolveIn
 		//------------------------------------------------------
 		// Calculate the outputs
 		//------------------------------------------------------
-		// calculate the outputs from Dvr and pack into output vector
+		// calculate the outputs from Dvr
 		NacelleAccelerations dvr_output = Dvr_CalcOutput(u.segment(U_DVR_NAC_FORCE, 3), u.segment(U_DVR_NAC_MOMENT, 3));
 		//  and pack into the output vector
 		y.segment(Y_DVR_NAC_ACC, 3) = dvr_output.acceleration;
@@ -585,7 +589,6 @@ AeroDynTurbine::NacelleReactionLoads_Vec AeroDynTurbine::CalcOutputs_And_SolveIn
 	// Just calc this here for debug purposes to see if it's finding the zeros
 	SerializedVector u_residual_check = CalcResidual(y, u);
 
-	// TODO, still not sure what is the right thing to return from this function
 	NacelleReactionLoads_Vec result;
 	result.force = u.segment(U_DVR_NAC_FORCE,3);
 	result.moment = u.segment(U_DVR_NAC_MOMENT,3);
@@ -665,9 +668,9 @@ AeroDynTurbine::NacelleAccelerations AeroDynTurbine::Dvr_CalcOutput(const Vector
 	// Interpolate the outputs at global_time_next (the outputs are at dvr_time_next)
 	NacelleAccelerations result;
 	result.acceleration = InterpExtrapVector(global_time_next, nacAccels_at_dvr_time_curr.acceleration, dvr_time_curr, 
-		nacelleMotion_at_global_time_next.acceleration, dvr_time_next);
+		nacAccels_at_dvr_time_next.acceleration, dvr_time_next);
 	result.rotation_acceleration = InterpExtrapVector(global_time_next, nacAccels_at_dvr_time_curr.rotation_acceleration, dvr_time_curr, 
-		nacelleMotion_at_global_time_next.angularAcc, dvr_time_next);
+		nacAccels_at_dvr_time_next.rotation_acceleration, dvr_time_next);
 
 	return result;
 }

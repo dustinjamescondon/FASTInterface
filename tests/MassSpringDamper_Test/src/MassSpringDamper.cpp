@@ -2,16 +2,21 @@
 #define _USE_MATH_DEFINES
 #include <math.h>
 #include <functional>
+#include <Eigen/Core>
 
-MassSpringDamper::MassSpringDamper(bool p_enable_added_mass, double p_timestep, double p_mass, double p_stiffness_coeff, double p_damping_coeff, double p_initial_disp)
+MassSpringDamper::MassSpringDamper(bool p_enable_added_mass, double p_timestep, double p_mass, double p_stiffness_coeff, double p_damping_coeff, 
+	double p_initial_disp, double p_rpm, double p_inflow_speed, std::string p_output_filename)
 {
 	enable_added_mass = p_enable_added_mass;
 	timestep = p_timestep;
-	time_curr = 0.01;
+	time_curr = 0.0;
 	mass = p_mass;
 	displacement = p_initial_disp;
 	damping_coeff = p_damping_coeff;
 	stiffness_coeff = p_stiffness_coeff;
+	rpm = p_rpm;
+	inflow_speed = p_inflow_speed;
+	output_filename = p_output_filename;
 
 	spring_force = CalcSpringForce();
 	acceleration = CalcOutput(0.0);
@@ -35,7 +40,7 @@ void MassSpringDamper::InitFASTInterface()
 	const double stiffness = 867637000.0;
 	const double damping = 6215000.0;
 	const double gearbox_ratio = 97.0;
-	const double initial_rotor_speed = 5 * M_PI / 30;
+	const double initial_rotor_speed = rpm * M_PI / 30;
 	const int num_blades = 3;
 
 	//turb.InitDriveTrain(rotorMOI, genMOI, stiffness, damping, gearbox_ratio, initial_rotor_speed);
@@ -50,13 +55,12 @@ void MassSpringDamper::InitFASTInterface()
 	// AeroDyn last
 	// TODO the input file is non-standard right now
 	const char* ad_input_file = "..\\modules\\openfast\\reg_tests\\r-test\\glue-codes\\openfast\\5MW_OC4Semi_WSt_WavesWN\\NRELOffshrBsline5MW_OC3Hywind_AeroDyn15_Water.dat";
-	const char* ad_output_file = "mass_spring_damper_test";
-	const double added_mass_coeff = 0.5; // TODO ^
+	const char* ad_output_file = output_filename.c_str();
+	const double added_mass_coeff = 1.0; // TODO ^
 	const double hub_radius = 1.5;
 	const double precone = 0.0;
 	const double fluid_density = 1.225;
 	const double kinematic_fluid_visc = 1.4639e-05;
-	const double inflow_speed = 1.0;
 	const double nacelle_pos[3] = { displacement, 0.0, 0.0 };
 	const double nacelle_euler_angles[3] = { 0.0, 0.0, 0.0 };
 	const double nacelle_vel[3] = { 0.0,0.0,0.0 };
@@ -83,43 +87,108 @@ void MassSpringDamper::InitFASTInterface()
 
 	// Set the inflows in AeroDyn
 	turb.InitInflows(constant_inflow_vel, constant_inflow_acc);
+
+	double tb_output[3];
+	turb.GetNacelleForce(tb_output);
+	acceleration = (spring_force + tb_output[0]) / mass; // (spring force + aerodynamic force) / mass
+
 }
 
 /* This version doesn't need the temporary update functionality because it's just using the Euler integration method */
 void MassSpringDamper::Simulate(double time_next)
 {
+	using namespace Eigen;
+
+	double dt = time_next - time_curr;
+
 	//-----------------------------------------------------------------------
 	// First, get forces at current simulation time by updating FASTInterface
 	//.......................................................................
 
-	// Figure out the nacelle input information and put into 3 component arrays
-	double nacelle_pos[3] = { displacement, 0.0, 0.0 };
-	double nacelle_euler_angles[3] = { 0.0, 0.0, 0.0 };
-	double nacelle_vel[3] = { velocity, 0.0, 0.0 };
-	double nacelle_rotvel[3] = { 0.0, 0.0, 0.0 };
-	double nacelle_acc[3] = { acceleration, 0.0, 0.0 };
-	double nacelle_rotacc[3] = { 0.0, 0.0, 0.0 };
+	// Q: do we assume the acceleration is aleady set at time_curr?
+	// A: yes
 
-	// Send them to FASTInterface
-	turb.SetNacelleStates(time_curr, nacelle_pos, nacelle_euler_angles, nacelle_vel, nacelle_acc, nacelle_rotvel, nacelle_rotacc, false);
+	Vector2d x_curr;
+	x_curr(0) = displacement;
+	x_curr(1) = velocity;
+
+	Vector2d dx_curr;
+	dx_curr(0) = velocity,
+	dx_curr(1) = acceleration;
+
+	//-----------------------------------------------------------------------
+	// Perform first step of Huen's method
+	//.......................................................................
+	Vector2d x_tilde_next = x_curr + dt * dx_curr;
+
+	displacement = x_tilde_next(0);
+	velocity = x_tilde_next(1);
+	spring_force = CalcSpringForce();
+
+	// Calculate dx_tilde at time_next
+	double nacelle_disp[3] = { x_tilde_next(0), 0.0, 0.0 };
+	double nacelle_vel[3] = { x_tilde_next(1), 0.0, 0.0 };
+	double nacelle_acc[3] = { dx_curr(1), 0.0, 0.0 }; // Just use prev acceleration as guess (this changes once the input solver is called)
+	double nacelle_Euler_angles[3] = { 0.0, 0.0, 0.0 };
+	double nacelle_angular_vel[3] = { 0.0, 0.0, 0.0 };
+	double nacelle_angular_acc[3] = { 0.0, 0.0, 0.0 };
+	
+	// Take make a temporary update from time_curr to time_next
+	turb.SetNacelleStates(time_next, nacelle_disp, nacelle_Euler_angles, nacelle_vel, nacelle_acc, nacelle_angular_vel, nacelle_angular_acc, true);
 	turb.SetInflows(constant_inflow_vel, constant_inflow_acc);
 
-	// Advance its states to global_time_curr. Now this could either return the loads or the acceleration of the nacelle.
-	// Doing the former means we have to calculate the acceleration, so the latter might be more straight-forward
-	auto output = turb.AdvanceStates();
-	acceleration = (spring_force + output.force[0]) / mass; // (spring force + aerodynamic force) / mass
+	turb.AdvanceStates();
 
-	// integrate
-	double dt = time_next - time_curr;
-	displacement += velocity * dt;
-	velocity += acceleration * dt;
-	/* can't really set the acceleration to what it should be at global_time_next, because the 
-	   input solver can only do that. So just leave it as the acceleration at global_time_curr,
-	   which will be the initial guess for the solver next time step. */
-	
-	// But we can know the spring force at global_time_next, so set it now
-	spring_force = CalcSpringForce();
-	
+	Vector2d dx_tilde_next;
+
+	// If added mass is enabled, then the input solver was run during call to AdvanceStates(). This
+	// means the nacelle acceleration has already been solved for, so it doens't need to be calculated 
+	// from the nacelle force.
+	if(enable_added_mass) {
+		double nac_acc[3];
+		turb.GetNacelleAcc(nac_acc);
+		dx_tilde_next(0) = x_tilde_next(1);
+		dx_tilde_next(1) = nac_acc[0];
+	}
+	// Otherwise, the input solver wasn't used, so we still have to calculate the nacelle acceleration from the 
+	// nacelle force.
+	else {
+		double nac_force[3];
+		turb.GetNacelleForce(nac_force);
+		dx_tilde_next(0) = x_tilde_next(1);
+		dx_tilde_next(1) = (nac_force[0] + CalcSpringForce(x_tilde_next(0), x_tilde_next(1))) / mass;
+	}
+
+	Vector2d x_next = x_curr + 0.5 * dt * (dx_curr + dx_tilde_next);
+
+	displacement = x_next(0);
+	velocity = x_next(1);
+
+	nacelle_disp[0] = displacement;
+	nacelle_vel[0] = velocity;
+
+	turb.SetNacelleStates(time_next, nacelle_disp, nacelle_Euler_angles, nacelle_vel, nacelle_acc, nacelle_angular_vel, nacelle_angular_acc, false);
+	turb.SetInflows(constant_inflow_vel, constant_inflow_acc);
+	auto nac_force = turb.AdvanceStates();
+
+	Vector2d dx_next;
+
+	// If added mass is enabled, then the input solver was run during call to AdvanceStates(). This
+	// means the nacelle acceleration has already been solved for, so it doens't need to be calculated 
+	// from the nacelle force.
+	if (enable_added_mass) {
+		double nac_acc[3];
+		turb.GetNacelleAcc(nac_acc);
+		acceleration = nac_acc[0];
+	}
+	// Otherwise, the input solver wasn't used, so we still have to calculate the nacelle acceleration from the 
+	// nacelle force.
+	else {
+		double nac_force[3];
+		turb.GetNacelleForce(nac_force);
+		acceleration = (nac_force[0] + CalcSpringForce(displacement, velocity)) / mass;
+	}
+
 	time_curr = time_next;
 }
 
@@ -129,9 +198,15 @@ double MassSpringDamper::CalcSpringForce() const
 	return -(damping_coeff * velocity + stiffness_coeff * displacement);
 }
 
+// Calculates the spring force based on the current state of the spring mass damper
+double MassSpringDamper::CalcSpringForce(double p_displacement, double p_velocity) const
+{
+	return -(damping_coeff * p_velocity + stiffness_coeff * p_displacement);
+}
+
 double MassSpringDamper::CalcOutput(double aerodynamic_force) const
 {
-	return aerodynamic_force + spring_force / mass;
+	return (aerodynamic_force + spring_force) / mass;
 }
 
 // The callback function made specifically for the added mass coupling with FASTInterface

@@ -179,6 +179,16 @@ void FASTInterface::GetNacelleMoment(double out[3]) const
 	memcpy(out, p_imp->GetNacelleReactionMoment().data(), 3 * sizeof(double));
 }
 
+void FASTInterface::GetNacelleAcc(double out[3]) const
+{
+	memcpy(out, p_imp->GetNacelleAcc().data(), 3 * sizeof(double));
+}
+
+void FASTInterface::GetNacelleAngularAcc(double out[3]) const
+{
+	memcpy(out, p_imp->GetNacelleAngularAcc().data(), 3 * sizeof(double));
+}
+
 // Returns the tip speed ratio
 double FASTInterface::GetTSR() const
 {

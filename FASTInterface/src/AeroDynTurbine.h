@@ -29,6 +29,10 @@ public:
 		Vector3d angularAcc;
 	};
 
+	struct NacelleAccelerations {
+		Vector3d acceleration, rotation_acceleration;
+	};
+
 	// There are two structures that carry the same information. This on uses Eigen::Vector3d; the other, arrays
 	struct NacelleReactionLoads_Vec {
 		Vector3d force, moment;
@@ -83,8 +87,10 @@ public:
 	inline void GetBladeNodePositions(std::vector<double>& nodePositions) { aerodyn.GetBladeNodePositions(nodePositions); }
 	inline AeroDyn_Interface_Wrapper::HubReactionLoads GetHubReactionLoads() const { return aerodyn.GetHubReactionLoads(); }
 	inline NacelleReactionLoads_Vec GetNacelleReactionLoads() const { return nacelleReactionLoads_at_global_time_next; }
-	inline Vector3d GetNacelleReactionForce() const { return nacelleReactionLoads_at_global_time_next.force; }
-	inline Vector3d GetNacelleReactionMoment() const { return nacelleReactionLoads_at_global_time_next.moment; }
+	inline Vector3d GetNacelleReactionForce() const { return nacelleReactionLoads_at_global_time_next.force; } // TODO could also return nacAccels_at_dvr_time_next
+	inline Vector3d GetNacelleReactionMoment() const { return nacelleReactionLoads_at_global_time_next.moment; } // ^
+	inline Vector3d GetNacelleAcc() const { return nacelleMotion_at_global_time_next.acceleration;  }
+	inline Vector3d GetNacelleAngularAcc() const { return nacelleMotion_at_global_time_next.acceleration; }
 	inline double GetPower() const { return nacelleReactionLoads_at_global_time_next.power; }
 	inline double GetTSR() const { return nacelleReactionLoads_at_global_time_next.tsr; }
 	inline int GetNumNodes() const { return aerodyn.GetNumNodes(); }
@@ -98,10 +104,6 @@ public:
 	inline DriveTrain::States GetGenShaftState() const { return drivetrain.GetGenStates(); }
 
 private:
-	struct NacelleAccelerations {
-		Vector3d acceleration, rotation_acceleration;
-	};
-
 	typedef Eigen::Vector<double,13> SerializedVector;
 
 	enum { Y_DVR_NAC_ACC = 0, Y_DVR_NAC_ROTACC = 3, Y_AD_HUB_FORCE = 6, Y_AD_HUB_MOMENT = 9, Y_DT_ROTOR_ACC = 12 };    // outputs
@@ -120,7 +122,6 @@ private:
 
 	SerializedVector CalcResidual(const SerializedVector& y, const SerializedVector& u) const;
 
-	NacelleReactionLoads_Vec UpdateAeroDynStates();
 	HubMotion CalculateHubMotion(const NacelleMotion&, const DriveTrain::States&) const;
 	HubAcc CalculateHubAcc(const Vector3d& nacAcc, const Vector3d& nacRotAcc, const Matrix3d& nacOri, double rotorShaftAcc) const;
 	Matrix3d CalculateNacelleOrientation(const Vector3d& nacelleEulerAngles) const;
