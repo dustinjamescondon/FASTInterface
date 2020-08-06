@@ -59,8 +59,6 @@ void MassSpringDamper::InitFASTInterface()
 	const double added_mass_coeff = 1.0; // TODO ^
 	const double hub_radius = 1.5;
 	const double precone = 0.0;
-	const double fluid_density = 1.225;
-	const double kinematic_fluid_visc = 1.4639e-05;
 	const double nacelle_pos[3] = { displacement, 0.0, 0.0 };
 	const double nacelle_euler_angles[3] = { 0.0, 0.0, 0.0 };
 	const double nacelle_vel[3] = { 0.0,0.0,0.0 };
@@ -94,7 +92,6 @@ void MassSpringDamper::InitFASTInterface()
 
 }
 
-/* This version doesn't need the temporary update functionality because it's just using the Euler integration method */
 void MassSpringDamper::Simulate(double time_next)
 {
 	using namespace Eigen;
@@ -123,7 +120,6 @@ void MassSpringDamper::Simulate(double time_next)
 
 	displacement = x_tilde_next(0);
 	velocity = x_tilde_next(1);
-	spring_force = CalcSpringForce();
 
 	// Calculate dx_tilde at time_next
 	double nacelle_disp[3] = { x_tilde_next(0), 0.0, 0.0 };
@@ -137,27 +133,18 @@ void MassSpringDamper::Simulate(double time_next)
 	turb.SetNacelleStates(time_next, nacelle_disp, nacelle_Euler_angles, nacelle_vel, nacelle_acc, nacelle_angular_vel, nacelle_angular_acc, true);
 	turb.SetInflows(constant_inflow_vel, constant_inflow_acc);
 
-	turb.AdvanceStates();
+	auto nac_loads = turb.AdvanceStates();
 
 	Vector2d dx_tilde_next;
 
 	// If added mass is enabled, then the input solver was run during call to AdvanceStates(). This
-	// means the nacelle acceleration has already been solved for, so it doens't need to be calculated 
+	// means the nacelle acceleration has already been solved for, so it doesn't need to be calculated 
 	// from the nacelle force.
-	if(enable_added_mass) {
-		double nac_acc[3];
-		turb.GetNacelleAcc(nac_acc);
-		dx_tilde_next(0) = x_tilde_next(1);
-		dx_tilde_next(1) = nac_acc[0];
-	}
-	// Otherwise, the input solver wasn't used, so we still have to calculate the nacelle acceleration from the 
-	// nacelle force.
-	else {
-		double nac_force[3];
-		turb.GetNacelleForce(nac_force);
-		dx_tilde_next(0) = x_tilde_next(1);
-		dx_tilde_next(1) = (nac_force[0] + CalcSpringForce(x_tilde_next(0), x_tilde_next(1))) / mass;
-	}
+
+	double nac_force[3];
+	turb.GetNacelleForce(nac_force);
+	dx_tilde_next(0) = x_tilde_next(1);
+	dx_tilde_next(1) = CalcOutput(nac_force[0]);
 
 	Vector2d x_next = x_curr + 0.5 * dt * (dx_curr + dx_tilde_next);
 
@@ -169,25 +156,12 @@ void MassSpringDamper::Simulate(double time_next)
 
 	turb.SetNacelleStates(time_next, nacelle_disp, nacelle_Euler_angles, nacelle_vel, nacelle_acc, nacelle_angular_vel, nacelle_angular_acc, false);
 	turb.SetInflows(constant_inflow_vel, constant_inflow_acc);
-	auto nac_force = turb.AdvanceStates();
+	nac_loads = turb.AdvanceStates();
 
 	Vector2d dx_next;
 
-	// If added mass is enabled, then the input solver was run during call to AdvanceStates(). This
-	// means the nacelle acceleration has already been solved for, so it doens't need to be calculated 
-	// from the nacelle force.
-	if (enable_added_mass) {
-		double nac_acc[3];
-		turb.GetNacelleAcc(nac_acc);
-		acceleration = nac_acc[0];
-	}
-	// Otherwise, the input solver wasn't used, so we still have to calculate the nacelle acceleration from the 
-	// nacelle force.
-	else {
-		double nac_force[3];
-		turb.GetNacelleForce(nac_force);
-		acceleration = (nac_force[0] + CalcSpringForce(displacement, velocity)) / mass;
-	}
+
+	acceleration = CalcOutput(nac_loads.force[0]);
 
 	time_curr = time_next;
 }
@@ -198,14 +172,15 @@ double MassSpringDamper::CalcSpringForce() const
 	return -(damping_coeff * velocity + stiffness_coeff * displacement);
 }
 
-// Calculates the spring force based on the current state of the spring mass damper
+// Calculates the spring force based on the given parameters
 double MassSpringDamper::CalcSpringForce(double p_displacement, double p_velocity) const
 {
 	return -(damping_coeff * p_velocity + stiffness_coeff * p_displacement);
 }
 
-double MassSpringDamper::CalcOutput(double aerodynamic_force) const
+double MassSpringDamper::CalcOutput(double aerodynamic_force)
 {
+	spring_force = CalcSpringForce();
 	return (aerodynamic_force + spring_force) / mass;
 }
 
@@ -220,14 +195,13 @@ double MassSpringDamper::CalcOutput(double aerodynamic_force) const
 void MassSpringDamper::CalcOutput_Callback(const double* nacelle_force, const double* nacelle_moment,
 	double* nacelle_acc, double* nacelle_rotacc)
 {
-	double tmp_spring_force = CalcSpringForce();
 	double zero[3] = { 0.0, 0.0, 0.0 };
 
 	// Set nacelle rotation acceleration (always zero)
 	memcpy(nacelle_rotacc, zero, 3 * sizeof(double));
 
 	// Set nacelle acceleration (only setting the x component)
-	nacelle_acc[0] = (tmp_spring_force + nacelle_force[0]) / mass;
+	nacelle_acc[0] = CalcOutput(nacelle_force[0]);
 	nacelle_acc[1] = 0.0;
 	nacelle_acc[2] = 0.0;
 }

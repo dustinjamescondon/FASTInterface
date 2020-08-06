@@ -1,3 +1,6 @@
+/* 
+This coordinates AeroDyn, the drivetrain, and the pitch + generator controller, creating a turbine simulation.*/
+
 #pragma once
 #include "AeroDyn_Interface_Wrapper.h"
 #include "DriveTrain.h"
@@ -89,8 +92,8 @@ public:
 	inline NacelleReactionLoads_Vec GetNacelleReactionLoads() const { return nacelleReactionLoads_at_global_time_next; }
 	inline Vector3d GetNacelleReactionForce() const { return nacelleReactionLoads_at_global_time_next.force; } // TODO could also return nacAccels_at_dvr_time_next
 	inline Vector3d GetNacelleReactionMoment() const { return nacelleReactionLoads_at_global_time_next.moment; } // ^
-	inline Vector3d GetNacelleAcc() const { return nacelleMotion_at_global_time_next.acceleration;  }
-	inline Vector3d GetNacelleAngularAcc() const { return nacelleMotion_at_global_time_next.acceleration; }
+	inline Vector3d GetNacelleAcc() const { return nacelleMotion_at_dvr_time_next.acceleration;  }
+	inline Vector3d GetNacelleAngularAcc() const { return nacelleMotion_at_dvr_time_next.angularAcc; }
 	inline double GetPower() const { return nacelleReactionLoads_at_global_time_next.power; }
 	inline double GetTSR() const { return nacelleReactionLoads_at_global_time_next.tsr; }
 	inline int GetNumNodes() const { return aerodyn.GetNumNodes(); }

@@ -25,8 +25,7 @@ struct SimulationParameters
 SimulationParameters ParseCommandLineArgs(int argc, char** argv);
 void PrintHelpMenu();
 void PrintHeader(std::ofstream& p_ofs);
-void PrintOutputLine(std::ofstream& p_ofs, double time, double disp, double vel, double rotor_disp, double rotor_vel,
-	double gen_disp, double gen_vel);
+void PrintOutputLine(std::ofstream& p_ofs, double time, double disp, double vel, double acc, double aerodynamic_force);
 
 int main(int argc, char* argv[])
 {
@@ -44,7 +43,7 @@ int main(int argc, char* argv[])
 
 	while (time <= params.simulation_time) {
 		msd.Simulate(time);
-		PrintOutputLine(fout, time, msd.GetDisp(), msd.GetVel(), msd.GetRotorDisp(), msd.GetRotorVel(), msd.GetGenDisp(), msd.GetGenVel());
+		PrintOutputLine(fout, time, msd.GetDisp(), msd.GetVel(), msd.GetAcc(), msd.GetAeroDynamicForce());
 
 		time += params.timestep;
 	}
@@ -102,12 +101,12 @@ SimulationParameters ParseCommandLineArgs(int argc, char** argv)
 
 void PrintHeader(std::ofstream& p_ofs)
 {
-	p_ofs << "Time\tDisp\tVel\tRotorDisp\tRotorVel\tGenDisp\tGenVel\n";
+	p_ofs << "Time\tDisp\tVel\tAcc\tAeroDynamicForce\n";
 }
 
-void PrintOutputLine(std::ofstream& p_ofs, double time, double disp, double vel, double rot_disp, double rot_vel, double gen_disp, double gen_vel)
+void PrintOutputLine(std::ofstream& p_ofs, double time, double disp, double vel, double acc, double aerodynamic_force)
 {
-	p_ofs << time << '\t' << disp << '\t' << vel << '\t' << rot_disp << '\t' << rot_vel << '\t' << gen_disp << '\t' << gen_vel << '\n';
+	p_ofs << time << '\t' << disp << '\t' << vel << '\t' << acc << '\t' << aerodynamic_force << '\n';
 }
 
 void PrintHelpMenu()

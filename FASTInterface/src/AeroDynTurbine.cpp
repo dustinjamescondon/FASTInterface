@@ -276,6 +276,8 @@ AeroDynTurbine::NacelleReactionLoads_Vec AeroDynTurbine::AdvanceStates()
 
 	auto result = nacelleReactionLoads_at_global_time_next;
 
+	// TODO problem with method of having a get routine for the nacelle accelerations. On temporary updates,
+	// you can't get the result because the saved states are restored right at this point. So just don't use the get routines for now
 	if(onTempUpdate)
 		RestoreSavedStates();
 
@@ -303,7 +305,7 @@ AeroDynTurbine::NacelleMotion AeroDynTurbine::InterpolateNacelleMotion_AtNextGlo
 	return r;
 }
 
-// Performs the predictor-corrector method, and uses the input-output solver for each corrector iteration
+// Performs the predictor-corrector method, and uses the input-output solver for each corrector iteration (when added mass is enabled)
 AeroDynTurbine::NacelleReactionLoads_Vec AeroDynTurbine::AdvanceStates_By_One_Global_Timestep()
 {
 	const int n_corrector_steps = 2;

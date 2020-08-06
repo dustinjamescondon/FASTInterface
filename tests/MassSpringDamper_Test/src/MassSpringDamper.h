@@ -14,6 +14,12 @@ public:
 
 	double GetDisp() const { return displacement; }
 	double GetVel() const { return velocity; }
+	double GetAcc() const { return acceleration; }
+	double GetAeroDynamicForce() const {
+		double f[3];
+		turb.GetNacelleForce(f);
+		return f[0];
+}
 	double GetRotorDisp() const { return turb.GetRotorAngularDisp(); }
 	double GetRotorVel() const { return turb.GetRotorSpeed(); }
 	double GetGenDisp() const { return turb.GetGeneratorAngularDisp(); }
@@ -21,7 +27,7 @@ public:
 
 private:
 	
-	double CalcOutput(double aerodynamic_force) const;
+	double CalcOutput(double aerodynamic_force);
 	// Calculates the accelerations at current time given the nacelle loads
 	void CalcOutput_Callback(const double* in_nacelle_force, const double* in_nacelle_moment, double* out_nacelle_acc, double* out_nacelle_rotacc);
 	double CalcSpringForce() const;
