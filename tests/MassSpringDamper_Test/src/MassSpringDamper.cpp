@@ -3,6 +3,7 @@
 #include <math.h>
 #include <functional>
 #include <Eigen/Core>
+#include <iostream>
 
 MassSpringDamper::MassSpringDamper(bool p_enable_added_mass, double p_timestep, double p_mass, double p_stiffness_coeff, double p_damping_coeff, 
 	double p_initial_disp, double p_rpm, double p_inflow_speed, std::string p_output_filename)
@@ -54,7 +55,7 @@ void MassSpringDamper::InitFASTInterface()
 
 	// AeroDyn last
 	// TODO the input file is non-standard right now
-	const char* ad_input_file = "..\\modules\\openfast\\reg_tests\\r-test\\glue-codes\\openfast\\5MW_OC4Semi_WSt_WavesWN\\NRELOffshrBsline5MW_OC3Hywind_AeroDyn15_Water.dat";
+	const char* ad_input_file = "..\\..\\modules\\openfast\\reg_tests\\r-test\\glue-codes\\openfast\\5MW_OC4Semi_WSt_WavesWN\\NRELOffshrBsline5MW_OC3Hywind_AeroDyn15_Water.dat";
 	const char* ad_output_file = output_filename.c_str();
 	const double added_mass_coeff = 1.0; // TODO ^
 	const double hub_radius = 1.5;
@@ -66,9 +67,15 @@ void MassSpringDamper::InitFASTInterface()
 	const double nacelle_rotvel[3] = { 0.0,0.0,0.0 };
 	const double nacelle_rotacc[3] = { 0.0,0.0,0.0 };
 
-	turb.InitAeroDyn(ad_input_file, ad_output_file, enable_added_mass, added_mass_coeff, timestep, num_blades,
-		hub_radius, precone, nacelle_pos, nacelle_euler_angles, nacelle_vel,
-		nacelle_acc, nacelle_rotvel, nacelle_rotacc);
+
+	try {
+		turb.InitAeroDyn(ad_input_file, ad_output_file, enable_added_mass, added_mass_coeff, timestep, num_blades,
+			hub_radius, precone, nacelle_pos, nacelle_euler_angles, nacelle_vel,
+			nacelle_acc, nacelle_rotvel, nacelle_rotacc);
+	}
+	catch (const std::runtime_error& e) {
+		std::cout << std::endl << e.what() << std::endl;
+	}
 
 	// Set what the constant inflows should be 
 	constant_inflow_vel.resize(3 * turb.GetNumNodes());
@@ -191,7 +198,7 @@ double MassSpringDamper::CalcOutput(double aerodynamic_force)
 // Note: it doesn't set the acceleration inside the mass spring damper object. It doesn't do this because 
 //	     the input solver uses this function to calculate its partial derivatives, which involves perturbing
 //       each component of the inputs. So if this function actuallys sets the acceleration, it might be set 
-//       with a perturbed input and left that way (not very elegant).
+//       with a perturbed input and left that way.
 void MassSpringDamper::CalcOutput_Callback(const double* nacelle_force, const double* nacelle_moment,
 	double* nacelle_acc, double* nacelle_rotacc)
 {

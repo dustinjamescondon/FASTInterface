@@ -346,3 +346,6 @@ healthchecksdb
 /AD_Interface_Wrapper_Test/pack
 /AD_Interface_Wrapper_Test/pack.zip
 *.ech
+
+# Simulation output files defined in the tests directories
+/tests/**/*.out

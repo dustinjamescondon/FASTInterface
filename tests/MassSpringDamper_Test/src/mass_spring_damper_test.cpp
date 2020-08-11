@@ -32,7 +32,7 @@ int main(int argc, char* argv[])
 	SimulationParameters params = ParseCommandLineArgs(argc, argv);
 
 	double time = 0.0;
-	
+
 	MassSpringDamper msd(params.enable_added_mass, params.timestep, params.mass, params.spring_coeff, params.damping_coeff, params.initial_disp,
 		params.rpm, params.flow_speed, params.output_filename);
 
