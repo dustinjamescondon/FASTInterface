@@ -375,7 +375,7 @@ AeroDynTurbine::NacelleReactionLoads_Vec AeroDynTurbine::CalcOutputs_And_DeriveI
 		ad_input_hub.angularVel, ad_input_hub.angularAcc, mcont.GetBladePitchCommand());
 	drivetrain.SetInputs(global_time_next, dt_input_rotor_torque, dt_input_gen_torque);
 
-	// Derive the inputs for Dvr at global_time_next
+	// Derive the force inputs for Dvr at global_time_next
 	Vector3d nacelleForce = TransformHubToNacelle(
 		ad_output.force,
 		nacelleMotion_at_global_time_next.orientation,

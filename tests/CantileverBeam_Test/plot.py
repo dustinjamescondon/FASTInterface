@@ -70,7 +70,7 @@ def plot_output_files(file_without_AM, file_with_AM):
     plt.ylabel('Nm')
     plt.title('Aerodynamic force')
     plt.legend(loc='upper right', shadow=True)
-
+    
     plt.subplot(223)
     plt.plot(time, velocity, linestyle=':', color='r', label='velocity')
     plt.plot(time_AM, velocity_AM, linestyle='-', color='y', label='velocity with added mass')
@@ -78,7 +78,7 @@ def plot_output_files(file_without_AM, file_with_AM):
     plt.ylabel('M/s')
     plt.title('Tip mass velocity')
     plt.legend(loc='upper right', shadow=True)
-
+    
     plt.subplot(224)
     plt.plot(time, acc, linestyle=':', color='black', label='velocity')
     plt.plot(time_AM, acc_AM, linestyle='-', color='red', label='velocity with added mass')

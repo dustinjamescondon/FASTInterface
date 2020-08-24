@@ -16,7 +16,7 @@ enable_added_mass = 1 # 0 == false; 1 == true
 disable_added_mass = 0
 simulation_time = 5.0
 timestep        = 0.00125
-mass            = 3000000.0
+mass            = 1500000.0
 I               = mass * (beam_length **2)
 initial_disp    = 0.0
 spring_coeff    = 3 * E * I / (beam_length **3)
