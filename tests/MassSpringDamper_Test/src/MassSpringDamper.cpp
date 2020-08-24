@@ -2,7 +2,7 @@
 #define _USE_MATH_DEFINES
 #include <math.h>
 #include <functional>
-#include <Eigen/Core>
+#include "Eigen/Core"
 #include <iostream>
 
 MassSpringDamper::MassSpringDamper(bool p_enable_added_mass, double p_timestep, double p_mass, double p_stiffness_coeff, double p_damping_coeff, 
