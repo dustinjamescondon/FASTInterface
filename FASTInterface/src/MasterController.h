@@ -2,17 +2,13 @@
 Description:
 
 This class abstracts the generator and pitch controller. Because we want to have the option of interfacing with a
-Bladed-style DLL or defining the controller behaviors by CSV files and other parameters contained in an input file,
-we have this high-level class which provides a common interface for both options. */
+Bladed-style DLL or just specifying a constant rotor speed, we have this high-level class which provides a common 
+interface for both options. */
 
 
 #pragma once
-
-#include "PitchController.h"
-#include "GenController.h"
 #include "BladedInterface.h"
-#include "LowPassFilter.h"
-#include "InputFile.h"
+
 
 class MasterController
 {
@@ -25,23 +21,16 @@ public:
 	// Initialization function for the controllers when using a Bladed-style DLL
 	void Init_BladedDLL(int numBlades, const char* bladed_dll_fname, double initBladePitch);
 
-	// Initialization function for the controllers when using parameters from CSV and parameter files
-	void Init_InputFile(const char* inputfile_fname, double initGenSpeed, double initBladePitch);
-
 	void UpdateController(double time, double genSpeed, double currBladePitch);
 
 	double GetGeneratorTorqueCommand() const;
 	double GetBladePitchCommand() const;
 
 private:
-	enum ControllerMode { BLADED_DLL, INPUT_FILE, CONSTANT_SPEED };
+	enum ControllerMode { BLADED_DLL, CONSTANT_SPEED };
 	ControllerMode controlMode;
 
 	double bladePitchCommand;
-	LowPassFilter genSpeedLPF;
-	PitchController pitcont;
-	GenController   gencont;
-	InputFile inputfile;
 
 	BladedInterface bladedcont;
 };

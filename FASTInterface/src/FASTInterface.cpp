@@ -266,7 +266,7 @@ double FASTInterface::GetGeneratorAngularDisp() const
 // \nacelleEulerAngles: the orientation in Euler angles 
 // \nacelleVel: the nacelle velocity
 // \nacelleAngularVel: the nacelle angular velocity of the nacelle represented as axis-angle vector	
-// \isRealStep: if true, the turbines states_pred will be permanently updated to \time_act; if false, 
+// \isTempUpdate: if false, the turbines states_pred will be permanently updated to \time_act; if true, 
 //              the turbines states_pred will only be temporarily updated to \time_act. In both cases
 //				the reaction forces at /time_act are reported
 void FASTInterface::SetNacelleStates(

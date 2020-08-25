@@ -22,14 +22,9 @@
     <ClCompile Include="src\AeroDynTurbine.cpp" />
     <ClCompile Include="src\AeroDyn_Interface_Wrapper.cpp" />
     <ClCompile Include="src\BladedInterface.cpp" />
-    <ClCompile Include="src\CSVSpecFunction.cpp" />
     <ClCompile Include="src\DriveTrain.cpp" />
     <ClCompile Include="src\FASTInterface.cpp" />
-    <ClCompile Include="src\InputFile.cpp" />
-    <ClCompile Include="src\GenController.cpp" />
-    <ClCompile Include="src\LowPassFilter.cpp" />
     <ClCompile Include="src\MasterController.cpp" />
-    <ClCompile Include="src\PitchController.cpp" />
     <ClCompile Include="src\Utilities.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -45,16 +40,11 @@
   <ItemGroup>
     <ClInclude Include="src\AeroDyn_Interface_Wrapper.h" />
     <ClInclude Include="src\BladedInterface.h" />
-    <ClInclude Include="src\CSVSpecFunction.h" />
     <ClInclude Include="src\DriveTrain.h" />
     <ClInclude Include="src\FASTInterfaceExceptions.h" />
     <ClInclude Include="src\FASTInterface.h" />
-    <ClInclude Include="src\GenController.h" />
     <ClInclude Include="src\AeroDynTurbine.h" />
-    <ClInclude Include="src\InputFile.h" />
-    <ClInclude Include="src\LowPassFilter.h" />
     <ClInclude Include="src\MasterController.h" />
-    <ClInclude Include="src\PitchController.h" />
     <ClInclude Include="src\Utilities.h" />
   </ItemGroup>
   <ItemGroup>

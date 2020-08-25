@@ -32,9 +32,8 @@ Usage during simulation:
 	If this process was done with isTempUpdate == false, then the turbine's states_pred will be updated to "time_act".
 	However, if isTempUpdate == true, then the turbine's states remain at the previous time_act.
 
-	In any case, whether isRealStep is true or false, after UpdateStates has been called, the nacelle reaction
-	forces at "time_act" are returned; also any call to GetForce, GetMoment, GetGeneratorSpeed, GetRotorSpeed, will
-	return the value at "time_act" as well.
+	In any case, whether isTempUpdate is true or false, after UpdateStates has been called, the nacelle reaction
+	forces at "time_act" are returned.
 */
 
 #pragma once
@@ -142,10 +141,10 @@ public:
 
 	DECLDIR double GetAerodynamicTorque() const;
 
-	// Returns the reaction force on the nacelle
+	// Returns the reaction force on the nacelle in the nacelle coordinate system
 	DECLDIR void GetNacelleForce(double[3]) const;
 
-	// Returns the moment of the nacelle
+	// Returns the moment of the nacelle in the nacelle coordinate system
 	DECLDIR void GetNacelleMoment(double[3]) const;
 
 	// When using added mass, this returns the solved-for nacelle linear acceleration;
@@ -197,7 +196,7 @@ public:
 	// \nacelleEulerAngles: the orientation in Euler angles 
 	// \nacelleVel: the nacelle velocity
 	// \nacelleAngularVel: the nacelle angular velocity of the nacelle represented as axis-angle vector	
-	// \isRealStep: if true, the turbines states_pred will be permanently updated to \time_act; if false, 
+	// \isTempUpdate: if false, the turbines states_pred will be permanently updated to \time_act; if true, 
 	//              the turbines states_pred will only be temporarily updated to \time_act. In both cases
 	//				the reaction forces at /time_act are reported
 	DECLDIR void SetNacelleStates(
@@ -208,7 +207,7 @@ public:
 		const double nacelleAcc[3],
 		const double nacelleAngularVel[3],
 		const double nacelleAngularAcc[3],
-		bool isRealStep = true);
+		bool isTempUpdate = false);
 
 	// Sets the inflow velocities at the \time_act passed to SetNacelleMotion(...)
 	DECLDIR void SetInflows(const std::vector<double>& inflowVel, const std::vector<double>& inflowAcc);
