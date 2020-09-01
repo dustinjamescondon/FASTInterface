@@ -78,12 +78,12 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <OutDir>$(SolutionDir)\bin\</OutDir>
     <IntDir>$(Platform)\$(Configuration)\</IntDir>
-    <LibraryPath>..\..\extern\SFML-2.5.1\lib;..\..\modules\openfast\build\bin;$(LibraryPath)</LibraryPath>
+    <LibraryPath>$(SolutionDir)extern\SFML-2.5.1\lib;$(SolutionDir)modules\openfast\build\bin;$(LibraryPath)</LibraryPath>
     <PreBuildEventUseInBuild>false</PreBuildEventUseInBuild>
     <PostBuildEventUseInBuild>false</PostBuildEventUseInBuild>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
-    <LibraryPath>..\..\extern\SFML-2.5.1\lib;..\..\modules\openfast\build\bin;$(LibraryPath)</LibraryPath>
+    <LibraryPath>$(SolutionDir)extern\SFML-2.5.1\lib;$(SolutionDir)modules\openfast\build\bin;$(LibraryPath)</LibraryPath>
     <OutDir>$(SolutionDir)bin\</OutDir>
     <PreBuildEventUseInBuild>false</PreBuildEventUseInBuild>
     <PostBuildEventUseInBuild>false</PostBuildEventUseInBuild>
@@ -91,6 +91,7 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <OutDir>$(SolutionDir)bin\</OutDir>
     <PreBuildEventUseInBuild>false</PreBuildEventUseInBuild>
+    <LibraryPath>$(SolutionDir)extern\SFML-2.5.1\lib;$(SolutionDir)modules\openfast\build\bin;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <ClCompile>

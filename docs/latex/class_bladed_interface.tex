@@ -1,0 +1,118 @@
+\hypertarget{class_bladed_interface}{}\doxysection{Bladed\+Interface Class Reference}
+\label{class_bladed_interface}\index{BladedInterface@{BladedInterface}}
+
+
+This class provides an interface with the Bladed-\/style D\+LL. The interface was built by referencing the Bladed-\/style D\+LL of N\+R\+EL\textquotesingle{}s O\+C3 5 MW turbine.  
+
+
+
+
+{\ttfamily \#include $<$Bladed\+Interface.\+h$>$}
+
+\doxysubsection*{Public Member Functions}
+\begin{DoxyCompactItemize}
+\item 
+\mbox{\Hypertarget{class_bladed_interface_afde874142935250745bff1453edec3f8}\label{class_bladed_interface_afde874142935250745bff1453edec3f8}} 
+void {\bfseries Init} (int num\+Blades, const char $\ast$fname)
+\item 
+\mbox{\Hypertarget{class_bladed_interface_abd52fc60ebf74bcc9706cf0b65d6b1e0}\label{class_bladed_interface_abd52fc60ebf74bcc9706cf0b65d6b1e0}} 
+void {\bfseries Update\+Controller} (double time, float bl\+Pitch1, float bl\+Pitch2, float bl\+Pitch3, float gen\+Sp, float hor\+WindV)
+\item 
+\mbox{\Hypertarget{class_bladed_interface_afd75f5af99dc2f5c4c79f78f0595ff94}\label{class_bladed_interface_afd75f5af99dc2f5c4c79f78f0595ff94}} 
+float {\bfseries Get\+Bl\+Pitch\+Command} () const
+\item 
+\mbox{\Hypertarget{class_bladed_interface_a8d113deb8dda0d4835b711d9f69ab42c}\label{class_bladed_interface_a8d113deb8dda0d4835b711d9f69ab42c}} 
+float {\bfseries Get\+Gen\+Torque\+Command} () const
+\end{DoxyCompactItemize}
+\doxysubsection*{Private Types}
+\begin{DoxyCompactItemize}
+\item 
+\mbox{\Hypertarget{class_bladed_interface_a5a33cdb2622f3a623ce7092b092b4b27}\label{class_bladed_interface_a5a33cdb2622f3a623ce7092b092b4b27}} 
+enum {\bfseries Swap\+Index} \+: int \{ \newline
+{\bfseries Num\+Bl} = 60, 
+{\bfseries Bl\+Pitch1} = 3, 
+{\bfseries Bl\+Pitch2} = 32, 
+{\bfseries Bl\+Pitch3} = 33, 
+\newline
+{\bfseries Gen\+Sp} = 19, 
+{\bfseries Hor\+WindV} = 26, 
+{\bfseries Time} = 1, 
+{\bfseries I\+Status} = 0, 
+\newline
+{\bfseries Pitch\+Override} = 54, 
+{\bfseries Pit\+Com1} = 41, 
+{\bfseries Pit\+Com2} = 42, 
+{\bfseries Pit\+Com3} = 43, 
+\newline
+{\bfseries Pit\+Com} = 44, 
+{\bfseries Gen\+Contact\+Status} = 55, 
+{\bfseries Gen\+Trq\+Dem} = 46
+ \}
+\item 
+\mbox{\Hypertarget{class_bladed_interface_abf08a4ced7b6a0c430dab127f6586e1e}\label{class_bladed_interface_abf08a4ced7b6a0c430dab127f6586e1e}} 
+typedef void(\+\_\+\+\_\+cdecl $\ast$ {\bfseries f\+\_\+ptr}) (float $\ast$, int $\ast$, const char $\ast$, const char $\ast$, const char $\ast$)
+\item 
+\mbox{\Hypertarget{class_bladed_interface_aa0dd850cd4cdb5c86ddcf2b47778d48f}\label{class_bladed_interface_aa0dd850cd4cdb5c86ddcf2b47778d48f}} 
+typedef void(\+\_\+\+\_\+cdecl $\ast$ {\bfseries vf\+\_\+ptr}) ()
+\end{DoxyCompactItemize}
+\doxysubsection*{Private Attributes}
+\begin{DoxyCompactItemize}
+\item 
+\mbox{\Hypertarget{class_bladed_interface_ac1da65cb8b7ee6dbb7acb4e17bb5c21e}\label{class_bladed_interface_ac1da65cb8b7ee6dbb7acb4e17bb5c21e}} 
+float {\bfseries swap} \mbox{[}Num\+Swap\mbox{]}
+\item 
+\mbox{\Hypertarget{class_bladed_interface_af96ccebae88e2d0a13aa17cc71ef0718}\label{class_bladed_interface_af96ccebae88e2d0a13aa17cc71ef0718}} 
+int {\bfseries fail}
+\item 
+\mbox{\Hypertarget{class_bladed_interface_a3378ad950046f04f1e1d21be3c84920f}\label{class_bladed_interface_a3378ad950046f04f1e1d21be3c84920f}} 
+int {\bfseries i\+Status}
+\item 
+\mbox{\Hypertarget{class_bladed_interface_ad45ce897c2676ad62e310c199f0c31e0}\label{class_bladed_interface_ad45ce897c2676ad62e310c199f0c31e0}} 
+std\+::string {\bfseries acc\+I\+N\+F\+I\+LE}
+\item 
+\mbox{\Hypertarget{class_bladed_interface_a3f5b8a1471e2a3c496afca134b679c64}\label{class_bladed_interface_a3f5b8a1471e2a3c496afca134b679c64}} 
+std\+::string {\bfseries avc\+O\+U\+T\+N\+A\+ME}
+\item 
+\mbox{\Hypertarget{class_bladed_interface_a8c58ec02a9adb25e2f01d3f8bac3d793}\label{class_bladed_interface_a8c58ec02a9adb25e2f01d3f8bac3d793}} 
+std\+::string {\bfseries avc\+M\+SG}
+\item 
+\mbox{\Hypertarget{class_bladed_interface_a444f8d5084ec23b62093a3d097800602}\label{class_bladed_interface_a444f8d5084ec23b62093a3d097800602}} 
+int {\bfseries num\+Blades}
+\item 
+\mbox{\Hypertarget{class_bladed_interface_ac68f267e2b29c2f0cd591ad277d17cf4}\label{class_bladed_interface_ac68f267e2b29c2f0cd591ad277d17cf4}} 
+float {\bfseries blade\+Pitch\+Command}
+\item 
+\mbox{\Hypertarget{class_bladed_interface_a27105bffeadd53f97622d01f4db680d5}\label{class_bladed_interface_a27105bffeadd53f97622d01f4db680d5}} 
+float {\bfseries gen\+Torque\+Command}
+\item 
+\mbox{\Hypertarget{class_bladed_interface_afb9131b572050f3e7cb7c17885d8a2d9}\label{class_bladed_interface_afb9131b572050f3e7cb7c17885d8a2d9}} 
+H\+I\+N\+S\+T\+A\+N\+CE {\bfseries h\+Instance}
+\item 
+\mbox{\Hypertarget{class_bladed_interface_a2489887b49189db53958a766a7fd264a}\label{class_bladed_interface_a2489887b49189db53958a766a7fd264a}} 
+f\+\_\+ptr {\bfseries D\+I\+S\+C\+ON}
+\end{DoxyCompactItemize}
+\doxysubsection*{Static Private Attributes}
+\begin{DoxyCompactItemize}
+\item 
+\mbox{\Hypertarget{class_bladed_interface_a4bc81a36f093cae503fe0e8dedb34ef1}\label{class_bladed_interface_a4bc81a36f093cae503fe0e8dedb34ef1}} 
+static const int {\bfseries Num\+Swap} = 100
+\end{DoxyCompactItemize}
+
+
+\doxysubsection{Detailed Description}
+This class provides an interface with the Bladed-\/style D\+LL. The interface was built by referencing the Bladed-\/style D\+LL of N\+R\+EL\textquotesingle{}s O\+C3 5 MW turbine. 
+
+\begin{DoxyAuthor}{Author}
+Dustin Condon 
+\end{DoxyAuthor}
+\begin{DoxyDate}{Date}
+August 2020
+\end{DoxyDate}
+The interface allows the user of the class to pass the needed values to the D\+LL, and recieve the results. Inside each D\+LL there is a pitch controller, generator controller, and a low-\/pass filter on the generator shaft speed.
+
+Note that (as far as I have seen), the Bladed-\/style D\+LL are written to be loosely coupled with the turbine model; therefore, this interface assumes that. It may be possible to write a tightly coupled controller D\+LL, however -\/ in which case this interface should be built upon to allow for it. 
+
+The documentation for this class was generated from the following files\+:\begin{DoxyCompactItemize}
+\item 
+F\+A\+S\+T\+Interface/src/Bladed\+Interface.\+h\item 
+F\+A\+S\+T\+Interface/src/Bladed\+Interface.\+cpp\end{DoxyCompactItemize}

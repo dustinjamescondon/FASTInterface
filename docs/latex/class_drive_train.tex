@@ -1,0 +1,198 @@
+\hypertarget{class_drive_train}{}\doxysection{Drive\+Train Class Reference}
+\label{class_drive_train}\index{DriveTrain@{DriveTrain}}
+
+
+This class implements a two-\/mass drivetrain model with a particular generator and rotor mass moment of inertia, shaft stiffness and damping, and gearbox ratio.  
+
+
+
+
+{\ttfamily \#include $<$Drive\+Train.\+h$>$}
+
+\doxysubsection*{Classes}
+\begin{DoxyCompactItemize}
+\item 
+struct \mbox{\hyperlink{struct_drive_train_1_1_input}{Input}}
+\item 
+struct \mbox{\hyperlink{struct_drive_train_1_1_model_states}{Model\+States}}
+\item 
+struct \mbox{\hyperlink{struct_drive_train_1_1_states}{States}}
+\end{DoxyCompactItemize}
+\doxysubsection*{Public Member Functions}
+\begin{DoxyCompactItemize}
+\item 
+\mbox{\Hypertarget{class_drive_train_abc728ebb98ee097138b7caf5650829d7}\label{class_drive_train_abc728ebb98ee097138b7caf5650829d7}} 
+{\bfseries Drive\+Train} (double constant\+Rotor\+Speed)
+\item 
+\mbox{\Hypertarget{class_drive_train_a4869f9572df1436cf0556448335099dd}\label{class_drive_train_a4869f9572df1436cf0556448335099dd}} 
+{\bfseries Drive\+Train} (double initial\+Rotor\+Speed, double gearboxratio)
+\item 
+\mbox{\Hypertarget{class_drive_train_adfd3c28023b56a64ccc486b9c77dae47}\label{class_drive_train_adfd3c28023b56a64ccc486b9c77dae47}} 
+void {\bfseries Init} (double constant\+Rotor\+Speed)
+\item 
+\mbox{\Hypertarget{class_drive_train_a5df6c804da924a39b19756f0f854ef34}\label{class_drive_train_a5df6c804da924a39b19756f0f854ef34}} 
+void {\bfseries Init} (double initial\+Rotor\+Speed, double gearbox\+Ratio, double damping\+Coeff, double stiffness\+Coeff, double rotor\+Mass\+M\+OI, double generator\+Mass\+M\+OI)
+\item 
+\mbox{\Hypertarget{class_drive_train_abebc5af7ede64c266c957cce525370be}\label{class_drive_train_abebc5af7ede64c266c957cce525370be}} 
+void \mbox{\hyperlink{class_drive_train_abebc5af7ede64c266c957cce525370be}{Save\+Current\+States}} ()
+\begin{DoxyCompactList}\small\item\em This saves the current state of the turbine. \end{DoxyCompactList}\item 
+\mbox{\Hypertarget{class_drive_train_a530034c763a9a074b58de17a30676c2e}\label{class_drive_train_a530034c763a9a074b58de17a30676c2e}} 
+void \mbox{\hyperlink{class_drive_train_a530034c763a9a074b58de17a30676c2e}{Restore\+Saved\+States}} ()
+\begin{DoxyCompactList}\small\item\em This restores the saved state of the turbine. \end{DoxyCompactList}\item 
+\mbox{\Hypertarget{class_drive_train_a11ecb32188acd5f9307e36a165b336da}\label{class_drive_train_a11ecb32188acd5f9307e36a165b336da}} 
+void \mbox{\hyperlink{class_drive_train_a11ecb32188acd5f9307e36a165b336da}{Update\+States}} ()
+\begin{DoxyCompactList}\small\item\em Uses inputs and calculates new states, storing them in the predicted states. \end{DoxyCompactList}\item 
+\mbox{\Hypertarget{class_drive_train_afc01bddd1d7a3576adc2dac164fc0ffc}\label{class_drive_train_afc01bddd1d7a3576adc2dac164fc0ffc}} 
+void \mbox{\hyperlink{class_drive_train_afc01bddd1d7a3576adc2dac164fc0ffc}{Copy\+States\+\_\+\+Pred\+\_\+to\+\_\+\+Curr}} ()
+\begin{DoxyCompactList}\small\item\em Moves the predicted states into the current states. \end{DoxyCompactList}\item 
+\mbox{\Hypertarget{class_drive_train_a86a90dac9d94bb1024760db2c5b7d208}\label{class_drive_train_a86a90dac9d94bb1024760db2c5b7d208}} 
+void {\bfseries Advance\+Input\+Window} ()
+\item 
+\mbox{\Hypertarget{class_drive_train_ab79950e93c4021dd1fa7081633f829c9}\label{class_drive_train_ab79950e93c4021dd1fa7081633f829c9}} 
+void {\bfseries Set\+Inputs} (double time, double rotor\+Torque, double generator\+Torque)
+\item 
+\mbox{\Hypertarget{class_drive_train_a0452c1045e15d61a5f0ddf406f709a30}\label{class_drive_train_a0452c1045e15d61a5f0ddf406f709a30}} 
+\mbox{\hyperlink{struct_drive_train_1_1_model_states}{Model\+States}} {\bfseries Calc\+Output} ()
+\item 
+\mbox{\Hypertarget{class_drive_train_a4221c78633742510a1703968c6be38cd}\label{class_drive_train_a4221c78633742510a1703968c6be38cd}} 
+void {\bfseries Set\+Initial\+Rotor\+Speed} (double)
+\item 
+\mbox{\Hypertarget{class_drive_train_afee59ff7ef7bab87f1b3d30e5cf4ecaf}\label{class_drive_train_afee59ff7ef7bab87f1b3d30e5cf4ecaf}} 
+void {\bfseries Set\+Initial\+Gen\+Speed} (double)
+\item 
+\mbox{\Hypertarget{class_drive_train_a589a78a33b30ad1c20338c9fc27a5fce}\label{class_drive_train_a589a78a33b30ad1c20338c9fc27a5fce}} 
+void {\bfseries Set\+Damping\+Coeff} (double)
+\item 
+\mbox{\Hypertarget{class_drive_train_a3c9dd2852f68f15dfc7eb7b0e720d3fc}\label{class_drive_train_a3c9dd2852f68f15dfc7eb7b0e720d3fc}} 
+void {\bfseries Set\+Stiffness\+Coeff} (double)
+\item 
+\mbox{\Hypertarget{class_drive_train_af08c7326d352456f16808ba1e23d3c1e}\label{class_drive_train_af08c7326d352456f16808ba1e23d3c1e}} 
+void {\bfseries Set\+Gen\+Mass\+Moment\+Of\+Inertia} (double)
+\item 
+\mbox{\Hypertarget{class_drive_train_a40ce21290cbf8aa589bbbf64ef7a1a4e}\label{class_drive_train_a40ce21290cbf8aa589bbbf64ef7a1a4e}} 
+void {\bfseries Set\+Rotor\+Mass\+Moment\+Of\+Inertia} (double)
+\item 
+\mbox{\Hypertarget{class_drive_train_abd1dd65ad524a4150810125f85b09459}\label{class_drive_train_abd1dd65ad524a4150810125f85b09459}} 
+void {\bfseries Set\+Gearbox\+Ratio} (double)
+\item 
+\mbox{\Hypertarget{class_drive_train_ad76c7cb5a8a3f6af2f1996f6278e632d}\label{class_drive_train_ad76c7cb5a8a3f6af2f1996f6278e632d}} 
+\mbox{\hyperlink{struct_drive_train_1_1_model_states}{Model\+States}} {\bfseries Get\+States} () const
+\item 
+\mbox{\Hypertarget{class_drive_train_a4b6659cb1c721e25aa73ad50f83ba201}\label{class_drive_train_a4b6659cb1c721e25aa73ad50f83ba201}} 
+double {\bfseries Get\+Input\+\_\+\+Rotor\+Torque} () const
+\item 
+\mbox{\Hypertarget{class_drive_train_a9a8c3f06719dc1d719565e1e030e02ce}\label{class_drive_train_a9a8c3f06719dc1d719565e1e030e02ce}} 
+double {\bfseries Get\+Input\+\_\+\+Gen\+Torque} () const
+\item 
+\mbox{\Hypertarget{class_drive_train_a08917faffca4129f3998ae0bbf7e62b9}\label{class_drive_train_a08917faffca4129f3998ae0bbf7e62b9}} 
+\mbox{\hyperlink{struct_drive_train_1_1_states}{States}} {\bfseries Get\+Rotor\+States} () const
+\item 
+\mbox{\Hypertarget{class_drive_train_aa65d6eab74491bcf66892bb38b5b57ff}\label{class_drive_train_aa65d6eab74491bcf66892bb38b5b57ff}} 
+double {\bfseries Get\+Rotor\+Shaft\+Speed} () const
+\item 
+\mbox{\Hypertarget{class_drive_train_af60846097b0713ae49a85e83a3ee0688}\label{class_drive_train_af60846097b0713ae49a85e83a3ee0688}} 
+double {\bfseries Get\+Rotor\+Shaft\+Theta} () const
+\item 
+\mbox{\Hypertarget{class_drive_train_a76ec4f1f94d5eb0f5c98eff6242da83c}\label{class_drive_train_a76ec4f1f94d5eb0f5c98eff6242da83c}} 
+double {\bfseries Get\+Rotor\+Shaft\+Acc} () const
+\item 
+\mbox{\Hypertarget{class_drive_train_aeff14e26c27136f3f8bf27049be88cec}\label{class_drive_train_aeff14e26c27136f3f8bf27049be88cec}} 
+\mbox{\hyperlink{struct_drive_train_1_1_states}{States}} {\bfseries Get\+Gen\+States} () const
+\item 
+\mbox{\Hypertarget{class_drive_train_a179c61ce1b6f7f2bc9456facee6bbd06}\label{class_drive_train_a179c61ce1b6f7f2bc9456facee6bbd06}} 
+double {\bfseries Get\+Gen\+Shaft\+Speed} () const
+\item 
+\mbox{\Hypertarget{class_drive_train_a7b08699ce51c1da8b79309e3d0e37243}\label{class_drive_train_a7b08699ce51c1da8b79309e3d0e37243}} 
+double {\bfseries Get\+Gen\+Shaft\+Theta} () const
+\item 
+\mbox{\Hypertarget{class_drive_train_aa1d112beb0ddc46764c5bfed76753ed3}\label{class_drive_train_aa1d112beb0ddc46764c5bfed76753ed3}} 
+double {\bfseries Get\+Gen\+Shaft\+Acc} () const
+\end{DoxyCompactItemize}
+\doxysubsection*{Private Types}
+\begin{DoxyCompactItemize}
+\item 
+\mbox{\Hypertarget{class_drive_train_ae5703b41edad21c1e94b14f3f0619db9}\label{class_drive_train_ae5703b41edad21c1e94b14f3f0619db9}} 
+enum \{ {\bfseries N\+E\+XT} =0, 
+{\bfseries C\+U\+RR} =1
+ \}
+\begin{DoxyCompactList}\small\item\em maps N\+E\+XT and C\+U\+RR to array indices for the time and inputs \end{DoxyCompactList}\item 
+\mbox{\Hypertarget{class_drive_train_a230836d89cfb701514a8728e64224be4}\label{class_drive_train_a230836d89cfb701514a8728e64224be4}} 
+enum \mbox{\hyperlink{class_drive_train_a230836d89cfb701514a8728e64224be4}{Mode}} \{ {\bfseries D\+Y\+N\+A\+M\+IC}, 
+{\bfseries C\+O\+N\+S\+T\+A\+NT}
+ \}
+\begin{DoxyCompactList}\small\item\em Dynamic is using O\+D\+Es; Constant is just using a constant rotor speed. \end{DoxyCompactList}\end{DoxyCompactItemize}
+\doxysubsection*{Private Member Functions}
+\begin{DoxyCompactItemize}
+\item 
+\mbox{\Hypertarget{class_drive_train_a5dfffdcea9c51315901f081f535d8e24}\label{class_drive_train_a5dfffdcea9c51315901f081f535d8e24}} 
+\mbox{\hyperlink{struct_drive_train_1_1_model_states}{Model\+States}} {\bfseries Calc\+Output} (const \mbox{\hyperlink{struct_drive_train_1_1_model_states}{Model\+States}} \&s, const \mbox{\hyperlink{struct_drive_train_1_1_input}{Input}} \&u) const
+\end{DoxyCompactItemize}
+\doxysubsection*{Private Attributes}
+\begin{DoxyCompactItemize}
+\item 
+\mbox{\Hypertarget{class_drive_train_ada1eb33651c72ad39002cae9f810caa1}\label{class_drive_train_ada1eb33651c72ad39002cae9f810caa1}} 
+\mbox{\hyperlink{class_drive_train_a230836d89cfb701514a8728e64224be4}{Mode}} {\bfseries mode}
+\item 
+\mbox{\Hypertarget{class_drive_train_aa7a205b1f4dfc3f09eaf2b53b9133c09}\label{class_drive_train_aa7a205b1f4dfc3f09eaf2b53b9133c09}} 
+double {\bfseries gearbox\+\_\+ratio}
+\item 
+\mbox{\Hypertarget{class_drive_train_a73b65f96500f392a94ecb20e49c594b5}\label{class_drive_train_a73b65f96500f392a94ecb20e49c594b5}} 
+double {\bfseries damping\+\_\+coeff}
+\item 
+\mbox{\Hypertarget{class_drive_train_a47f58f7d2948d9d6527350f7c0d28362}\label{class_drive_train_a47f58f7d2948d9d6527350f7c0d28362}} 
+double {\bfseries stiffness\+\_\+coeff}
+\item 
+\mbox{\Hypertarget{class_drive_train_a5303905419790cf44e3f988e5adde54d}\label{class_drive_train_a5303905419790cf44e3f988e5adde54d}} 
+double {\bfseries gen\+\_\+moi}
+\item 
+\mbox{\Hypertarget{class_drive_train_ad02d70ede6fbd837aa40c5ce9fa3f6c7}\label{class_drive_train_ad02d70ede6fbd837aa40c5ce9fa3f6c7}} 
+double {\bfseries rotor\+\_\+moi}
+\item 
+\mbox{\Hypertarget{class_drive_train_a5e19f216775361dd4fde6d1cbb9a2e40}\label{class_drive_train_a5e19f216775361dd4fde6d1cbb9a2e40}} 
+\mbox{\hyperlink{struct_drive_train_1_1_model_states}{Model\+States}} \mbox{\hyperlink{class_drive_train_a5e19f216775361dd4fde6d1cbb9a2e40}{states\+\_\+pred}}
+\begin{DoxyCompactList}\small\item\em moment of inertia for generator mass and rotor mass \end{DoxyCompactList}\item 
+\mbox{\Hypertarget{class_drive_train_a8d639584af7af55046a3c0519f712b51}\label{class_drive_train_a8d639584af7af55046a3c0519f712b51}} 
+\mbox{\hyperlink{struct_drive_train_1_1_model_states}{Model\+States}} {\bfseries states\+\_\+curr}
+\item 
+\mbox{\Hypertarget{class_drive_train_a9f7094a73659165edeabea625a16a3f7}\label{class_drive_train_a9f7094a73659165edeabea625a16a3f7}} 
+\mbox{\hyperlink{struct_drive_train_1_1_model_states}{Model\+States}} {\bfseries saved\+\_\+states}
+\item 
+\mbox{\Hypertarget{class_drive_train_a09c803bcabc20d4b46a0531bcdccd8d3}\label{class_drive_train_a09c803bcabc20d4b46a0531bcdccd8d3}} 
+double {\bfseries time}
+\item 
+\mbox{\Hypertarget{class_drive_train_ac068256cfb3b98b40e97d4117e215e1e}\label{class_drive_train_ac068256cfb3b98b40e97d4117e215e1e}} 
+double {\bfseries saved\+\_\+time}
+\item 
+\mbox{\Hypertarget{class_drive_train_a801bf19e6ec48bf284adfd29525900ba}\label{class_drive_train_a801bf19e6ec48bf284adfd29525900ba}} 
+double \mbox{\hyperlink{class_drive_train_a801bf19e6ec48bf284adfd29525900ba}{input\+Time}} \mbox{[}2\mbox{]}
+\begin{DoxyCompactList}\small\item\em The time that the states\+\_\+pred are currently at. \end{DoxyCompactList}\item 
+\mbox{\Hypertarget{class_drive_train_ad0f0cca5ac00503cc0dc12aee710106b}\label{class_drive_train_ad0f0cca5ac00503cc0dc12aee710106b}} 
+double {\bfseries saved\+\_\+input\+Time} \mbox{[}2\mbox{]}
+\item 
+\mbox{\Hypertarget{class_drive_train_aab0ab3bd496b24d6b31aeb9d3c59f69b}\label{class_drive_train_aab0ab3bd496b24d6b31aeb9d3c59f69b}} 
+\mbox{\hyperlink{struct_drive_train_1_1_input}{Input}} {\bfseries input} \mbox{[}2\mbox{]}
+\item 
+\mbox{\Hypertarget{class_drive_train_af53c072d39257cfa0b7d6975ea9a0142}\label{class_drive_train_af53c072d39257cfa0b7d6975ea9a0142}} 
+\mbox{\hyperlink{struct_drive_train_1_1_input}{Input}} {\bfseries saved\+\_\+input} \mbox{[}2\mbox{]}
+\end{DoxyCompactItemize}
+
+
+\doxysubsection{Detailed Description}
+This class implements a two-\/mass drivetrain model with a particular generator and rotor mass moment of inertia, shaft stiffness and damping, and gearbox ratio. 
+
+\begin{DoxyAuthor}{Author}
+Dustin Condon 
+\end{DoxyAuthor}
+\begin{DoxyDate}{Date}
+Aug 2020
+\end{DoxyDate}
+The inputs to this simulation module are the rotor and generator torque. The outputs are the shaft displacements, speeds, and accelerations. This has been written to have the same general structure as an openfast module, so that it can be coordinate with them using openfast\textquotesingle{}s predictor-\/corrector method. The key parts of how the drivetrain is implemented is that
+\begin{DoxyEnumerate}
+\item Advance states integrate the states held in states\+\_\+curr, integrates them, and assigns the result to states\+\_\+pred. Then advance states can be called multiple times without actually changing the states\+\_\+curr.
+\item Advance states uses the inputs at input\mbox{[}C\+U\+RR\mbox{]} and input\mbox{[}N\+E\+XT\mbox{]}, i.\+e. it uses inputs at its current timestep, and inputs at the next timestep to do its calculation, as is the case with the openfast modules. 
+\end{DoxyEnumerate}
+
+The documentation for this class was generated from the following files\+:\begin{DoxyCompactItemize}
+\item 
+F\+A\+S\+T\+Interface/src/Drive\+Train.\+h\item 
+F\+A\+S\+T\+Interface/src/Drive\+Train.\+cpp\end{DoxyCompactItemize}

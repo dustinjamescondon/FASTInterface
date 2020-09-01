@@ -1,0 +1,332 @@
+\hypertarget{class_aero_dyn_turbine}{}\doxysection{Aero\+Dyn\+Turbine Class Reference}
+\label{class_aero_dyn_turbine}\index{AeroDynTurbine@{AeroDynTurbine}}
+
+
+This class coordinates Aero\+Dyn, the drivetrain, and the controller. It also implements the input-\/output solver for when added mass is enabled.  
+
+
+
+
+{\ttfamily \#include $<$Aero\+Dyn\+Turbine.\+h$>$}
+
+Inheritance diagram for Aero\+Dyn\+Turbine\+:\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[height=2.000000cm]{class_aero_dyn_turbine}
+\end{center}
+\end{figure}
+\doxysubsection*{Classes}
+\begin{DoxyCompactItemize}
+\item 
+struct \mbox{\hyperlink{struct_aero_dyn_turbine_1_1_hub_acc}{Hub\+Acc}}
+\item 
+struct \mbox{\hyperlink{struct_aero_dyn_turbine_1_1_hub_motion}{Hub\+Motion}}
+\item 
+struct \mbox{\hyperlink{struct_aero_dyn_turbine_1_1_nacelle_accelerations}{Nacelle\+Accelerations}}
+\item 
+struct \mbox{\hyperlink{struct_aero_dyn_turbine_1_1_nacelle_motion}{Nacelle\+Motion}}
+\item 
+struct \mbox{\hyperlink{struct_aero_dyn_turbine_1_1_nacelle_reaction_loads___vec}{Nacelle\+Reaction\+Loads\+\_\+\+Vec}}
+\end{DoxyCompactItemize}
+\doxysubsection*{Public Member Functions}
+\begin{DoxyCompactItemize}
+\item 
+\mbox{\Hypertarget{class_aero_dyn_turbine_a18a757a45188cfdc8e76363685307a9d}\label{class_aero_dyn_turbine_a18a757a45188cfdc8e76363685307a9d}} 
+void {\bfseries Init\+With\+Constant\+Rotor\+Speed\+And\+Pitch} (double constant\+Rotor\+Speed, double constant\+Blade\+Pitch)
+\item 
+\mbox{\Hypertarget{class_aero_dyn_turbine_a922afc94ae60b8721b51811d89ac8e92}\label{class_aero_dyn_turbine_a922afc94ae60b8721b51811d89ac8e92}} 
+void {\bfseries Init\+Drive\+Train} (double rotor\+M\+OI, double gen\+M\+OI, double stiffness, double damping, double gearbox\+Ratio, double init\+Rotor\+Speed)
+\item 
+\mbox{\Hypertarget{class_aero_dyn_turbine_a91d9b790642a78d649864ffc05c8b9d4}\label{class_aero_dyn_turbine_a91d9b790642a78d649864ffc05c8b9d4}} 
+void {\bfseries Init\+Controllers\+\_\+\+Bladed\+D\+LL} (int num\+Blades, const std\+::string \&bladed\+\_\+dll\+\_\+fname, double initial\+Blade\+Pitch)
+\item 
+\mbox{\Hypertarget{class_aero_dyn_turbine_aa63523566e2101c174d34ec8a679f47e}\label{class_aero_dyn_turbine_aa63523566e2101c174d34ec8a679f47e}} 
+void {\bfseries Init\+Aero\+Dyn} (const std\+::string \&input\+Filename, const std\+::string \&output\+Filename, bool use\+Added\+Mass, double coeff\+Added\+Mass, double timestep, int num\+Blades, double hub\+Radius, double precone, const Vector3d \&nacelle\+Pos, const Vector3d \&nacelle\+Euler\+Angles, const Vector3d \&nacelle\+Vel, const Vector3d \&nacelle\+Acc, const Vector3d \&nacelle\+Angular\+Vel, const Vector3d \&nacelle\+Angular\+Acc)
+\item 
+\mbox{\Hypertarget{class_aero_dyn_turbine_adc40f401950ee6867e85f6a2bf99080e}\label{class_aero_dyn_turbine_adc40f401950ee6867e85f6a2bf99080e}} 
+void {\bfseries Init\+Inputs\+\_\+\+Inflow} (const std\+::vector$<$ double $>$ \&inflow\+Vel, const std\+::vector$<$ double $>$ \&inflow\+Acc)
+\item 
+\mbox{\Hypertarget{class_aero_dyn_turbine_abdef2fdb31600844322a977204fe31fb}\label{class_aero_dyn_turbine_abdef2fdb31600844322a977204fe31fb}} 
+void {\bfseries Set\+Callback\+\_\+\+Calc\+Output} (std\+::function$<$ void(const double $\ast$, const double $\ast$, double $\ast$, double $\ast$)$>$ Calc\+Output)
+\item 
+void \mbox{\hyperlink{class_aero_dyn_turbine_a484f4f77c95e9954ff8c826e4491cabe}{Set\+Inputs\+\_\+\+Nacelle}} (double time, const Vector3d \&nacelle\+Pos, const Vector3d \&nacelle\+Euler\+Angles, const Vector3d \&nacelle\+Vel, const Vector3d \&nacelle\+Acc, const Vector3d \&nacelle\+Angular\+Vel, const Vector3d \&nacelle\+Angular\+Acc, bool is\+Temp\+Update)
+\begin{DoxyCompactList}\small\item\em Begin updating the model\textquotesingle{}s state by first setting the nacelle\textquotesingle{}s states in the future. We can\textquotesingle{}t know where the blade nodes will be before actually updating all the states, so we have to provide an estimate. \end{DoxyCompactList}\item 
+\mbox{\Hypertarget{class_aero_dyn_turbine_aa14cd31ef510ca40198bbedf703da19a}\label{class_aero_dyn_turbine_aa14cd31ef510ca40198bbedf703da19a}} 
+void {\bfseries Set\+Inputs\+\_\+\+Nacelle\+Acc} (const Vector3d \&nacelle\+Acc, const Vector3d \&nacelle\+Rotation\+Acc)
+\item 
+void \mbox{\hyperlink{class_aero_dyn_turbine_a34de2ce9345d41db9de7225adb701e48}{Set\+Inputs\+\_\+\+Inflow}} (const std\+::vector$<$ double $>$ \&inflow\+Vel, const std\+::vector$<$ double $>$ \&inflow\+Acc)
+\item 
+\mbox{\hyperlink{struct_aero_dyn_turbine_1_1_nacelle_reaction_loads___vec}{Nacelle\+Reaction\+Loads\+\_\+\+Vec}} \mbox{\hyperlink{class_aero_dyn_turbine_afa230dc3d1d9ec16cda99ac502d985c8}{Advance\+States}} ()
+\begin{DoxyCompactList}\small\item\em When added mass is enabled, this will actually calculate and solve for the correct accelerations/loads and get the outputs unlike the Update\+States functions of Aero\+Dyn and the drivetrain. \end{DoxyCompactList}\item 
+\mbox{\Hypertarget{class_aero_dyn_turbine_a710866255412acd86aa0494f5948ac68}\label{class_aero_dyn_turbine_a710866255412acd86aa0494f5948ac68}} 
+void {\bfseries Get\+Blade\+Node\+Positions} (std\+::vector$<$ double $>$ \&node\+Positions)
+\item 
+\mbox{\Hypertarget{class_aero_dyn_turbine_afb98e67eefde72a9b912c80048b052f7}\label{class_aero_dyn_turbine_afb98e67eefde72a9b912c80048b052f7}} 
+\mbox{\hyperlink{struct_aero_dyn___interface___wrapper_1_1_hub_reaction_loads}{Aero\+Dyn\+\_\+\+Interface\+\_\+\+Wrapper\+::\+Hub\+Reaction\+Loads}} {\bfseries Get\+Hub\+Reaction\+Loads} () const
+\item 
+\mbox{\Hypertarget{class_aero_dyn_turbine_a8d0dfb6477d4a902a64e2fe7539ac076}\label{class_aero_dyn_turbine_a8d0dfb6477d4a902a64e2fe7539ac076}} 
+\mbox{\hyperlink{struct_aero_dyn_turbine_1_1_nacelle_reaction_loads___vec}{Nacelle\+Reaction\+Loads\+\_\+\+Vec}} {\bfseries Get\+Nacelle\+Reaction\+Loads} () const
+\item 
+\mbox{\Hypertarget{class_aero_dyn_turbine_a32fb4be6fef8fc1d498c63027526a8f0}\label{class_aero_dyn_turbine_a32fb4be6fef8fc1d498c63027526a8f0}} 
+Vector3d {\bfseries Get\+Nacelle\+Reaction\+Force} () const
+\item 
+\mbox{\Hypertarget{class_aero_dyn_turbine_a9f236c5498f088122c7d372fdf07669d}\label{class_aero_dyn_turbine_a9f236c5498f088122c7d372fdf07669d}} 
+Vector3d {\bfseries Get\+Nacelle\+Reaction\+Moment} () const
+\item 
+\mbox{\Hypertarget{class_aero_dyn_turbine_a45697d87bd78c0f79327dd7937a747dd}\label{class_aero_dyn_turbine_a45697d87bd78c0f79327dd7937a747dd}} 
+Vector3d {\bfseries Get\+Nacelle\+Acc} () const
+\item 
+\mbox{\Hypertarget{class_aero_dyn_turbine_a35f3dbca80caa3ba56d706a8dffb8625}\label{class_aero_dyn_turbine_a35f3dbca80caa3ba56d706a8dffb8625}} 
+Vector3d {\bfseries Get\+Nacelle\+Angular\+Acc} () const
+\item 
+\mbox{\Hypertarget{class_aero_dyn_turbine_a9c21545a124438662c93d5a68189e85c}\label{class_aero_dyn_turbine_a9c21545a124438662c93d5a68189e85c}} 
+double {\bfseries Get\+Power} () const
+\item 
+\mbox{\Hypertarget{class_aero_dyn_turbine_a9c4889d878e66d74eb04cb37ec72c719}\label{class_aero_dyn_turbine_a9c4889d878e66d74eb04cb37ec72c719}} 
+double {\bfseries Get\+T\+SR} () const
+\item 
+\mbox{\Hypertarget{class_aero_dyn_turbine_a03782a59ecb11ccaefe9046c6a453a35}\label{class_aero_dyn_turbine_a03782a59ecb11ccaefe9046c6a453a35}} 
+int {\bfseries Get\+Num\+Nodes} () const
+\item 
+\mbox{\Hypertarget{class_aero_dyn_turbine_a30e00ca84434c6e62c265c13d694805e}\label{class_aero_dyn_turbine_a30e00ca84434c6e62c265c13d694805e}} 
+int {\bfseries Get\+Num\+Blades} () const
+\item 
+\mbox{\Hypertarget{class_aero_dyn_turbine_a3e5c6f82e8837bbdce89d3381c63a4c5}\label{class_aero_dyn_turbine_a3e5c6f82e8837bbdce89d3381c63a4c5}} 
+double {\bfseries Get\+Turbine\+Diameter} () const
+\item 
+\mbox{\Hypertarget{class_aero_dyn_turbine_a1b205832919adbe2a1eb476f316dd2be}\label{class_aero_dyn_turbine_a1b205832919adbe2a1eb476f316dd2be}} 
+double {\bfseries Get\+Blade\+Pitch} () const
+\item 
+\mbox{\Hypertarget{class_aero_dyn_turbine_a21f8baccac1d008b83092f23a045bb48}\label{class_aero_dyn_turbine_a21f8baccac1d008b83092f23a045bb48}} 
+double {\bfseries Get\+Gen\+Torque} () const
+\item 
+\mbox{\Hypertarget{class_aero_dyn_turbine_ae8568f676c008a9878aae95a793e1744}\label{class_aero_dyn_turbine_ae8568f676c008a9878aae95a793e1744}} 
+double {\bfseries Get\+Gen\+Speed} () const
+\item 
+\mbox{\Hypertarget{class_aero_dyn_turbine_abb797bec9f001272c4bfc79d04ec6ac3}\label{class_aero_dyn_turbine_abb797bec9f001272c4bfc79d04ec6ac3}} 
+double {\bfseries Get\+Rotor\+Speed} () const
+\item 
+\mbox{\Hypertarget{class_aero_dyn_turbine_a1946e211c89aed538e39348bd367c831}\label{class_aero_dyn_turbine_a1946e211c89aed538e39348bd367c831}} 
+\mbox{\hyperlink{struct_drive_train_1_1_states}{Drive\+Train\+::\+States}} {\bfseries Get\+Rotor\+Shaft\+State} () const
+\item 
+\mbox{\Hypertarget{class_aero_dyn_turbine_a752541c696fbefed703cfc2ceb0869c6}\label{class_aero_dyn_turbine_a752541c696fbefed703cfc2ceb0869c6}} 
+\mbox{\hyperlink{struct_drive_train_1_1_states}{Drive\+Train\+::\+States}} {\bfseries Get\+Gen\+Shaft\+State} () const
+\end{DoxyCompactItemize}
+\doxysubsection*{Private Types}
+\begin{DoxyCompactItemize}
+\item 
+\mbox{\Hypertarget{class_aero_dyn_turbine_ae39c9b8b966373ef88d1072a9b36ffb1}\label{class_aero_dyn_turbine_ae39c9b8b966373ef88d1072a9b36ffb1}} 
+enum \{ \newline
+{\bfseries Y\+\_\+\+D\+V\+R\+\_\+\+N\+A\+C\+\_\+\+A\+CC} = 0, 
+{\bfseries Y\+\_\+\+D\+V\+R\+\_\+\+N\+A\+C\+\_\+\+R\+O\+T\+A\+CC} = 3, 
+{\bfseries Y\+\_\+\+A\+D\+\_\+\+H\+U\+B\+\_\+\+F\+O\+R\+CE} = 6, 
+{\bfseries Y\+\_\+\+A\+D\+\_\+\+H\+U\+B\+\_\+\+M\+O\+M\+E\+NT} = 9, 
+\newline
+{\bfseries Y\+\_\+\+D\+T\+\_\+\+R\+O\+T\+O\+R\+\_\+\+A\+CC} = 12
+ \}
+\item 
+\mbox{\Hypertarget{class_aero_dyn_turbine_a61f59c23bb5c42239959b290d7852dd1}\label{class_aero_dyn_turbine_a61f59c23bb5c42239959b290d7852dd1}} 
+enum \{ \newline
+{\bfseries U\+\_\+\+D\+V\+R\+\_\+\+N\+A\+C\+\_\+\+F\+O\+R\+CE} = 0, 
+{\bfseries U\+\_\+\+D\+V\+R\+\_\+\+N\+A\+C\+\_\+\+M\+O\+M\+E\+NT} = 3, 
+{\bfseries U\+\_\+\+A\+D\+\_\+\+H\+U\+B\+\_\+\+A\+CC} = 6, 
+{\bfseries U\+\_\+\+A\+D\+\_\+\+H\+U\+B\+\_\+\+R\+O\+T\+A\+CC} = 9, 
+\newline
+{\bfseries U\+\_\+\+D\+T\+\_\+\+R\+O\+T\+O\+R\+\_\+\+T\+O\+R\+Q\+UE} = 12
+ \}
+\item 
+\mbox{\Hypertarget{class_aero_dyn_turbine_aa4f00c5014079c5c79bf09394ed0dabd}\label{class_aero_dyn_turbine_aa4f00c5014079c5c79bf09394ed0dabd}} 
+typedef Eigen\+::\+Vector$<$ double, 13 $>$ {\bfseries Serialized\+Vector}
+\end{DoxyCompactItemize}
+\doxysubsection*{Private Member Functions}
+\begin{DoxyCompactItemize}
+\item 
+\mbox{\Hypertarget{class_aero_dyn_turbine_a1b39eb5bf4bb7898dcd50640daf2c5ac}\label{class_aero_dyn_turbine_a1b39eb5bf4bb7898dcd50640daf2c5ac}} 
+void {\bfseries Save\+Current\+States} ()
+\item 
+\mbox{\Hypertarget{class_aero_dyn_turbine_aced54f9b1ab653a9d427593684bafd2a}\label{class_aero_dyn_turbine_aced54f9b1ab653a9d427593684bafd2a}} 
+void {\bfseries Restore\+Saved\+States} ()
+\item 
+\mbox{\Hypertarget{class_aero_dyn_turbine_a8d3a915e7d13f50b091b1e7b83142441}\label{class_aero_dyn_turbine_a8d3a915e7d13f50b091b1e7b83142441}} 
+void {\bfseries Set\+Inputs\+\_\+\+Nacelle\+\_\+\+At\+\_\+\+Global\+\_\+\+Time\+\_\+\+Next} (const \mbox{\hyperlink{struct_aero_dyn_turbine_1_1_nacelle_motion}{Nacelle\+Motion}} \&nm)
+\item 
+\mbox{\Hypertarget{class_aero_dyn_turbine_a47470e9c409f02f51f4e7043b34228d9}\label{class_aero_dyn_turbine_a47470e9c409f02f51f4e7043b34228d9}} 
+\mbox{\hyperlink{struct_aero_dyn_turbine_1_1_nacelle_reaction_loads___vec}{Nacelle\+Reaction\+Loads\+\_\+\+Vec}} \mbox{\hyperlink{class_aero_dyn_turbine_a47470e9c409f02f51f4e7043b34228d9}{Advance\+States\+\_\+\+By\+\_\+\+One\+\_\+\+Global\+\_\+\+Timestep}} ()
+\begin{DoxyCompactList}\small\item\em Performs the predictor-\/corrector method, and uses the input-\/output solver for each corrector iteration (when added mass is enabled) \end{DoxyCompactList}\item 
+\mbox{\hyperlink{struct_aero_dyn_turbine_1_1_nacelle_reaction_loads___vec}{Nacelle\+Reaction\+Loads\+\_\+\+Vec}} \mbox{\hyperlink{class_aero_dyn_turbine_af794c650277f55b4c2a30d5be5104f24}{Calc\+Outputs\+\_\+\+And\+\_\+\+Solve\+Inputs}} ()
+\begin{DoxyCompactList}\small\item\em Solves for the correct acceleration inputs at global\+\_\+time\+\_\+next and then calculates the outputs at that same time. \end{DoxyCompactList}\item 
+\mbox{\Hypertarget{class_aero_dyn_turbine_a050eb6a7522011c16688e69dac48d45a}\label{class_aero_dyn_turbine_a050eb6a7522011c16688e69dac48d45a}} 
+\mbox{\hyperlink{struct_aero_dyn_turbine_1_1_nacelle_reaction_loads___vec}{Nacelle\+Reaction\+Loads\+\_\+\+Vec}} {\bfseries Calc\+Outputs\+\_\+\+And\+\_\+\+Derive\+Inputs} ()
+\item 
+\mbox{\Hypertarget{class_aero_dyn_turbine_a37042e7f7f07f6c9533a6877ba7d4286}\label{class_aero_dyn_turbine_a37042e7f7f07f6c9533a6877ba7d4286}} 
+Serialized\+Vector {\bfseries Calc\+Residual} (const Serialized\+Vector \&y, const Serialized\+Vector \&u) const
+\item 
+\mbox{\Hypertarget{class_aero_dyn_turbine_a6af517528a487bb39f73c30316948d35}\label{class_aero_dyn_turbine_a6af517528a487bb39f73c30316948d35}} 
+\mbox{\hyperlink{struct_aero_dyn_turbine_1_1_hub_motion}{Hub\+Motion}} {\bfseries Calculate\+Hub\+Motion} (const \mbox{\hyperlink{struct_aero_dyn_turbine_1_1_nacelle_motion}{Nacelle\+Motion}} \&, const \mbox{\hyperlink{struct_drive_train_1_1_states}{Drive\+Train\+::\+States}} \&) const
+\item 
+\mbox{\Hypertarget{class_aero_dyn_turbine_a81581f491a5fffcbcd7747ee9af2e3c3}\label{class_aero_dyn_turbine_a81581f491a5fffcbcd7747ee9af2e3c3}} 
+\mbox{\hyperlink{struct_aero_dyn_turbine_1_1_hub_acc}{Hub\+Acc}} {\bfseries Calculate\+Hub\+Acc} (const Vector3d \&nac\+Acc, const Vector3d \&nac\+Rot\+Acc, const Matrix3d \&nac\+Ori, double rotor\+Shaft\+Acc) const
+\item 
+\mbox{\Hypertarget{class_aero_dyn_turbine_a73053f494413aea0f583560ce5635709}\label{class_aero_dyn_turbine_a73053f494413aea0f583560ce5635709}} 
+Matrix3d {\bfseries Calculate\+Nacelle\+Orientation} (const Vector3d \&nacelle\+Euler\+Angles) const
+\item 
+\mbox{\Hypertarget{class_aero_dyn_turbine_ad3ccb078c7a73f5dddd503a152c8d100}\label{class_aero_dyn_turbine_ad3ccb078c7a73f5dddd503a152c8d100}} 
+\mbox{\hyperlink{struct_aero_dyn_turbine_1_1_nacelle_motion}{Nacelle\+Motion}} {\bfseries Interpolate\+Nacelle\+Motion\+\_\+\+At\+Next\+Global\+Time} () const
+\item 
+\mbox{\Hypertarget{class_aero_dyn_turbine_a88a8151b0bd23534382db39686b44fd6}\label{class_aero_dyn_turbine_a88a8151b0bd23534382db39686b44fd6}} 
+Vector3d {\bfseries Transform\+Hub\+To\+Nacelle} (const Vector3d \&v, const Matrix3d \&nacelle\+Orienation, const Matrix3d \&hub\+Orienation) const
+\item 
+\mbox{\Hypertarget{class_aero_dyn_turbine_a53739dd3405e455fb601e571b5e90d67}\label{class_aero_dyn_turbine_a53739dd3405e455fb601e571b5e90d67}} 
+\mbox{\hyperlink{struct_aero_dyn_turbine_1_1_nacelle_reaction_loads___vec}{Nacelle\+Reaction\+Loads\+\_\+\+Vec}} {\bfseries Calc\+Nacelle\+Reaction\+Loads} ()
+\item 
+\mbox{\Hypertarget{class_aero_dyn_turbine_a0215c990a1ffc4931ff402b1a8bfdbfb}\label{class_aero_dyn_turbine_a0215c990a1ffc4931ff402b1a8bfdbfb}} 
+\mbox{\hyperlink{struct_aero_dyn_turbine_1_1_nacelle_accelerations}{Nacelle\+Accelerations}} {\bfseries Dvr\+\_\+\+Calc\+Output} (const Vector3d \&nacelle\+\_\+force, const Vector3d \&nacelle\+\_\+moment)
+\end{DoxyCompactItemize}
+\doxysubsection*{Private Attributes}
+\begin{DoxyCompactItemize}
+\item 
+\mbox{\Hypertarget{class_aero_dyn_turbine_a8604c9b31c699b2b4fe2475402ae3a65}\label{class_aero_dyn_turbine_a8604c9b31c699b2b4fe2475402ae3a65}} 
+double {\bfseries global\+\_\+time\+\_\+curr}
+\item 
+\mbox{\Hypertarget{class_aero_dyn_turbine_ad81c6d6fdf312d66b9445bf0621a8ffe}\label{class_aero_dyn_turbine_ad81c6d6fdf312d66b9445bf0621a8ffe}} 
+double {\bfseries global\+\_\+time\+\_\+curr\+\_\+saved}
+\item 
+\mbox{\Hypertarget{class_aero_dyn_turbine_aa7c5fe5329d9b24730a669b35772e524}\label{class_aero_dyn_turbine_aa7c5fe5329d9b24730a669b35772e524}} 
+double {\bfseries global\+\_\+time\+\_\+next}
+\item 
+\mbox{\Hypertarget{class_aero_dyn_turbine_a71f236aa4326551cf4e045517e87627e}\label{class_aero_dyn_turbine_a71f236aa4326551cf4e045517e87627e}} 
+double {\bfseries global\+\_\+time\+\_\+next\+\_\+saved}
+\item 
+\mbox{\Hypertarget{class_aero_dyn_turbine_ac61922d4bbc7c8e5dbb12a76f90f8faf}\label{class_aero_dyn_turbine_ac61922d4bbc7c8e5dbb12a76f90f8faf}} 
+double {\bfseries global\+\_\+timestep}
+\item 
+\mbox{\Hypertarget{class_aero_dyn_turbine_a03a6d5ace194370581b58cf265f50eea}\label{class_aero_dyn_turbine_a03a6d5ace194370581b58cf265f50eea}} 
+bool {\bfseries on\+Temp\+Update}
+\item 
+\mbox{\Hypertarget{class_aero_dyn_turbine_a86e3081ebcd210d7df8f229e1d1fc392}\label{class_aero_dyn_turbine_a86e3081ebcd210d7df8f229e1d1fc392}} 
+bool {\bfseries use\+Added\+Mass}
+\item 
+\mbox{\Hypertarget{class_aero_dyn_turbine_aa41d3b4b655a1ee602e0c5b6ba658efa}\label{class_aero_dyn_turbine_aa41d3b4b655a1ee602e0c5b6ba658efa}} 
+\mbox{\hyperlink{struct_aero_dyn_turbine_1_1_nacelle_reaction_loads___vec}{Nacelle\+Reaction\+Loads\+\_\+\+Vec}} {\bfseries nacelle\+Reaction\+Loads\+\_\+at\+\_\+global\+\_\+time\+\_\+next}
+\item 
+\mbox{\Hypertarget{class_aero_dyn_turbine_ad85a693c98d13d3941dc9a6ed10359db}\label{class_aero_dyn_turbine_ad85a693c98d13d3941dc9a6ed10359db}} 
+\mbox{\hyperlink{struct_aero_dyn_turbine_1_1_nacelle_reaction_loads___vec}{Nacelle\+Reaction\+Loads\+\_\+\+Vec}} {\bfseries nacelle\+Reaction\+Loads\+\_\+at\+\_\+global\+\_\+time\+\_\+next\+\_\+saved}
+\item 
+\mbox{\Hypertarget{class_aero_dyn_turbine_a41b275528acf434db9f22247d6d3d3b2}\label{class_aero_dyn_turbine_a41b275528acf434db9f22247d6d3d3b2}} 
+\mbox{\hyperlink{struct_aero_dyn_turbine_1_1_nacelle_reaction_loads___vec}{Nacelle\+Reaction\+Loads\+\_\+\+Vec}} {\bfseries nacelle\+Reaction\+Loads\+\_\+at\+\_\+global\+\_\+time\+\_\+curr}
+\item 
+\mbox{\Hypertarget{class_aero_dyn_turbine_a8c36f8151d8aea86c9f984d7243ab68d}\label{class_aero_dyn_turbine_a8c36f8151d8aea86c9f984d7243ab68d}} 
+\mbox{\hyperlink{struct_aero_dyn_turbine_1_1_nacelle_reaction_loads___vec}{Nacelle\+Reaction\+Loads\+\_\+\+Vec}} {\bfseries nacelle\+Reaction\+Loads\+\_\+at\+\_\+global\+\_\+time\+\_\+curr\+\_\+saved}
+\item 
+\mbox{\Hypertarget{class_aero_dyn_turbine_a3b02c76e4d9f7045ea4ef47553259fe2}\label{class_aero_dyn_turbine_a3b02c76e4d9f7045ea4ef47553259fe2}} 
+\mbox{\hyperlink{class_aero_dyn___interface___wrapper}{Aero\+Dyn\+\_\+\+Interface\+\_\+\+Wrapper}} {\bfseries aerodyn}
+\item 
+\mbox{\Hypertarget{class_aero_dyn_turbine_a5a8127238948715fc20367ee87d656cd}\label{class_aero_dyn_turbine_a5a8127238948715fc20367ee87d656cd}} 
+\mbox{\hyperlink{class_drive_train}{Drive\+Train}} {\bfseries drivetrain}
+\item 
+\mbox{\Hypertarget{class_aero_dyn_turbine_a5765e5fef2c68b725d1a4715085aa1d8}\label{class_aero_dyn_turbine_a5765e5fef2c68b725d1a4715085aa1d8}} 
+\mbox{\hyperlink{class_master_controller}{Master\+Controller}} {\bfseries mcont}
+\item 
+\mbox{\Hypertarget{class_aero_dyn_turbine_ae3ede4f0512c4388c76c92b16d7dd931}\label{class_aero_dyn_turbine_ae3ede4f0512c4388c76c92b16d7dd931}} 
+\mbox{\hyperlink{struct_aero_dyn_turbine_1_1_nacelle_motion}{Nacelle\+Motion}} {\bfseries nacelle\+Motion\+\_\+at\+\_\+global\+\_\+time\+\_\+next}
+\item 
+\mbox{\Hypertarget{class_aero_dyn_turbine_ab6465fc5726345292be33e074aa28aae}\label{class_aero_dyn_turbine_ab6465fc5726345292be33e074aa28aae}} 
+\mbox{\hyperlink{struct_aero_dyn_turbine_1_1_nacelle_motion}{Nacelle\+Motion}} {\bfseries nacelle\+Motion\+\_\+at\+\_\+global\+\_\+time\+\_\+next\+\_\+saved}
+\item 
+\mbox{\Hypertarget{class_aero_dyn_turbine_aba54cd9ce9f2111e2ada92e8861629c1}\label{class_aero_dyn_turbine_aba54cd9ce9f2111e2ada92e8861629c1}} 
+\mbox{\hyperlink{struct_aero_dyn_turbine_1_1_nacelle_motion}{Nacelle\+Motion}} {\bfseries nacelle\+Motion\+\_\+at\+\_\+global\+\_\+time\+\_\+curr}
+\item 
+\mbox{\Hypertarget{class_aero_dyn_turbine_a928bf266febe7d3f2acd16efea224009}\label{class_aero_dyn_turbine_a928bf266febe7d3f2acd16efea224009}} 
+\mbox{\hyperlink{struct_aero_dyn_turbine_1_1_nacelle_motion}{Nacelle\+Motion}} {\bfseries nacelle\+Motion\+\_\+at\+\_\+global\+\_\+time\+\_\+curr\+\_\+saved}
+\item 
+\mbox{\Hypertarget{class_aero_dyn_turbine_a92fc20baab8cff0d1c34b3117014f5ab}\label{class_aero_dyn_turbine_a92fc20baab8cff0d1c34b3117014f5ab}} 
+\mbox{\hyperlink{struct_aero_dyn_turbine_1_1_nacelle_motion}{Nacelle\+Motion}} {\bfseries nacelle\+Motion\+\_\+at\+\_\+dvr\+\_\+time\+\_\+next}
+\item 
+\mbox{\Hypertarget{class_aero_dyn_turbine_aa0c60cfa775a1178654d4983f0a35e9b}\label{class_aero_dyn_turbine_aa0c60cfa775a1178654d4983f0a35e9b}} 
+\mbox{\hyperlink{struct_aero_dyn_turbine_1_1_nacelle_motion}{Nacelle\+Motion}} {\bfseries nacelle\+Motion\+\_\+at\+\_\+dvr\+\_\+time\+\_\+next\+\_\+saved}
+\item 
+\mbox{\Hypertarget{class_aero_dyn_turbine_aebb4397c223d02d6580868c216fb0d55}\label{class_aero_dyn_turbine_aebb4397c223d02d6580868c216fb0d55}} 
+\mbox{\hyperlink{struct_aero_dyn_turbine_1_1_nacelle_accelerations}{Nacelle\+Accelerations}} {\bfseries nac\+Accels\+\_\+at\+\_\+dvr\+\_\+time\+\_\+curr}
+\item 
+\mbox{\Hypertarget{class_aero_dyn_turbine_a40876e8a25a238591395f34244f4f9fd}\label{class_aero_dyn_turbine_a40876e8a25a238591395f34244f4f9fd}} 
+\mbox{\hyperlink{struct_aero_dyn_turbine_1_1_nacelle_accelerations}{Nacelle\+Accelerations}} {\bfseries nac\+Accels\+\_\+at\+\_\+dvr\+\_\+time\+\_\+curr\+\_\+saved}
+\item 
+\mbox{\Hypertarget{class_aero_dyn_turbine_a0d2499811944c4f23aaecdd00262f31f}\label{class_aero_dyn_turbine_a0d2499811944c4f23aaecdd00262f31f}} 
+\mbox{\hyperlink{struct_aero_dyn_turbine_1_1_nacelle_accelerations}{Nacelle\+Accelerations}} {\bfseries nac\+Accels\+\_\+at\+\_\+dvr\+\_\+time\+\_\+next}
+\item 
+\mbox{\Hypertarget{class_aero_dyn_turbine_a2084fe0a1207a79b7d264c8763bec6b8}\label{class_aero_dyn_turbine_a2084fe0a1207a79b7d264c8763bec6b8}} 
+\mbox{\hyperlink{struct_aero_dyn_turbine_1_1_nacelle_accelerations}{Nacelle\+Accelerations}} {\bfseries nac\+Accels\+\_\+at\+\_\+dvr\+\_\+time\+\_\+next\+\_\+saved}
+\item 
+\mbox{\Hypertarget{class_aero_dyn_turbine_a8c023fce0e68e00fc4f3c5f30b7ba086}\label{class_aero_dyn_turbine_a8c023fce0e68e00fc4f3c5f30b7ba086}} 
+double {\bfseries dvr\+\_\+time\+\_\+curr}
+\item 
+\mbox{\Hypertarget{class_aero_dyn_turbine_aadc3872fa5469a19b8ab14fbd1aa0635}\label{class_aero_dyn_turbine_aadc3872fa5469a19b8ab14fbd1aa0635}} 
+double {\bfseries dvr\+\_\+time\+\_\+curr\+\_\+saved}
+\item 
+\mbox{\Hypertarget{class_aero_dyn_turbine_a5550df19bbe7d591e74f2027f5b5a54a}\label{class_aero_dyn_turbine_a5550df19bbe7d591e74f2027f5b5a54a}} 
+double {\bfseries dvr\+\_\+time\+\_\+next}
+\item 
+\mbox{\Hypertarget{class_aero_dyn_turbine_a5dd81f12a000bc2fc44d938152f9a4da}\label{class_aero_dyn_turbine_a5dd81f12a000bc2fc44d938152f9a4da}} 
+double {\bfseries dvr\+\_\+time\+\_\+next\+\_\+saved}
+\item 
+\mbox{\Hypertarget{class_aero_dyn_turbine_ae0e63f0caec11754247a7db0eddf84fb}\label{class_aero_dyn_turbine_ae0e63f0caec11754247a7db0eddf84fb}} 
+std\+::function$<$ void(const double $\ast$, const double $\ast$, double $\ast$, double $\ast$)$>$ {\bfseries Calc\+Output\+\_\+callback}
+\end{DoxyCompactItemize}
+
+
+\doxysubsection{Detailed Description}
+This class coordinates Aero\+Dyn, the drivetrain, and the controller. It also implements the input-\/output solver for when added mass is enabled. 
+
+\begin{DoxyAuthor}{Author}
+Dustin Condon 
+\end{DoxyAuthor}
+\begin{DoxyDate}{Date}
+Aug 2020 
+\end{DoxyDate}
+
+
+\doxysubsection{Member Function Documentation}
+\mbox{\Hypertarget{class_aero_dyn_turbine_afa230dc3d1d9ec16cda99ac502d985c8}\label{class_aero_dyn_turbine_afa230dc3d1d9ec16cda99ac502d985c8}} 
+\index{AeroDynTurbine@{AeroDynTurbine}!AdvanceStates@{AdvanceStates}}
+\index{AdvanceStates@{AdvanceStates}!AeroDynTurbine@{AeroDynTurbine}}
+\doxysubsubsection{\texorpdfstring{AdvanceStates()}{AdvanceStates()}}
+{\footnotesize\ttfamily \mbox{\hyperlink{struct_aero_dyn_turbine_1_1_nacelle_reaction_loads___vec}{Aero\+Dyn\+Turbine\+::\+Nacelle\+Reaction\+Loads\+\_\+\+Vec}} Aero\+Dyn\+Turbine\+::\+Advance\+States (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})}
+
+
+
+When added mass is enabled, this will actually calculate and solve for the correct accelerations/loads and get the outputs unlike the Update\+States functions of Aero\+Dyn and the drivetrain. 
+
+this takes the substeps needed to reach within global\+\_\+timestep of dvr\+\_\+time\+\_\+next \mbox{\Hypertarget{class_aero_dyn_turbine_af794c650277f55b4c2a30d5be5104f24}\label{class_aero_dyn_turbine_af794c650277f55b4c2a30d5be5104f24}} 
+\index{AeroDynTurbine@{AeroDynTurbine}!CalcOutputs\_And\_SolveInputs@{CalcOutputs\_And\_SolveInputs}}
+\index{CalcOutputs\_And\_SolveInputs@{CalcOutputs\_And\_SolveInputs}!AeroDynTurbine@{AeroDynTurbine}}
+\doxysubsubsection{\texorpdfstring{CalcOutputs\_And\_SolveInputs()}{CalcOutputs\_And\_SolveInputs()}}
+{\footnotesize\ttfamily \mbox{\hyperlink{struct_aero_dyn_turbine_1_1_nacelle_reaction_loads___vec}{Aero\+Dyn\+Turbine\+::\+Nacelle\+Reaction\+Loads\+\_\+\+Vec}} Aero\+Dyn\+Turbine\+::\+Calc\+Outputs\+\_\+\+And\+\_\+\+Solve\+Inputs (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [private]}}
+
+
+
+Solves for the correct acceleration inputs at global\+\_\+time\+\_\+next and then calculates the outputs at that same time. 
+
+\begin{DoxyRefDesc}{Todo}
+\item[\mbox{\hyperlink{todo__todo000003}{Todo}}]initialize perturb vector somewhere in the constructor \end{DoxyRefDesc}
+\mbox{\Hypertarget{class_aero_dyn_turbine_a34de2ce9345d41db9de7225adb701e48}\label{class_aero_dyn_turbine_a34de2ce9345d41db9de7225adb701e48}} 
+\index{AeroDynTurbine@{AeroDynTurbine}!SetInputs\_Inflow@{SetInputs\_Inflow}}
+\index{SetInputs\_Inflow@{SetInputs\_Inflow}!AeroDynTurbine@{AeroDynTurbine}}
+\doxysubsubsection{\texorpdfstring{SetInputs\_Inflow()}{SetInputs\_Inflow()}}
+{\footnotesize\ttfamily void Aero\+Dyn\+Turbine\+::\+Set\+Inputs\+\_\+\+Inflow (\begin{DoxyParamCaption}\item[{const std\+::vector$<$ double $>$ \&}]{inflow\+Vel,  }\item[{const std\+::vector$<$ double $>$ \&}]{inflow\+Acc }\end{DoxyParamCaption})}
+
+Sets the inflow velocities at the time passed to Set\+Nacelle\+Motion \mbox{\Hypertarget{class_aero_dyn_turbine_a484f4f77c95e9954ff8c826e4491cabe}\label{class_aero_dyn_turbine_a484f4f77c95e9954ff8c826e4491cabe}} 
+\index{AeroDynTurbine@{AeroDynTurbine}!SetInputs\_Nacelle@{SetInputs\_Nacelle}}
+\index{SetInputs\_Nacelle@{SetInputs\_Nacelle}!AeroDynTurbine@{AeroDynTurbine}}
+\doxysubsubsection{\texorpdfstring{SetInputs\_Nacelle()}{SetInputs\_Nacelle()}}
+{\footnotesize\ttfamily void Aero\+Dyn\+Turbine\+::\+Set\+Inputs\+\_\+\+Nacelle (\begin{DoxyParamCaption}\item[{double}]{p\+\_\+time,  }\item[{const Vector3d \&}]{p\+\_\+nacelle\+Pos,  }\item[{const Vector3d \&}]{p\+\_\+nacelle\+Euler\+Angles,  }\item[{const Vector3d \&}]{p\+\_\+nacelle\+Vel,  }\item[{const Vector3d \&}]{p\+\_\+nacelle\+Acc,  }\item[{const Vector3d \&}]{p\+\_\+nacelle\+Angular\+Vel,  }\item[{const Vector3d \&}]{p\+\_\+nacelle\+Angular\+Acc,  }\item[{bool}]{p\+\_\+is\+Temp\+Update }\end{DoxyParamCaption})}
+
+
+
+Begin updating the model\textquotesingle{}s state by first setting the nacelle\textquotesingle{}s states in the future. We can\textquotesingle{}t know where the blade nodes will be before actually updating all the states, so we have to provide an estimate. 
+
+{\bfseries{Note\+:}} The only reason the drivetrain\textquotesingle{}s states are updated here is to get the rotor shaft displacement to send to Aero\+Dyn, which in is then used to set Aero\+Dyn\textquotesingle{}s hub state. Finally this is just used to get the blade node positions at dvr\+\_\+time\+\_\+next. Both the drivetrain update and the inputs sent to Aero\+Dyn are temporary and not actually used for anything other than getting the blade node positions. 
+
+The documentation for this class was generated from the following files\+:\begin{DoxyCompactItemize}
+\item 
+F\+A\+S\+T\+Interface/src/Aero\+Dyn\+Turbine.\+h\item 
+F\+A\+S\+T\+Interface/src/Aero\+Dyn\+Turbine.\+cpp\end{DoxyCompactItemize}

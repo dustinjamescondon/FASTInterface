@@ -1,0 +1,385 @@
+\hypertarget{class_aero_dyn___interface___wrapper}{}\doxysection{Aero\+Dyn\+\_\+\+Interface\+\_\+\+Wrapper Class Reference}
+\label{class_aero_dyn___interface___wrapper}\index{AeroDyn\_Interface\_Wrapper@{AeroDyn\_Interface\_Wrapper}}
+
+
+This is a wrapper for Aero\+Dyn\+\_\+\+Interface, which is written in F\+O\+R\+T\+R\+AN. Its main purpose is to provide Aerodyn with inputs, for which it can return reaction loads on the hub. It also changes from Proteus\+DS\textquotesingle{} z-\/positive-\/down coordinate system to Aero\+Dyn\textquotesingle{}s z-\/positive-\/up coordinate system.  
+
+
+
+
+{\ttfamily \#include $<$Aero\+Dyn\+\_\+\+Interface\+\_\+\+Wrapper.\+h$>$}
+
+\doxysubsection*{Classes}
+\begin{DoxyCompactItemize}
+\item 
+struct \mbox{\hyperlink{struct_aero_dyn___interface___wrapper_1_1_hub_reaction_loads}{Hub\+Reaction\+Loads}}
+\item 
+struct \mbox{\hyperlink{struct_aero_dyn___interface___wrapper_1_1_input}{Input}}
+\end{DoxyCompactItemize}
+\doxysubsection*{Public Member Functions}
+\begin{DoxyCompactItemize}
+\item 
+void \mbox{\hyperlink{class_aero_dyn___interface___wrapper_aba4f03bde29cc7fc61556325ebd40c64}{Init\+Aerodyn}} (const char $\ast$input\+Filename, const char $\ast$output\+Filename, double timestep, int num\+Blades, double hub\+Radius, double precone, bool use\+Added\+Mass, double coeff\+Added\+Mass, const Vector3d \&hub\+Position, const Matrix3d \&hub\+Orientation, const Vector3d \&hub\+Vel, const Vector3d \&hub\+Acc, const Vector3d \&hub\+Rotational\+Vel, const Vector3d \&hub\+Rotational\+Acc, double blade\+Pitch)
+\begin{DoxyCompactList}\small\item\em Initializes Aero\+Dyn by loading input files and setting initial hub state. \end{DoxyCompactList}\item 
+void \mbox{\hyperlink{class_aero_dyn___interface___wrapper_a22f49f937a36e78a1a3609e0a4abdc66}{Init\+Inflows}} (const std\+::vector$<$ double $>$ \&inflow\+Vel, const std\+::vector$<$ double $>$ \&inflow\+Acc)
+\begin{DoxyCompactList}\small\item\em Initializes the inflows. Note, inflow velocities are in global coordinate system. \end{DoxyCompactList}\item 
+\mbox{\Hypertarget{class_aero_dyn___interface___wrapper_ac891c89d1f37f9694c049d1fe2cb3894}\label{class_aero_dyn___interface___wrapper_ac891c89d1f37f9694c049d1fe2cb3894}} 
+void {\bfseries Save\+Current\+States} ()
+\item 
+\mbox{\Hypertarget{class_aero_dyn___interface___wrapper_a261110ab38c660347aa8793e14de4bdf}\label{class_aero_dyn___interface___wrapper_a261110ab38c660347aa8793e14de4bdf}} 
+void {\bfseries Restore\+Saved\+States} ()
+\item 
+void \mbox{\hyperlink{class_aero_dyn___interface___wrapper_a83efebceeba09a5730bbd4627e7f229d}{Set\+\_\+\+Inputs\+\_\+\+Hub}} (double time, const Vector3d \&hub\+Position, const Matrix3d \&hub\+Orientation, const Vector3d \&hub\+Vel, const Vector3d \&hub\+Acc, const Vector3d \&hub\+Angular\+Vel, const Vector3d \&hub\+Angular\+Acc, double blade\+Pitch)
+\begin{DoxyCompactList}\small\item\em Updates the hub motion variables, changing the positions of the nodes accordingly. \end{DoxyCompactList}\item 
+void \mbox{\hyperlink{class_aero_dyn___interface___wrapper_ab83233cd9085b565593cbbe304d30980}{Set\+\_\+\+Inputs\+\_\+\+Hub\+Acceleration}} (const Vector3d \&hub\+Acc, const Vector3d \&hub\+Angular\+Acc)
+\begin{DoxyCompactList}\small\item\em Sets the acceleration inputs only. \end{DoxyCompactList}\item 
+void \mbox{\hyperlink{class_aero_dyn___interface___wrapper_a008b9580fca86c4edaa714b716b82f2c}{Set\+\_\+\+Inputs\+\_\+\+Inflow}} (const std\+::vector$<$ double $>$ \&inflow\+Vel, const std\+::vector$<$ double $>$ \&inflow\+Acc)
+\begin{DoxyCompactList}\small\item\em Sets the flow velocity and acceleration at the next time-\/step. Note, inflow velocities are in global coordinate system. \end{DoxyCompactList}\item 
+\mbox{\hyperlink{struct_aero_dyn___interface___wrapper_1_1_hub_reaction_loads}{Hub\+Reaction\+Loads}} \mbox{\hyperlink{class_aero_dyn___interface___wrapper_a590d1e1bb7dc56dd4b08a746e5276cb9}{Calc\+Output}} ()
+\begin{DoxyCompactList}\small\item\em Calculates the hub reaction loads. \end{DoxyCompactList}\item 
+\mbox{\Hypertarget{class_aero_dyn___interface___wrapper_a1b782515d1d983f18501f80b8285a1b4}\label{class_aero_dyn___interface___wrapper_a1b782515d1d983f18501f80b8285a1b4}} 
+\mbox{\hyperlink{struct_aero_dyn___interface___wrapper_1_1_hub_reaction_loads}{Hub\+Reaction\+Loads}} \mbox{\hyperlink{class_aero_dyn___interface___wrapper_a1b782515d1d983f18501f80b8285a1b4}{Get\+Output}} () const
+\begin{DoxyCompactList}\small\item\em Returns the current outputs {\bfseries{Note\+:}} the values returned by this are part of what is saved when Save\+Current\+States is called, so if this is called after calling Restore\+Saved\+States, then the outputs will be from those saved states. \end{DoxyCompactList}\item 
+\mbox{\Hypertarget{class_aero_dyn___interface___wrapper_a5669533a22e0f6ba60c30c6d5f6a2306}\label{class_aero_dyn___interface___wrapper_a5669533a22e0f6ba60c30c6d5f6a2306}} 
+void \mbox{\hyperlink{class_aero_dyn___interface___wrapper_a5669533a22e0f6ba60c30c6d5f6a2306}{Advance\+\_\+\+Input\+Window}} ()
+\begin{DoxyCompactList}\small\item\em Cycles the two inputs\+: curr\+\_\+input=next\+\_\+input. \end{DoxyCompactList}\item 
+Vector3d \mbox{\hyperlink{class_aero_dyn___interface___wrapper_ab351cbcceda676f2b38a7e027c7b4def}{Get\+Input\+\_\+\+Hub\+Acc}} () const
+\begin{DoxyCompactList}\small\item\em Returns the acceleration input at the next timestep. \end{DoxyCompactList}\item 
+\mbox{\Hypertarget{class_aero_dyn___interface___wrapper_a5548c1c3e2d32b7e0f04d9cd9a181d31}\label{class_aero_dyn___interface___wrapper_a5548c1c3e2d32b7e0f04d9cd9a181d31}} 
+Vector3d {\bfseries Get\+Input\+\_\+\+Hub\+Rot\+Acc} () const
+\item 
+\mbox{\Hypertarget{class_aero_dyn___interface___wrapper_a514403fc4652499b2b8cd18c3e0623b3}\label{class_aero_dyn___interface___wrapper_a514403fc4652499b2b8cd18c3e0623b3}} 
+Matrix3d {\bfseries Get\+Input\+\_\+\+Hub\+Orient} () const
+\item 
+void \mbox{\hyperlink{class_aero_dyn___interface___wrapper_a2a17f25396dc6de8d62011ab6bc61fd3}{Get\+Blade\+Node\+Positions}} (std\+::vector$<$ double $>$ \&blade\+Node\+Positions)
+\begin{DoxyCompactList}\small\item\em Once update\+Hub\+State has been called, we call this to get where those hub kinematics put the blade nodes. \end{DoxyCompactList}\item 
+\mbox{\Hypertarget{class_aero_dyn___interface___wrapper_a8663c790efc161371a25b8add74a6edb}\label{class_aero_dyn___interface___wrapper_a8663c790efc161371a25b8add74a6edb}} 
+int \mbox{\hyperlink{class_aero_dyn___interface___wrapper_a8663c790efc161371a25b8add74a6edb}{Get\+Num\+Nodes}} () const
+\begin{DoxyCompactList}\small\item\em Returns the total number of nodes (call after Init\+Aerodyn) \end{DoxyCompactList}\item 
+\mbox{\Hypertarget{class_aero_dyn___interface___wrapper_a2f924a11778f663779503ada269606c2}\label{class_aero_dyn___interface___wrapper_a2f924a11778f663779503ada269606c2}} 
+int \mbox{\hyperlink{class_aero_dyn___interface___wrapper_a2f924a11778f663779503ada269606c2}{Get\+Num\+Blades}} () const
+\begin{DoxyCompactList}\small\item\em Returns the number of blades (call after Init\+Aerodyn) \end{DoxyCompactList}\item 
+\mbox{\Hypertarget{class_aero_dyn___interface___wrapper_a0783af5d2f3e13dbe43e2f86dde8b38b}\label{class_aero_dyn___interface___wrapper_a0783af5d2f3e13dbe43e2f86dde8b38b}} 
+double \mbox{\hyperlink{class_aero_dyn___interface___wrapper_a0783af5d2f3e13dbe43e2f86dde8b38b}{Get\+Turbine\+Diameter}} () const
+\begin{DoxyCompactList}\small\item\em Returns the diameter of the turbine (call after Init\+Aero\+Dyn) \end{DoxyCompactList}\item 
+\mbox{\Hypertarget{class_aero_dyn___interface___wrapper_a8b049f70154c822b2ca5f5a82d5b101c}\label{class_aero_dyn___interface___wrapper_a8b049f70154c822b2ca5f5a82d5b101c}} 
+void \mbox{\hyperlink{class_aero_dyn___interface___wrapper_a8b049f70154c822b2ca5f5a82d5b101c}{Update\+States}} ()
+\begin{DoxyCompactList}\small\item\em Updates from the current states at time\+\_\+curr to time\+\_\+next, and stores the new states in the predicted states (in the F\+O\+R\+T\+R\+AN layer) \end{DoxyCompactList}\item 
+\mbox{\Hypertarget{class_aero_dyn___interface___wrapper_a6dc0263905781eed9a71415d401faa4a}\label{class_aero_dyn___interface___wrapper_a6dc0263905781eed9a71415d401faa4a}} 
+void \mbox{\hyperlink{class_aero_dyn___interface___wrapper_a6dc0263905781eed9a71415d401faa4a}{Copy\+States\+\_\+\+Pred\+\_\+to\+\_\+\+Curr}} ()
+\begin{DoxyCompactList}\small\item\em Wrapper to the F\+O\+R\+T\+R\+AN subroutine of the same name (see Aero\+Dyn\+\_\+\+Interface project) \end{DoxyCompactList}\item 
+\mbox{\Hypertarget{class_aero_dyn___interface___wrapper_a20737575c60b0d3b5d5e639225af7edf}\label{class_aero_dyn___interface___wrapper_a20737575c60b0d3b5d5e639225af7edf}} 
+void \mbox{\hyperlink{class_aero_dyn___interface___wrapper_a20737575c60b0d3b5d5e639225af7edf}{Print\+Output\+Line}} ()
+\begin{DoxyCompactList}\small\item\em Prints to the output file the one-\/line results from the last call to Calc\+Output. \end{DoxyCompactList}\item 
+\mbox{\Hypertarget{class_aero_dyn___interface___wrapper_a35673573f68f342147f1103f3ae17128}\label{class_aero_dyn___interface___wrapper_a35673573f68f342147f1103f3ae17128}} 
+\mbox{\hyperlink{struct_aero_dyn___interface___wrapper_1_1_hub_reaction_loads}{Hub\+Reaction\+Loads}} {\bfseries Get\+Hub\+Reaction\+Loads} () const
+\item 
+\mbox{\Hypertarget{class_aero_dyn___interface___wrapper_ae9f39c0dc52d0d9cf3a6d5eb85137766}\label{class_aero_dyn___interface___wrapper_ae9f39c0dc52d0d9cf3a6d5eb85137766}} 
+double \mbox{\hyperlink{class_aero_dyn___interface___wrapper_ae9f39c0dc52d0d9cf3a6d5eb85137766}{Get\+T\+SR}} () const
+\begin{DoxyCompactList}\small\item\em Returns the T\+SR of the current outputs. \end{DoxyCompactList}\item 
+\mbox{\Hypertarget{class_aero_dyn___interface___wrapper_a1ba32f1c5e9c10292df784b3fa2b9cdc}\label{class_aero_dyn___interface___wrapper_a1ba32f1c5e9c10292df784b3fa2b9cdc}} 
+double \mbox{\hyperlink{class_aero_dyn___interface___wrapper_a1ba32f1c5e9c10292df784b3fa2b9cdc}{Get\+Torque}} () const
+\begin{DoxyCompactList}\small\item\em Returns the torque resulting from the current outputs. \end{DoxyCompactList}\item 
+\mbox{\Hypertarget{class_aero_dyn___interface___wrapper_a669548c10e9ca4916e65fbcb9fe5b0dd}\label{class_aero_dyn___interface___wrapper_a669548c10e9ca4916e65fbcb9fe5b0dd}} 
+Vector3d \mbox{\hyperlink{class_aero_dyn___interface___wrapper_a669548c10e9ca4916e65fbcb9fe5b0dd}{Get\+Force}} () const
+\begin{DoxyCompactList}\small\item\em Returns the force resulting from the current outputs. \end{DoxyCompactList}\item 
+\mbox{\Hypertarget{class_aero_dyn___interface___wrapper_a6c53719e1482354910d8226f02583fc9}\label{class_aero_dyn___interface___wrapper_a6c53719e1482354910d8226f02583fc9}} 
+Vector3d \mbox{\hyperlink{class_aero_dyn___interface___wrapper_a6c53719e1482354910d8226f02583fc9}{Get\+Moment}} () const
+\begin{DoxyCompactList}\small\item\em Returns the moment resulting from the current outputs. \end{DoxyCompactList}\item 
+\mbox{\Hypertarget{class_aero_dyn___interface___wrapper_a3bdefb584bb1e806b3d91cf03a3a21a3}\label{class_aero_dyn___interface___wrapper_a3bdefb584bb1e806b3d91cf03a3a21a3}} 
+double \mbox{\hyperlink{class_aero_dyn___interface___wrapper_a3bdefb584bb1e806b3d91cf03a3a21a3}{Get\+Blade\+Pitch}} () const
+\begin{DoxyCompactList}\small\item\em Returns the last actual pitch value. \end{DoxyCompactList}\end{DoxyCompactItemize}
+\doxysubsection*{Private Member Functions}
+\begin{DoxyCompactItemize}
+\item 
+\mbox{\Hypertarget{class_aero_dyn___interface___wrapper_a9ea868c23ae0498a5f401ce7bc38dedb}\label{class_aero_dyn___interface___wrapper_a9ea868c23ae0498a5f401ce7bc38dedb}} 
+Vector3d \mbox{\hyperlink{class_aero_dyn___interface___wrapper_a9ea868c23ae0498a5f401ce7bc38dedb}{Transform\+\_\+\+P\+D\+Sto\+AD}} (const Vector3d \&v) const
+\begin{DoxyCompactList}\small\item\em Transforms a vector expressed in a z-\/positive-\/down coordinate system, to a z-\/positive-\/up coordinate system. \end{DoxyCompactList}\item 
+\mbox{\Hypertarget{class_aero_dyn___interface___wrapper_a0bf58e36cb25e11b9bee83848c0a74fc}\label{class_aero_dyn___interface___wrapper_a0bf58e36cb25e11b9bee83848c0a74fc}} 
+Vector3d \mbox{\hyperlink{class_aero_dyn___interface___wrapper_a0bf58e36cb25e11b9bee83848c0a74fc}{Transform\+\_\+\+A\+Dto\+P\+DS}} (const Vector3d \&v) const
+\begin{DoxyCompactList}\small\item\em Transforms a vector expressed in a z-\/positive-\/up coordinate system, to a z-\/positive-\/down coordinate system. \end{DoxyCompactList}\item 
+\mbox{\Hypertarget{class_aero_dyn___interface___wrapper_a6fa97cbfbc200febb1c3011b88820ccb}\label{class_aero_dyn___interface___wrapper_a6fa97cbfbc200febb1c3011b88820ccb}} 
+Matrix3d \mbox{\hyperlink{class_aero_dyn___interface___wrapper_a6fa97cbfbc200febb1c3011b88820ccb}{Transform\+Orientation}} (const Matrix3d \&orientation) const
+\begin{DoxyCompactList}\small\item\em Transforms the local to global orientation matrix from z-\/down to z-\/up coordinate system. \end{DoxyCompactList}\item 
+void \mbox{\hyperlink{class_aero_dyn___interface___wrapper_a857f05b5e37e311b0c8603b69a0f6f9d}{Transform\+Inflows\+\_\+\+P\+D\+Sto\+AD}} (const std\+::vector$<$ double $>$ \&pds\+Inflow\+Vel, const std\+::vector$<$ double $>$ \&pds\+Inflow\+Acc)
+\end{DoxyCompactItemize}
+\doxysubsection*{Private Attributes}
+\begin{DoxyCompactItemize}
+\item 
+void $\ast$ \mbox{\hyperlink{class_aero_dyn___interface___wrapper_aa6a7b33938a887d22cd444b56e00de17}{simulation\+Instance}}
+\item 
+\mbox{\Hypertarget{class_aero_dyn___interface___wrapper_a4fe38bd1791039be9eaa78c5415718e0}\label{class_aero_dyn___interface___wrapper_a4fe38bd1791039be9eaa78c5415718e0}} 
+\mbox{\hyperlink{struct_aero_dyn___interface___wrapper_1_1_hub_reaction_loads}{Hub\+Reaction\+Loads}} \mbox{\hyperlink{class_aero_dyn___interface___wrapper_a4fe38bd1791039be9eaa78c5415718e0}{hub\+Reaction\+Loads}}
+\begin{DoxyCompactList}\small\item\em Saved reaction loads from last call to Update\+States. \end{DoxyCompactList}\item 
+\mbox{\Hypertarget{class_aero_dyn___interface___wrapper_aeafb71d2e74c1cf770e50b5b477ac6ff}\label{class_aero_dyn___interface___wrapper_aeafb71d2e74c1cf770e50b5b477ac6ff}} 
+\mbox{\hyperlink{struct_aero_dyn___interface___wrapper_1_1_hub_reaction_loads}{Hub\+Reaction\+Loads}} {\bfseries hub\+Reaction\+Loads\+\_\+saved}
+\item 
+\mbox{\Hypertarget{class_aero_dyn___interface___wrapper_a78d6bdb0f87d348b0675b099387cd203}\label{class_aero_dyn___interface___wrapper_a78d6bdb0f87d348b0675b099387cd203}} 
+\mbox{\hyperlink{struct_aero_dyn___interface___wrapper_1_1_input}{Input}} {\bfseries input}
+\item 
+\mbox{\Hypertarget{class_aero_dyn___interface___wrapper_ad9ae4f44d6012c51a1c55e7f2412d0e2}\label{class_aero_dyn___interface___wrapper_ad9ae4f44d6012c51a1c55e7f2412d0e2}} 
+\mbox{\hyperlink{struct_aero_dyn___interface___wrapper_1_1_input}{Input}} {\bfseries input\+\_\+saved}
+\item 
+\mbox{\Hypertarget{class_aero_dyn___interface___wrapper_a33aac7a977eb9937e70212da128208c6}\label{class_aero_dyn___interface___wrapper_a33aac7a977eb9937e70212da128208c6}} 
+std\+::vector$<$ double $>$ {\bfseries aerodyn\+Inflow\+Vel}
+\item 
+\mbox{\Hypertarget{class_aero_dyn___interface___wrapper_afef16aa8cd8afd0cf6faf9bdc05506ff}\label{class_aero_dyn___interface___wrapper_afef16aa8cd8afd0cf6faf9bdc05506ff}} 
+std\+::vector$<$ double $>$ {\bfseries aerodyn\+Inflow\+Vel\+\_\+saved}
+\item 
+\mbox{\Hypertarget{class_aero_dyn___interface___wrapper_a124776cb9b1e0759fdff673233017709}\label{class_aero_dyn___interface___wrapper_a124776cb9b1e0759fdff673233017709}} 
+std\+::vector$<$ double $>$ \mbox{\hyperlink{class_aero_dyn___interface___wrapper_a124776cb9b1e0759fdff673233017709}{aerodyn\+Inflow\+Acc}}
+\begin{DoxyCompactList}\small\item\em holds the flow velocities in Aero\+Dyn\textquotesingle{}s coordinate system \end{DoxyCompactList}\item 
+\mbox{\Hypertarget{class_aero_dyn___interface___wrapper_a547248eb50ea2beaf2cf880a3030229f}\label{class_aero_dyn___interface___wrapper_a547248eb50ea2beaf2cf880a3030229f}} 
+std\+::vector$<$ double $>$ {\bfseries aerodyn\+Inflow\+Acc\+\_\+saved}
+\item 
+\mbox{\Hypertarget{class_aero_dyn___interface___wrapper_aeb44ac188645f72e5632ff97cb94bf46}\label{class_aero_dyn___interface___wrapper_aeb44ac188645f72e5632ff97cb94bf46}} 
+double \mbox{\hyperlink{class_aero_dyn___interface___wrapper_aeb44ac188645f72e5632ff97cb94bf46}{turbine\+Diameter}}
+\begin{DoxyCompactList}\small\item\em holds the flow accelerations in Aero\+Dyn\textquotesingle{}s coordinate system \end{DoxyCompactList}\item 
+\mbox{\Hypertarget{class_aero_dyn___interface___wrapper_a918a0f033b18e6b676442c0be6fb1037}\label{class_aero_dyn___interface___wrapper_a918a0f033b18e6b676442c0be6fb1037}} 
+double {\bfseries pitch}
+\item 
+\mbox{\Hypertarget{class_aero_dyn___interface___wrapper_a7759c4bd6f5c687b9272b993a73f6796}\label{class_aero_dyn___interface___wrapper_a7759c4bd6f5c687b9272b993a73f6796}} 
+double {\bfseries pitch\+\_\+saved}
+\item 
+\mbox{\Hypertarget{class_aero_dyn___interface___wrapper_a821df1bcff2f9928bcf11a74f136a24f}\label{class_aero_dyn___interface___wrapper_a821df1bcff2f9928bcf11a74f136a24f}} 
+int {\bfseries total\+Nodes}
+\item 
+\mbox{\Hypertarget{class_aero_dyn___interface___wrapper_a11af895e17cb5f2a22a7d99ec738c263}\label{class_aero_dyn___interface___wrapper_a11af895e17cb5f2a22a7d99ec738c263}} 
+int {\bfseries n\+Blades}
+\item 
+\mbox{\Hypertarget{class_aero_dyn___interface___wrapper_a3310fdb009cf5d757093e880e59b9ce2}\label{class_aero_dyn___interface___wrapper_a3310fdb009cf5d757093e880e59b9ce2}} 
+int {\bfseries n\+Nodes}
+\end{DoxyCompactItemize}
+
+
+\doxysubsection{Detailed Description}
+This is a wrapper for Aero\+Dyn\+\_\+\+Interface, which is written in F\+O\+R\+T\+R\+AN. Its main purpose is to provide Aerodyn with inputs, for which it can return reaction loads on the hub. It also changes from Proteus\+DS\textquotesingle{} z-\/positive-\/down coordinate system to Aero\+Dyn\textquotesingle{}s z-\/positive-\/up coordinate system. 
+
+\begin{DoxyAuthor}{Author}
+Dustin Condon 
+\end{DoxyAuthor}
+\begin{DoxyDate}{Date}
+Aug 2020
+\end{DoxyDate}
+This interface has two features\+:
+
+1.\+The interface allows one to save all of Aero\+Dyn\textquotesingle{}s states and restore them by calling Save\+Current\+States and Restore\+Saved\+States, respectively. This is used to take temporary updates when the driver program is calling this Aero\+Dyn interface during the intermediate steps of its explicit integrator. The process is covered in the Fall 2019 work term report, and is refered to as \char`\"{}modified loose coupling\char`\"{}. The implementation on Aero\+Dyn\+\_\+\+Interface\textquotesingle{}s end has since changed to this \char`\"{}save and restore states\char`\"{} method since that report, but the basic idea of the method is the same.
+
+2.\+The other feature is that the interface doesn\textquotesingle{}t overwrite the existing states when Update\+States is called. Instead it keeps two states, \char`\"{}current\char`\"{} and \char`\"{}predicted\char`\"{}. When Update\+States is called, the \char`\"{}current\char`\"{} states are integrated, and the result is saved in \char`\"{}predicted\char`\"{}, so \char`\"{}current\char`\"{} remains unchanged. This allows for this module to be coordinate with others using the same predictor-\/corrector method used in Open\+F\+A\+ST. So Update\+States can be called multiple times using different inputs until the \char`\"{}predicted\char`\"{} states have been corrected enough times. Then the \char`\"{}predicted\char`\"{} states can be copied into the \char`\"{}current\char`\"{} states by calling Copy\+States\+\_\+\+Pred\+\_\+to\+\_\+\+Curr.\hypertarget{class_aero_dyn___interface___wrapper_autotoc_md0}{}\doxysubsubsection{Example\+:}\label{class_aero_dyn___interface___wrapper_autotoc_md0}
+The expected order of function calls is follows (this example is without using any corrector steps) 
+\begin{DoxyCode}{0}
+\DoxyCodeLine{\textcolor{comment}{//-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/ initialization -\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/}}
+\DoxyCodeLine{\mbox{\hyperlink{class_aero_dyn___interface___wrapper_aba4f03bde29cc7fc61556325ebd40c64}{InitAerodyn}}(...);           \textcolor{comment}{// passing driver input file name, hub kinematics, and blade pitch; receiving the total number of nodes used}}
+\DoxyCodeLine{\mbox{\hyperlink{class_aero_dyn___interface___wrapper_a2a17f25396dc6de8d62011ab6bc61fd3}{GetBladeNodePositions}}();    \textcolor{comment}{// receiving the positions of the blade nodes in global coordinate system}}
+\DoxyCodeLine{InitInputs\_Inflow(...);     \textcolor{comment}{// passing the inflows at time\_act=0}}
+\DoxyCodeLine{\textcolor{comment}{//-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/ simulation loop -\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/}}
+\DoxyCodeLine{\mbox{\hyperlink{class_aero_dyn___interface___wrapper_a83efebceeba09a5730bbd4627e7f229d}{Set\_Inputs\_Hub}}(...);        \textcolor{comment}{// passing hubstate at time\_act = 0}}
+\DoxyCodeLine{\mbox{\hyperlink{class_aero_dyn___interface___wrapper_a2a17f25396dc6de8d62011ab6bc61fd3}{GetBladeNodePositions}}();    \textcolor{comment}{// ...}}
+\DoxyCodeLine{\mbox{\hyperlink{class_aero_dyn___interface___wrapper_a008b9580fca86c4edaa714b716b82f2c}{Set\_Inputs\_Inflow}}(...);     \textcolor{comment}{// ...}}
+\DoxyCodeLine{\mbox{\hyperlink{class_aero_dyn___interface___wrapper_a8b049f70154c822b2ca5f5a82d5b101c}{UpdateStates}}();             \textcolor{comment}{// passing the inflow at time\_act = 0}}
+\DoxyCodeLine{\mbox{\hyperlink{class_aero_dyn___interface___wrapper_a6dc0263905781eed9a71415d401faa4a}{CopyStates\_Pred\_to\_Curr}}();  \textcolor{comment}{// ...}}
+\DoxyCodeLine{\mbox{\hyperlink{class_aero_dyn___interface___wrapper_a5669533a22e0f6ba60c30c6d5f6a2306}{Advance\_InputWindow}}();      \textcolor{comment}{// ... }}
+\DoxyCodeLine{\textcolor{comment}{//-\/-\/-\/next timestep-\/-\/-\/}}
+\DoxyCodeLine{\mbox{\hyperlink{class_aero_dyn___interface___wrapper_a83efebceeba09a5730bbd4627e7f229d}{Set\_Inputs\_Hub}}(...);        \textcolor{comment}{// passing hubstate at time\_act = t\_1}}
+\DoxyCodeLine{\mbox{\hyperlink{class_aero_dyn___interface___wrapper_a2a17f25396dc6de8d62011ab6bc61fd3}{GetBladeNodePositions}}();    \textcolor{comment}{// ...}}
+\DoxyCodeLine{\mbox{\hyperlink{class_aero_dyn___interface___wrapper_a008b9580fca86c4edaa714b716b82f2c}{Set\_Inputs\_Inflow}}(...);     \textcolor{comment}{//}}
+\DoxyCodeLine{\mbox{\hyperlink{class_aero_dyn___interface___wrapper_a8b049f70154c822b2ca5f5a82d5b101c}{UpdateStates}}();             \textcolor{comment}{// passing the inflow at time\_act = t\_1}}
+\DoxyCodeLine{CopyState\_Pred\_to\_Curr();   \textcolor{comment}{//}}
+\DoxyCodeLine{\mbox{\hyperlink{class_aero_dyn___interface___wrapper_a5669533a22e0f6ba60c30c6d5f6a2306}{Advance\_InputWindow}}();      \textcolor{comment}{//}}
+\DoxyCodeLine{                            \textcolor{comment}{// etc...}}
+\end{DoxyCode}
+ 
+
+\doxysubsection{Member Function Documentation}
+\mbox{\Hypertarget{class_aero_dyn___interface___wrapper_a590d1e1bb7dc56dd4b08a746e5276cb9}\label{class_aero_dyn___interface___wrapper_a590d1e1bb7dc56dd4b08a746e5276cb9}} 
+\index{AeroDyn\_Interface\_Wrapper@{AeroDyn\_Interface\_Wrapper}!CalcOutput@{CalcOutput}}
+\index{CalcOutput@{CalcOutput}!AeroDyn\_Interface\_Wrapper@{AeroDyn\_Interface\_Wrapper}}
+\doxysubsubsection{\texorpdfstring{CalcOutput()}{CalcOutput()}}
+{\footnotesize\ttfamily \mbox{\hyperlink{struct_aero_dyn___interface___wrapper_1_1_hub_reaction_loads}{Aero\+Dyn\+\_\+\+Interface\+\_\+\+Wrapper\+::\+Hub\+Reaction\+Loads}} Aero\+Dyn\+\_\+\+Interface\+\_\+\+Wrapper\+::\+Calc\+Output (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})}
+
+
+
+Calculates the hub reaction loads. 
+
+{\bfseries{Note\+:}} Should be called after either\+:
+\begin{DoxyEnumerate}
+\item Updating the states, or
+\item Changing the inputs at global\+\_\+time\+\_\+next 
+\end{DoxyEnumerate}\mbox{\Hypertarget{class_aero_dyn___interface___wrapper_a2a17f25396dc6de8d62011ab6bc61fd3}\label{class_aero_dyn___interface___wrapper_a2a17f25396dc6de8d62011ab6bc61fd3}} 
+\index{AeroDyn\_Interface\_Wrapper@{AeroDyn\_Interface\_Wrapper}!GetBladeNodePositions@{GetBladeNodePositions}}
+\index{GetBladeNodePositions@{GetBladeNodePositions}!AeroDyn\_Interface\_Wrapper@{AeroDyn\_Interface\_Wrapper}}
+\doxysubsubsection{\texorpdfstring{GetBladeNodePositions()}{GetBladeNodePositions()}}
+{\footnotesize\ttfamily void Aero\+Dyn\+\_\+\+Interface\+\_\+\+Wrapper\+::\+Get\+Blade\+Node\+Positions (\begin{DoxyParamCaption}\item[{std\+::vector$<$ double $>$ \&}]{blade\+Node\+Positions }\end{DoxyParamCaption})}
+
+
+
+Once update\+Hub\+State has been called, we call this to get where those hub kinematics put the blade nodes. 
+
+The format expected is the same as init\+Inflows. So indices 0,1,2 correspond to the x,y,z position of node 0; and inflow indices 0,1,2 represent the x,y,z inflow velocity for that node. \mbox{\Hypertarget{class_aero_dyn___interface___wrapper_ab351cbcceda676f2b38a7e027c7b4def}\label{class_aero_dyn___interface___wrapper_ab351cbcceda676f2b38a7e027c7b4def}} 
+\index{AeroDyn\_Interface\_Wrapper@{AeroDyn\_Interface\_Wrapper}!GetInput\_HubAcc@{GetInput\_HubAcc}}
+\index{GetInput\_HubAcc@{GetInput\_HubAcc}!AeroDyn\_Interface\_Wrapper@{AeroDyn\_Interface\_Wrapper}}
+\doxysubsubsection{\texorpdfstring{GetInput\_HubAcc()}{GetInput\_HubAcc()}}
+{\footnotesize\ttfamily Vector3d Aero\+Dyn\+\_\+\+Interface\+\_\+\+Wrapper\+::\+Get\+Input\+\_\+\+Hub\+Acc (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption}) const\hspace{0.3cm}{\ttfamily [inline]}}
+
+
+
+Returns the acceleration input at the next timestep. 
+
+{\bfseries{Note\+:}} used in the input solver in the coordinating class
+
+\begin{DoxyReturn}{Returns}
+acceleration at next timestep of the hub in the global coordinate system. 
+\end{DoxyReturn}
+\mbox{\Hypertarget{class_aero_dyn___interface___wrapper_aba4f03bde29cc7fc61556325ebd40c64}\label{class_aero_dyn___interface___wrapper_aba4f03bde29cc7fc61556325ebd40c64}} 
+\index{AeroDyn\_Interface\_Wrapper@{AeroDyn\_Interface\_Wrapper}!InitAerodyn@{InitAerodyn}}
+\index{InitAerodyn@{InitAerodyn}!AeroDyn\_Interface\_Wrapper@{AeroDyn\_Interface\_Wrapper}}
+\doxysubsubsection{\texorpdfstring{InitAerodyn()}{InitAerodyn()}}
+{\footnotesize\ttfamily void Aero\+Dyn\+\_\+\+Interface\+\_\+\+Wrapper\+::\+Init\+Aerodyn (\begin{DoxyParamCaption}\item[{const char $\ast$}]{input\+Filename,  }\item[{const char $\ast$}]{output\+Filename,  }\item[{double}]{timestep,  }\item[{int}]{num\+Blades,  }\item[{double}]{hub\+Radius,  }\item[{double}]{precone,  }\item[{bool}]{use\+Added\+Mass,  }\item[{double}]{coeff\+Added\+Mass,  }\item[{const Vector3d \&}]{hub\+Position,  }\item[{const Matrix3d \&}]{hub\+Orientation,  }\item[{const Vector3d \&}]{hub\+Vel,  }\item[{const Vector3d \&}]{hub\+Acc,  }\item[{const Vector3d \&}]{hub\+Rotational\+Vel,  }\item[{const Vector3d \&}]{hub\+Rotational\+Acc,  }\item[{double}]{blade\+Pitch }\end{DoxyParamCaption})}
+
+
+
+Initializes Aero\+Dyn by loading input files and setting initial hub state. 
+
+
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\texttt{ in}}  & {\em input\+Filename} & filename (including path) of the Aero\+Dyn input file \\
+\hline
+\mbox{\texttt{ in}}  & {\em output\+Filename} & root name of the output file to be generated \\
+\hline
+\mbox{\texttt{ in}}  & {\em timestep} & the timestep that Aero\+Dyn will take (sec) \\
+\hline
+\mbox{\texttt{ in}}  & {\em num\+Blades} & the number of blades to use in the simulation \\
+\hline
+\mbox{\texttt{ in}}  & {\em hub\+Radius} & the distance from hub center to blade root \\
+\hline
+\mbox{\texttt{ in}}  & {\em precone} & the precone angle of the blades (radians) \\
+\hline
+\mbox{\texttt{ in}}  & {\em have} & Aero\+Dyn include added mass effects \\
+\hline
+\mbox{\texttt{ in}}  & {\em coefficient} & of added mass (only used when use\+Added\+Mass is true) \\
+\hline
+\mbox{\texttt{ in}}  & {\em hub\+Position} & global position of the hub center in Proteus\+DS\textquotesingle{}s coordinate system \\
+\hline
+\mbox{\texttt{ in}}  & {\em hub\+Orientation} & 3x3 orientation matrix of the hub \\
+\hline
+\mbox{\texttt{ in}}  & {\em hub\+Velocity} & (metres/sec) \\
+\hline
+\mbox{\texttt{ in}}  & {\em hub\+Acceleration} & (metres/sec$^\wedge$2) \\
+\hline
+\mbox{\texttt{ in}}  & {\em hub\+Rotational\+Vel} & axis-\/angle form in global coordinate system \\
+\hline
+\mbox{\texttt{ in}}  & {\em hub\+Rotational\+Acc} & axis-\/angle form in global coordinate system \\
+\hline
+\mbox{\texttt{ in}}  & {\em blade\+Pitch} & radians \\
+\hline
+\end{DoxyParams}
+\mbox{\Hypertarget{class_aero_dyn___interface___wrapper_a22f49f937a36e78a1a3609e0a4abdc66}\label{class_aero_dyn___interface___wrapper_a22f49f937a36e78a1a3609e0a4abdc66}} 
+\index{AeroDyn\_Interface\_Wrapper@{AeroDyn\_Interface\_Wrapper}!InitInflows@{InitInflows}}
+\index{InitInflows@{InitInflows}!AeroDyn\_Interface\_Wrapper@{AeroDyn\_Interface\_Wrapper}}
+\doxysubsubsection{\texorpdfstring{InitInflows()}{InitInflows()}}
+{\footnotesize\ttfamily void Aero\+Dyn\+\_\+\+Interface\+\_\+\+Wrapper\+::\+Init\+Inflows (\begin{DoxyParamCaption}\item[{const std\+::vector$<$ double $>$ \&}]{inflow\+Vel,  }\item[{const std\+::vector$<$ double $>$ \&}]{inflow\+Acc }\end{DoxyParamCaption})}
+
+
+
+Initializes the inflows. Note, inflow velocities are in global coordinate system. 
+
+\DoxyHorRuler{0}
+ The format expected is (in global coordinate system) inflows\mbox{[}0\mbox{]} inflow velocity in x direction at node 0 ...\mbox{[}1\mbox{]} inflow velocity in y direction at node 0 ...\mbox{[}2\mbox{]} inflow velocity in z direction at node 0 ...\mbox{[}3\mbox{]} inflow velocity in x direction at node 1 ... etc
+
+
+\begin{DoxyParams}{Parameters}
+{\em inflow\+Vel} & a serialized vector of the inflow velocity at each blade node \\
+\hline
+{\em inflow\+Acc} & a serialized vector of the inflow acceleration at each blade node (not used when added mass is not enabled), so could just pass the inflow\+Vel vector twice in that case.\\
+\hline
+\end{DoxyParams}
+\begin{DoxyRefDesc}{Todo}
+\item[\mbox{\hyperlink{todo__todo000001}{Todo}}]maybe make version that doesn\textquotesingle{}t require the acceleration for when added mass isn\textquotesingle{}t enabled \end{DoxyRefDesc}
+\mbox{\Hypertarget{class_aero_dyn___interface___wrapper_a83efebceeba09a5730bbd4627e7f229d}\label{class_aero_dyn___interface___wrapper_a83efebceeba09a5730bbd4627e7f229d}} 
+\index{AeroDyn\_Interface\_Wrapper@{AeroDyn\_Interface\_Wrapper}!Set\_Inputs\_Hub@{Set\_Inputs\_Hub}}
+\index{Set\_Inputs\_Hub@{Set\_Inputs\_Hub}!AeroDyn\_Interface\_Wrapper@{AeroDyn\_Interface\_Wrapper}}
+\doxysubsubsection{\texorpdfstring{Set\_Inputs\_Hub()}{Set\_Inputs\_Hub()}}
+{\footnotesize\ttfamily void Aero\+Dyn\+\_\+\+Interface\+\_\+\+Wrapper\+::\+Set\+\_\+\+Inputs\+\_\+\+Hub (\begin{DoxyParamCaption}\item[{double}]{time,  }\item[{const Vector3d \&}]{hub\+Position,  }\item[{const Matrix3d \&}]{hub\+Orientation,  }\item[{const Vector3d \&}]{hub\+Vel,  }\item[{const Vector3d \&}]{hub\+Acc,  }\item[{const Vector3d \&}]{hub\+Angular\+Vel,  }\item[{const Vector3d \&}]{hub\+Angular\+Acc,  }\item[{double}]{blade\+Pitch }\end{DoxyParamCaption})}
+
+
+
+Updates the hub motion variables, changing the positions of the nodes accordingly. 
+
+{\bfseries{Note\+:}} call this before calling Get\+Blade\+Node\+Positions because this will inform where the node positions are. 
+\begin{DoxyParams}{Parameters}
+{\em time} & The time the inputs describe (sec) \\
+\hline
+{\em hub\+Position} & position of the hub in global coordinate system (meters) \\
+\hline
+{\em hub\+Orientation} & orientation matrix in Proteus\+DS\textquotesingle{} z-\/positive-\/down coordinate system \\
+\hline
+{\em hub\+Vel} & velocity of the hub in Proteus\+DS\textquotesingle{} global coordinate system (meters/sec) \\
+\hline
+{\em hub\+Acc} & acceleration of the hub in Proteus\+DS\textquotesingle{} global coordinate system (m/sec$^\wedge$2) \\
+\hline
+{\em hub\+Angular\+Vel} & angular velocity of the hub in Proteus\+DS\textquotesingle{} global coordinate system (axis-\/angle) \\
+\hline
+{\em hub\+Angular\+Accangular} & angular velocity of the hub in Proteus\+DS\textquotesingle{} global coordinate system (axis-\/angle) \\
+\hline
+{\em blade\+Pitch} & (radians) \\
+\hline
+\end{DoxyParams}
+\begin{DoxyWarning}{Warning}
+the {\bfseries{time}} parameter should always be time\+\_\+curr + timestep. Any interpolation/extrapolation should be done outside this function. 
+\end{DoxyWarning}
+\mbox{\Hypertarget{class_aero_dyn___interface___wrapper_ab83233cd9085b565593cbbe304d30980}\label{class_aero_dyn___interface___wrapper_ab83233cd9085b565593cbbe304d30980}} 
+\index{AeroDyn\_Interface\_Wrapper@{AeroDyn\_Interface\_Wrapper}!Set\_Inputs\_HubAcceleration@{Set\_Inputs\_HubAcceleration}}
+\index{Set\_Inputs\_HubAcceleration@{Set\_Inputs\_HubAcceleration}!AeroDyn\_Interface\_Wrapper@{AeroDyn\_Interface\_Wrapper}}
+\doxysubsubsection{\texorpdfstring{Set\_Inputs\_HubAcceleration()}{Set\_Inputs\_HubAcceleration()}}
+{\footnotesize\ttfamily void Aero\+Dyn\+\_\+\+Interface\+\_\+\+Wrapper\+::\+Set\+\_\+\+Inputs\+\_\+\+Hub\+Acceleration (\begin{DoxyParamCaption}\item[{const Vector3d \&}]{hub\+Acc,  }\item[{const Vector3d \&}]{hub\+Angular\+Acc }\end{DoxyParamCaption})}
+
+
+
+Sets the acceleration inputs only. 
+
+The expected use of this function is to perturb the components indivually in order to calculate the partial derivatives of the residual function w.\+r.\+t. acceleration inputs, which is a composite function of Calc\+Output function \mbox{\Hypertarget{class_aero_dyn___interface___wrapper_a008b9580fca86c4edaa714b716b82f2c}\label{class_aero_dyn___interface___wrapper_a008b9580fca86c4edaa714b716b82f2c}} 
+\index{AeroDyn\_Interface\_Wrapper@{AeroDyn\_Interface\_Wrapper}!Set\_Inputs\_Inflow@{Set\_Inputs\_Inflow}}
+\index{Set\_Inputs\_Inflow@{Set\_Inputs\_Inflow}!AeroDyn\_Interface\_Wrapper@{AeroDyn\_Interface\_Wrapper}}
+\doxysubsubsection{\texorpdfstring{Set\_Inputs\_Inflow()}{Set\_Inputs\_Inflow()}}
+{\footnotesize\ttfamily void Aero\+Dyn\+\_\+\+Interface\+\_\+\+Wrapper\+::\+Set\+\_\+\+Inputs\+\_\+\+Inflow (\begin{DoxyParamCaption}\item[{const std\+::vector$<$ double $>$ \&}]{inflow\+Vel,  }\item[{const std\+::vector$<$ double $>$ \&}]{inflow\+Acc }\end{DoxyParamCaption})}
+
+
+
+Sets the flow velocity and acceleration at the next time-\/step. Note, inflow velocities are in global coordinate system. 
+
+\DoxyHorRuler{0}
+ The format expected is (in global coordinate system) inflows\mbox{[}0\mbox{]} inflow velocity in x direction at node 0 ...\mbox{[}1\mbox{]} inflow velocity in y direction at node 0 ...\mbox{[}2\mbox{]} inflow velocity in z direction at node 0 ...\mbox{[}3\mbox{]} inflow velocity in x direction at node 1 ... etc 
+\begin{DoxyParams}{Parameters}
+{\em inflow\+Vel} & a serialized vector of the inflow velocity at each blade node \\
+\hline
+{\em inflow\+Acc} & a serialized vector of the inflow acceleration at each blade node; not used when added mass is not enabled, so could just pass the inflow\+Vel vector twice in that case.\\
+\hline
+\end{DoxyParams}
+\begin{DoxyRefDesc}{Todo}
+\item[\mbox{\hyperlink{todo__todo000002}{Todo}}]maybe make version that doesn\textquotesingle{}t require the acceleration for when added mass isn\textquotesingle{}t enabled \end{DoxyRefDesc}
+\mbox{\Hypertarget{class_aero_dyn___interface___wrapper_a857f05b5e37e311b0c8603b69a0f6f9d}\label{class_aero_dyn___interface___wrapper_a857f05b5e37e311b0c8603b69a0f6f9d}} 
+\index{AeroDyn\_Interface\_Wrapper@{AeroDyn\_Interface\_Wrapper}!TransformInflows\_PDStoAD@{TransformInflows\_PDStoAD}}
+\index{TransformInflows\_PDStoAD@{TransformInflows\_PDStoAD}!AeroDyn\_Interface\_Wrapper@{AeroDyn\_Interface\_Wrapper}}
+\doxysubsubsection{\texorpdfstring{TransformInflows\_PDStoAD()}{TransformInflows\_PDStoAD()}}
+{\footnotesize\ttfamily void Aero\+Dyn\+\_\+\+Interface\+\_\+\+Wrapper\+::\+Transform\+Inflows\+\_\+\+P\+D\+Sto\+AD (\begin{DoxyParamCaption}\item[{const std\+::vector$<$ double $>$ \&}]{pds\+Inflow\+Vel,  }\item[{const std\+::vector$<$ double $>$ \&}]{pds\+Inflow\+Acc }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [private]}}
+
+updates aerodyn\+Inflows with transformed pds\+Inflows
+
+The transformation from Proteus\+DS\textquotesingle{}s coordinate system and that of Aero\+Dyn is done by negating the y and z components. This is because one is positive-\/z-\/up, while the other is positive-\/z-\/down. 
+
+\doxysubsection{Member Data Documentation}
+\mbox{\Hypertarget{class_aero_dyn___interface___wrapper_aa6a7b33938a887d22cd444b56e00de17}\label{class_aero_dyn___interface___wrapper_aa6a7b33938a887d22cd444b56e00de17}} 
+\index{AeroDyn\_Interface\_Wrapper@{AeroDyn\_Interface\_Wrapper}!simulationInstance@{simulationInstance}}
+\index{simulationInstance@{simulationInstance}!AeroDyn\_Interface\_Wrapper@{AeroDyn\_Interface\_Wrapper}}
+\doxysubsubsection{\texorpdfstring{simulationInstance}{simulationInstance}}
+{\footnotesize\ttfamily void$\ast$ Aero\+Dyn\+\_\+\+Interface\+\_\+\+Wrapper\+::simulation\+Instance\hspace{0.3cm}{\ttfamily [private]}}
+
+the turbine instance pointer for the current instance of the class (points to a memory location allocated by the layer of the project; the data pointed to is a F\+O\+R\+T\+R\+AN type) \begin{DoxySeeAlso}{See also}
+F\+O\+R\+T\+R\+AN project Aero\+Dyn\+\_\+\+Interface 
+\end{DoxySeeAlso}
+
+
+The documentation for this class was generated from the following files\+:\begin{DoxyCompactItemize}
+\item 
+F\+A\+S\+T\+Interface/src/Aero\+Dyn\+\_\+\+Interface\+\_\+\+Wrapper.\+h\item 
+F\+A\+S\+T\+Interface/src/Aero\+Dyn\+\_\+\+Interface\+\_\+\+Wrapper.\+cpp\end{DoxyCompactItemize}

@@ -1,0 +1,79 @@
+\hypertarget{class_master_controller}{}\doxysection{Master\+Controller Class Reference}
+\label{class_master_controller}\index{MasterController@{MasterController}}
+
+
+This class abstracts the generator and pitch controller. Because we want to have the option of interfacing with a Bladed-\/style D\+LL or just specifying a constant rotor speed, we have this high-\/level class which provides a common interface for both options.  
+
+
+
+
+{\ttfamily \#include $<$Master\+Controller.\+h$>$}
+
+\doxysubsection*{Public Member Functions}
+\begin{DoxyCompactItemize}
+\item 
+void \mbox{\hyperlink{class_master_controller_af5442c344de2139bec5cf1e1f0801ba0}{Init}} (double blade\+Pitch)
+\item 
+void \mbox{\hyperlink{class_master_controller_a35134da2d78e423d75720b1d42fb4313}{Init\+\_\+\+Bladed\+D\+LL}} (int num\+Blades, const char $\ast$bladed\+\_\+dll\+\_\+fname, double init\+Blade\+Pitch)
+\item 
+\mbox{\Hypertarget{class_master_controller_a6a5508e4d20b0a854009f7c43f4af678}\label{class_master_controller_a6a5508e4d20b0a854009f7c43f4af678}} 
+void {\bfseries Update\+Controller} (double time, double gen\+Speed, double curr\+Blade\+Pitch)
+\item 
+\mbox{\Hypertarget{class_master_controller_ae9bab0318e857ceb3aaf778c6f94ac30}\label{class_master_controller_ae9bab0318e857ceb3aaf778c6f94ac30}} 
+double {\bfseries Get\+Generator\+Torque\+Command} () const
+\item 
+\mbox{\Hypertarget{class_master_controller_a31fd3a3683ff869dc18951159022bd73}\label{class_master_controller_a31fd3a3683ff869dc18951159022bd73}} 
+double {\bfseries Get\+Blade\+Pitch\+Command} () const
+\end{DoxyCompactItemize}
+\doxysubsection*{Private Types}
+\begin{DoxyCompactItemize}
+\item 
+\mbox{\Hypertarget{class_master_controller_aaa6a895fe0b607bb9d83d97d00d1f40b}\label{class_master_controller_aaa6a895fe0b607bb9d83d97d00d1f40b}} 
+enum {\bfseries Controller\+Mode} \{ {\bfseries B\+L\+A\+D\+E\+D\+\_\+\+D\+LL}, 
+{\bfseries C\+O\+N\+S\+T\+A\+N\+T\+\_\+\+S\+P\+E\+ED}
+ \}
+\end{DoxyCompactItemize}
+\doxysubsection*{Private Attributes}
+\begin{DoxyCompactItemize}
+\item 
+\mbox{\Hypertarget{class_master_controller_aac7e9f489ea4f9421adf23dd1653f99b}\label{class_master_controller_aac7e9f489ea4f9421adf23dd1653f99b}} 
+Controller\+Mode {\bfseries control\+Mode}
+\item 
+\mbox{\Hypertarget{class_master_controller_aee2af6d15a739599563fa9a5eea5231d}\label{class_master_controller_aee2af6d15a739599563fa9a5eea5231d}} 
+double {\bfseries blade\+Pitch\+Command}
+\item 
+\mbox{\Hypertarget{class_master_controller_aebefe7b0d63cc1fdaa58138b0aa11dc9}\label{class_master_controller_aebefe7b0d63cc1fdaa58138b0aa11dc9}} 
+\mbox{\hyperlink{class_bladed_interface}{Bladed\+Interface}} {\bfseries bladedcont}
+\end{DoxyCompactItemize}
+
+
+\doxysubsection{Detailed Description}
+This class abstracts the generator and pitch controller. Because we want to have the option of interfacing with a Bladed-\/style D\+LL or just specifying a constant rotor speed, we have this high-\/level class which provides a common interface for both options. 
+
+\begin{DoxyAuthor}{Author}
+Dustin Condon 
+\end{DoxyAuthor}
+\begin{DoxyDate}{Date}
+Aug 2020 
+\end{DoxyDate}
+
+
+\doxysubsection{Member Function Documentation}
+\mbox{\Hypertarget{class_master_controller_af5442c344de2139bec5cf1e1f0801ba0}\label{class_master_controller_af5442c344de2139bec5cf1e1f0801ba0}} 
+\index{MasterController@{MasterController}!Init@{Init}}
+\index{Init@{Init}!MasterController@{MasterController}}
+\doxysubsubsection{\texorpdfstring{Init()}{Init()}}
+{\footnotesize\ttfamily void Master\+Controller\+::\+Init (\begin{DoxyParamCaption}\item[{double}]{blade\+Pitch }\end{DoxyParamCaption})}
+
+Initialize the controller with a constant rotor speed and blade pitch \mbox{\Hypertarget{class_master_controller_a35134da2d78e423d75720b1d42fb4313}\label{class_master_controller_a35134da2d78e423d75720b1d42fb4313}} 
+\index{MasterController@{MasterController}!Init\_BladedDLL@{Init\_BladedDLL}}
+\index{Init\_BladedDLL@{Init\_BladedDLL}!MasterController@{MasterController}}
+\doxysubsubsection{\texorpdfstring{Init\_BladedDLL()}{Init\_BladedDLL()}}
+{\footnotesize\ttfamily void Master\+Controller\+::\+Init\+\_\+\+Bladed\+D\+LL (\begin{DoxyParamCaption}\item[{int}]{num\+Blades,  }\item[{const char $\ast$}]{bladed\+\_\+dll\+\_\+fname,  }\item[{double}]{init\+Blade\+Pitch }\end{DoxyParamCaption})}
+
+Initialization function for the controllers when using a Bladed-\/style D\+LL 
+
+The documentation for this class was generated from the following files\+:\begin{DoxyCompactItemize}
+\item 
+F\+A\+S\+T\+Interface/src/Master\+Controller.\+h\item 
+F\+A\+S\+T\+Interface/src/Master\+Controller.\+cpp\end{DoxyCompactItemize}

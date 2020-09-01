@@ -1,19 +1,17 @@
-/*
-Author: Dustin Condon
-Date: Oct 2019
-Description: 
-	This class provides an interface with the Bladed-style DLL. The interface was built by referencing 
-	the Bladed-style DLL of NREL's OC3 5 MW turbine. The interface allows the user of the class to pass
-	the needed values to the DLL, and recieve the results. Inside each DLL there is a pitch controller,
-	generator controller, and a low-pass filter on the generator shaft speed.
-
-	Note that (as far as I have seen), the Bladed-style DLL are written to be loosely coupled with the turbine 
-	model; therefore, this interface assumes that. It may be possible to write a tightly coupled controller DLL,
-	however - in which case this interface should be built upon to allow for it.
-
-Note:
-	This interface expects the controller DLL to set its own number of blades instead of getting it from here. Having 
-	the number of blades hard-coded into the DLL seemed reasonable because each controller DLL is tuned for a specific turbine.
+/*!
+ * @author Dustin Condon
+ * @date August 2020
+ * 
+ * @brief This class provides an interface with the Bladed-style DLL. The interface was built by referencing 
+ *        the Bladed-style DLL of NREL's OC3 5 MW turbine.
+ * 	   
+ * The interface allows the user of the class to pass
+ * the needed values to the DLL, and recieve the results. Inside each DLL there is a pitch controller,
+ * generator controller, and a low-pass filter on the generator shaft speed.
+ * 
+ * Note that (as far as I have seen), the Bladed-style DLL are written to be loosely coupled with the turbine 
+ * model; therefore, this interface assumes that. It may be possible to write a tightly coupled controller DLL,
+ * however - in which case this interface should be built upon to allow for it.
 */
 
 

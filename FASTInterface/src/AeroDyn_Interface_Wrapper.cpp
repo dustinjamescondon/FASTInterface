@@ -60,7 +60,10 @@ Matrix3d AeroDyn_Interface_Wrapper::TransformOrientation(const Matrix3d& orienta
     return trans;
 }
 
-// Returns the inflows transformed from PDS' coordinate system to that of AD's
+/*!
+ * The transformation from ProteusDS's coordinate system and that of AeroDyn is done by negating the y and z components. 
+ * This is because one is positive-z-up, while the other is positive-z-down.
+ */
 void AeroDyn_Interface_Wrapper::TransformInflows_PDStoAD(const std::vector<double>& pdsInflowVel, 
 														 const std::vector<double>& pdsInflowAcc)
 {
@@ -91,6 +94,9 @@ AeroDyn_Interface_Wrapper::~AeroDyn_Interface_Wrapper()
     INTERFACE_END(simulationInstance);
 }
 
+/*!
+ * 
+ */
 void AeroDyn_Interface_Wrapper::InitAerodyn(
     const char* inputFilename,
 	const char* outputFilename,

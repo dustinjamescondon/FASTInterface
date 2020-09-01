@@ -25,8 +25,8 @@ DriveTrain::DriveTrain() {
 	rotor_moi = 1.0;
 
 	time = 0.0;
-	inputTime[LATEST] = 0.0;
-	inputTime[PREV] = -1.0;
+	inputTime[NEXT] = 0.0;
+	inputTime[CURR] = -1.0;
 }
 
 // Initialize the drive train with a constant rotor speed
@@ -46,15 +46,15 @@ void DriveTrain::Init(double constantRotorSpeed)
 	CopyStates_Pred_to_Curr();
 
 	// extrapolate back for the inputs
-	input[PREV].genTorque = 0;
-	input[PREV].rotorTorque = 0;
-	input[LATEST].genTorque = 0;
-	input[LATEST].rotorTorque = 0;
+	input[CURR].genTorque = 0;
+	input[CURR].rotorTorque = 0;
+	input[NEXT].genTorque = 0;
+	input[NEXT].rotorTorque = 0;
 
 	// Setting them equal at zero will mean dt in Advance States will be, so the states will remain unchanged for 
 	// the first call to Advance States
-	inputTime[PREV] = 0.0;
-	inputTime[LATEST] = 0.0;
+	inputTime[CURR] = 0.0;
+	inputTime[NEXT] = 0.0;
 }
 
 // Initialize the drive train using the connected two-mass model
@@ -94,7 +94,7 @@ void DriveTrain::RestoreSavedStates()
 // Calculates the accelerations given the states_pred 
 DriveTrain::ModelStates DriveTrain::CalcOutput()
 {
-	states_pred = CalcOutput(states_pred, input[LATEST]);
+	states_pred = CalcOutput(states_pred, input[NEXT]);
 	return states_pred;
 }
 
@@ -129,8 +129,10 @@ DriveTrain::ModelStates DriveTrain::CalcOutput(const ModelStates& s, const Input
 
 void DriveTrain::UpdateStates()
 {
-	double dt = inputTime[LATEST] - inputTime[PREV];
+	double dt = inputTime[NEXT] - inputTime[CURR];
 	states_pred = states_curr;
+
+	// TODO if Heun's method isn't accurate enough, then switch to RK4
 	/*----------------- Heun's method -------------------*/
 
 	//----------------------------------------------------
@@ -138,7 +140,7 @@ void DriveTrain::UpdateStates()
 	//....................................................
 
 	// Use the torque inputs at the prev time for calculating accelerations
-	ModelStates tmp = CalcOutput(states_pred, input[PREV]);
+	ModelStates tmp = CalcOutput(states_pred, input[CURR]);
 
 	// rotor states
 	tmp.rotor.theta = states_pred.rotor.theta + dt * tmp.rotor.vel;
@@ -152,7 +154,7 @@ void DriveTrain::UpdateStates()
 	//.....................................................
 
 	// Use the torque inputs at latest time for calculating the accelerations
-	ModelStates tmp2 = CalcOutput(tmp, input[LATEST]);
+	ModelStates tmp2 = CalcOutput(tmp, input[NEXT]);
 
 	tmp2.rotor.theta = states_pred.rotor.theta + dt * tmp2.rotor.vel;
 	tmp2.rotor.vel = states_pred.rotor.vel + dt * tmp2.rotor.acc;
@@ -176,17 +178,17 @@ void DriveTrain::CopyStates_Pred_to_Curr()
 
 void DriveTrain::SetInputs(double time, double rotorTorque, double genTorque)
 {
-	inputTime[LATEST] = time;
-	input[LATEST].rotorTorque = rotorTorque;
-	input[LATEST].genTorque = genTorque;
+	inputTime[NEXT] = time;
+	input[NEXT].rotorTorque = rotorTorque;
+	input[NEXT].genTorque = genTorque;
 }
 
 // Saves the latest input into the previous one, so next time the set inputs function is called,
-// the LATEST input can be overwritten
+// the NEXT input can be overwritten
 void DriveTrain::AdvanceInputWindow()
 {
-	input[PREV] = input[LATEST];
-	inputTime[PREV] = inputTime[LATEST];
+	input[CURR] = input[NEXT];
+	inputTime[CURR] = inputTime[NEXT];
 }
 
 // assumes gearbox ratio has already been set and is non-zero
@@ -234,12 +236,12 @@ DriveTrain::ModelStates DriveTrain::GetStates() const
 
 double DriveTrain::GetInput_RotorTorque() const
 {
-	return input[LATEST].rotorTorque;
+	return input[NEXT].rotorTorque;
 }
 
 double DriveTrain::GetInput_GenTorque() const
 {
-	return input[LATEST].genTorque;
+	return input[NEXT].genTorque;
 }
 
 DriveTrain::States DriveTrain::GetRotorStates() const

@@ -1,0 +1,361 @@
+\hypertarget{class_f_a_s_t_interface}{}\doxysection{F\+A\+S\+T\+Interface Class Reference}
+\label{class_f_a_s_t_interface}\index{FASTInterface@{FASTInterface}}
+
+
+{\bfseries{The main class}} used by Proteus\+DS that models a turbine with a two-\/mass drivetrain and controller.  
+
+
+
+
+{\ttfamily \#include $<$F\+A\+S\+T\+Interface.\+h$>$}
+
+\doxysubsection*{Classes}
+\begin{DoxyCompactItemize}
+\item 
+struct \mbox{\hyperlink{struct_f_a_s_t_interface_1_1_nacelle_accelerations}{Nacelle\+Accelerations}}
+\item 
+struct \mbox{\hyperlink{struct_f_a_s_t_interface_1_1_nacelle_reaction_loads}{Nacelle\+Reaction\+Loads}}
+\item 
+class \mbox{\hyperlink{class_f_a_s_t_interface_1_1_p_imp}{P\+Imp}}
+\begin{DoxyCompactList}\small\item\em The implementation class for the turbine model, just make it inherit from Aero\+Dyn\+Turbine\+Class. \end{DoxyCompactList}\item 
+struct \mbox{\hyperlink{struct_f_a_s_t_interface_1_1_turbine_output}{Turbine\+Output}}
+\end{DoxyCompactItemize}
+\doxysubsection*{Public Member Functions}
+\begin{DoxyCompactItemize}
+\item 
+D\+E\+C\+L\+D\+IR void \mbox{\hyperlink{class_f_a_s_t_interface_a0b4439f4b45c121946943a1d22fb00c4}{Init\+With\+Constant\+Rotor\+Speed\+And\+Pitch}} (double constant\+Rotor\+Speed, double constant\+Blade\+Pitch)
+\item 
+D\+E\+C\+L\+D\+IR void \mbox{\hyperlink{class_f_a_s_t_interface_a9e599da7d33733318a39a23586f9c68d}{Init\+Drive\+Train}} (double rotor\+M\+OI, double gen\+M\+OI, double stiffness, double damping, double gearbox\+Ratio, double init\+Rotor\+Speed)
+\item 
+D\+E\+C\+L\+D\+IR void \mbox{\hyperlink{class_f_a_s_t_interface_acbfa2b4d4905d9fbfb7f482ac24c5055}{Init\+Controllers\+\_\+\+Bladed\+D\+LL}} (int num\+Blades, const std\+::string \&bladed\+\_\+dll\+\_\+fname, double initial\+Blade\+Pitch)
+\item 
+D\+E\+C\+L\+D\+IR void \mbox{\hyperlink{class_f_a_s_t_interface_aeccc8f45f5d94daefde3587b7a6fd09f}{Init\+Aero\+Dyn}} (const std\+::string \&input\+Filename, const std\+::string \&output\+Filename, bool use\+Added\+Mass, double coeff\+Added\+Mass, double timestep, int num\+Blades, double hub\+Radius, double precone, const double nacelle\+Pos\mbox{[}3\mbox{]}, const double nacelle\+Euler\+Angles\mbox{[}3\mbox{]}, const double nacelle\+Vel\mbox{[}3\mbox{]}, const double nacelle\+Acc\mbox{[}3\mbox{]}, const double nacelle\+Angular\+Vel\mbox{[}3\mbox{]}, const double nacelle\+Angular\+Acc\mbox{[}3\mbox{]})
+\item 
+\mbox{\Hypertarget{class_f_a_s_t_interface_a377078c9e339629bc2814d19ca104627}\label{class_f_a_s_t_interface_a377078c9e339629bc2814d19ca104627}} 
+D\+E\+C\+L\+D\+IR void {\bfseries Init\+Inflows} (const std\+::vector$<$ double $>$ \&inflow\+Vel, const std\+::vector$<$ double $>$ \&inflow\+Acc)
+\item 
+D\+E\+C\+L\+D\+IR void \mbox{\hyperlink{class_f_a_s_t_interface_a2eb33a0a372354a2e7dbb5d61d2a5729}{Get\+Blade\+Node\+Positions}} (std\+::vector$<$ double $>$ \&)
+\item 
+\mbox{\Hypertarget{class_f_a_s_t_interface_a805c82b1141d356599a4322ceeb2456a}\label{class_f_a_s_t_interface_a805c82b1141d356599a4322ceeb2456a}} 
+D\+E\+C\+L\+D\+IR double {\bfseries Get\+Aerodynamic\+Torque} () const
+\item 
+D\+E\+C\+L\+D\+IR void \mbox{\hyperlink{class_f_a_s_t_interface_a514268200f79f175c0f0ded121f5a4a8}{Get\+Nacelle\+Force}} (double\mbox{[}3\mbox{]}) const
+\item 
+D\+E\+C\+L\+D\+IR void \mbox{\hyperlink{class_f_a_s_t_interface_a228b9ad65a8c5fc5c32979d02057495c}{Get\+Nacelle\+Moment}} (double\mbox{[}3\mbox{]}) const
+\item 
+D\+E\+C\+L\+D\+IR void \mbox{\hyperlink{class_f_a_s_t_interface_ad362779debb23a93b23efa33e102800b}{Get\+Nacelle\+Acc}} (double\mbox{[}3\mbox{]}) const
+\item 
+D\+E\+C\+L\+D\+IR void \mbox{\hyperlink{class_f_a_s_t_interface_a2ba788983f7f925177fdb212a63ffe90}{Get\+Nacelle\+Angular\+Acc}} (double\mbox{[}3\mbox{]}) const
+\item 
+D\+E\+C\+L\+D\+IR double \mbox{\hyperlink{class_f_a_s_t_interface_abc31df9481ce9728cafa02ea2b7fd51d}{Get\+T\+SR}} () const
+\item 
+D\+E\+C\+L\+D\+IR void \mbox{\hyperlink{class_f_a_s_t_interface_a2688dc8ec3029f2b962e03e29a5f6977}{Get\+Hub\+Force}} (double\mbox{[}3\mbox{]}) const
+\item 
+D\+E\+C\+L\+D\+IR void \mbox{\hyperlink{class_f_a_s_t_interface_acb26696422597b139bdfc0641fc2c7e8}{Get\+Hub\+Moment}} (double\mbox{[}3\mbox{]}) const
+\item 
+D\+E\+C\+L\+D\+IR int \mbox{\hyperlink{class_f_a_s_t_interface_a840d24ddb8d0009d3e5cf934fa96bd09}{Get\+Num\+Nodes}} () const
+\item 
+D\+E\+C\+L\+D\+IR int \mbox{\hyperlink{class_f_a_s_t_interface_aa57b1b30cd03c180ef6c3c56d1712806}{Get\+Num\+Blades}} () const
+\item 
+\mbox{\Hypertarget{class_f_a_s_t_interface_a7b77fef6a58c07ca81613efe8a0cc6d0}\label{class_f_a_s_t_interface_a7b77fef6a58c07ca81613efe8a0cc6d0}} 
+D\+E\+C\+L\+D\+IR double {\bfseries Get\+Turbine\+Diameter} () const
+\item 
+D\+E\+C\+L\+D\+IR double \mbox{\hyperlink{class_f_a_s_t_interface_a277aee8fef661c8f5f031f40939ec92e}{Get\+Blade\+Pitch}} () const
+\item 
+D\+E\+C\+L\+D\+IR double \mbox{\hyperlink{class_f_a_s_t_interface_ac3d771d08e700e9fd5e942ed554e5866}{Get\+Generator\+Torque}} () const
+\item 
+D\+E\+C\+L\+D\+IR double \mbox{\hyperlink{class_f_a_s_t_interface_a25f7e95f64e07a9fefcd1501f5ee4566}{Get\+Generator\+Speed}} () const
+\item 
+D\+E\+C\+L\+D\+IR double \mbox{\hyperlink{class_f_a_s_t_interface_ac062cfaa7d29120406ae6aefbbf60b91}{Get\+Rotor\+Speed}} () const
+\item 
+D\+E\+C\+L\+D\+IR double \mbox{\hyperlink{class_f_a_s_t_interface_a878f1d61dde94bed78313b2e6344ee08}{Get\+Rotor\+Angular\+Disp}} () const
+\item 
+D\+E\+C\+L\+D\+IR double \mbox{\hyperlink{class_f_a_s_t_interface_a333bc25c05effd67d0924de117713026}{Get\+Generator\+Angular\+Disp}} () const
+\item 
+D\+E\+C\+L\+D\+IR void \mbox{\hyperlink{class_f_a_s_t_interface_a59c8a7a2302178c9704593361cf78595}{Set\+Nacelle\+States}} (double time, const double nacelle\+Pos\mbox{[}3\mbox{]}, const double nacelle\+Euler\+Angles\mbox{[}3\mbox{]}, const double nacelle\+Vel\mbox{[}3\mbox{]}, const double nacelle\+Acc\mbox{[}3\mbox{]}, const double nacelle\+Angular\+Vel\mbox{[}3\mbox{]}, const double nacelle\+Angular\+Acc\mbox{[}3\mbox{]}, bool is\+Temp\+Update=false)
+\begin{DoxyCompactList}\small\item\em Begin an update to simulation states\+\_\+pred to bring them to time\+\_\+act. \end{DoxyCompactList}\item 
+D\+E\+C\+L\+D\+IR void \mbox{\hyperlink{class_f_a_s_t_interface_a955e96a6dc9ce04c0ea83a3e9350cbc5}{Set\+Inflows}} (const std\+::vector$<$ double $>$ \&inflow\+Vel, const std\+::vector$<$ double $>$ \&inflow\+Acc)
+\begin{DoxyCompactList}\small\item\em Sets the inflow velocities and accelerations at the time passed to Set\+Nacelle\+States. \end{DoxyCompactList}\item 
+D\+E\+C\+L\+D\+IR void \mbox{\hyperlink{class_f_a_s_t_interface_ad9463d9d8b10d7dbaabe54d944c2e8ff}{Set\+Calc\+Output\+Callback}} (std\+::function$<$ void(const double $\ast$, const double $\ast$, double $\ast$, double $\ast$)$>$ Calc\+Accelerations)
+\begin{DoxyCompactList}\small\item\em Sets the {\bfseries{Calc\+Accelerations}} function that will be called within the direct feed through solver when added mass is enabled. {\bfseries{Note\+:}} this doesn\textquotesingle{}t need to be set if added mass is not enabled. \end{DoxyCompactList}\item 
+D\+E\+C\+L\+D\+IR \mbox{\hyperlink{struct_f_a_s_t_interface_1_1_nacelle_reaction_loads}{Nacelle\+Reaction\+Loads}} \mbox{\hyperlink{class_f_a_s_t_interface_a3d9b7d0de47fc07171dbf379a643fae8}{Advance\+States}} ()
+\end{DoxyCompactItemize}
+\doxysubsection*{Private Attributes}
+\begin{DoxyCompactItemize}
+\item 
+\mbox{\Hypertarget{class_f_a_s_t_interface_ada9c9399b517885e62c300082059e74b}\label{class_f_a_s_t_interface_ada9c9399b517885e62c300082059e74b}} 
+std\+::unique\+\_\+ptr$<$ \mbox{\hyperlink{class_f_a_s_t_interface_1_1_p_imp}{P\+Imp}} $>$ {\bfseries p\+\_\+imp}
+\end{DoxyCompactItemize}
+
+
+\doxysubsection{Detailed Description}
+{\bfseries{The main class}} used by Proteus\+DS that models a turbine with a two-\/mass drivetrain and controller. 
+
+\begin{DoxyAuthor}{Author}
+Dustin Condon 
+\end{DoxyAuthor}
+\begin{DoxyDate}{Date}
+Aug 2020
+\end{DoxyDate}
+This class models a turbine which uses Aero\+Dyn for its calculation of reaction loads. It includes a drive train, generator controller, and pitch controller. The user of this class must provide the nacelle position, velocity, acclerations, orientation, angular velocity, angular acceleration, inflow velocities, and inflow accelerations.
+
+This class is just a wrapper for \mbox{\hyperlink{class_aero_dyn_turbine}{Aero\+Dyn\+Turbine}}; however this class removes the need for Eigen with this function arguments and return values. Therefore the user of this class doesn\textquotesingle{}t need to include Eigen.\hypertarget{class_f_a_s_t_interface_autotoc_md1}{}\doxysubsubsection{Initialization\+:}\label{class_f_a_s_t_interface_autotoc_md1}
+Note there are three parts to initialization which must happen in the following order\+:
+\begin{DoxyEnumerate}
+\item initialize the drive train,
+\item initialize the controllers,
+\item finally initialize Aero\+Dyn.
+\end{DoxyEnumerate}
+
+The only controller option existing right now is a Bladed-\/style D\+LL. Use Init\+Controllers\+\_\+\+Bladed\+D\+L\+L(const std\+::string\& bladed\+\_\+dll\+\_\+fname, double initial\+Blade\+Pitch);
+
+Also, you can initialize the simulation with a constant rotor speed and blade pitch. This takes the place of steps 1 and 2 (initializing the drive train and controllers)\+: \mbox{\hyperlink{class_f_a_s_t_interface_a0b4439f4b45c121946943a1d22fb00c4}{Init\+With\+Constant\+Rotor\+Speed\+And\+Pitch(double, double)}}\hypertarget{class_f_a_s_t_interface_autotoc_md2}{}\doxysubsubsection{Usage order during simulation loop\+:}\label{class_f_a_s_t_interface_autotoc_md2}
+
+\begin{DoxyEnumerate}
+\item Set\+Nacelle\+States(double time, ..., bool is\+Temp\+Update)
+\item Get\+Blade\+Node\+Positions(...)
+\item Set\+Inflows(...)
+\item \mbox{\hyperlink{class_f_a_s_t_interface_a3d9b7d0de47fc07171dbf379a643fae8}{Advance\+States()}}
+\end{DoxyEnumerate}
+
+If this process was done with is\+Temp\+Update == false, then the turbine\textquotesingle{}s states\+\_\+pred will be updated to {\bfseries{time}}. However, if is\+Temp\+Update == true, then the turbine\textquotesingle{}s states remain at the previous time. \begin{DoxySeeAlso}{See also}
+\mbox{\hyperlink{class_aero_dyn___interface___wrapper}{Aero\+Dyn\+\_\+\+Interface\+\_\+\+Wrapper}} for more details about how its implemented via state saving.
+\end{DoxySeeAlso}
+In any case, whether is\+Temp\+Update is true or false, after Update\+States has been called, the nacelle reaction forces at time are returned. 
+
+\doxysubsection{Member Function Documentation}
+\mbox{\Hypertarget{class_f_a_s_t_interface_a3d9b7d0de47fc07171dbf379a643fae8}\label{class_f_a_s_t_interface_a3d9b7d0de47fc07171dbf379a643fae8}} 
+\index{FASTInterface@{FASTInterface}!AdvanceStates@{AdvanceStates}}
+\index{AdvanceStates@{AdvanceStates}!FASTInterface@{FASTInterface}}
+\doxysubsubsection{\texorpdfstring{AdvanceStates()}{AdvanceStates()}}
+{\footnotesize\ttfamily \mbox{\hyperlink{struct_f_a_s_t_interface_1_1_nacelle_reaction_loads}{F\+A\+S\+T\+Interface\+::\+Nacelle\+Reaction\+Loads}} F\+A\+S\+T\+Interface\+::\+Advance\+States (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})}
+
+This will simulate from the last simulation time up until the time\+\_\+act passed to Set\+Nacelle\+States(...) and return the nacelle reaction loads at that time\+\_\+act. If is\+Temp\+Step was true for Set\+Nacelle\+States, then this doesn\textquotesingle{}t update states\+\_\+pred permanently; if false, then this does update states\+\_\+pred permanentely. \mbox{\Hypertarget{class_f_a_s_t_interface_a2eb33a0a372354a2e7dbb5d61d2a5729}\label{class_f_a_s_t_interface_a2eb33a0a372354a2e7dbb5d61d2a5729}} 
+\index{FASTInterface@{FASTInterface}!GetBladeNodePositions@{GetBladeNodePositions}}
+\index{GetBladeNodePositions@{GetBladeNodePositions}!FASTInterface@{FASTInterface}}
+\doxysubsubsection{\texorpdfstring{GetBladeNodePositions()}{GetBladeNodePositions()}}
+{\footnotesize\ttfamily void F\+A\+S\+T\+Interface\+::\+Get\+Blade\+Node\+Positions (\begin{DoxyParamCaption}\item[{std\+::vector$<$ double $>$ \&}]{node\+Pos\+\_\+out }\end{DoxyParamCaption})}
+
+Returns the blade node postion at the \textbackslash{}time\+\_\+act which was passed to Set\+Nacelle\+Motion(...) Sets the pass-\/by-\/reference parameters with the blade node positions. Assumes enough space has been allocated. \mbox{\Hypertarget{class_f_a_s_t_interface_a277aee8fef661c8f5f031f40939ec92e}\label{class_f_a_s_t_interface_a277aee8fef661c8f5f031f40939ec92e}} 
+\index{FASTInterface@{FASTInterface}!GetBladePitch@{GetBladePitch}}
+\index{GetBladePitch@{GetBladePitch}!FASTInterface@{FASTInterface}}
+\doxysubsubsection{\texorpdfstring{GetBladePitch()}{GetBladePitch()}}
+{\footnotesize\ttfamily double F\+A\+S\+T\+Interface\+::\+Get\+Blade\+Pitch (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption}) const}
+
+Returns the current blade pitch \mbox{\Hypertarget{class_f_a_s_t_interface_a333bc25c05effd67d0924de117713026}\label{class_f_a_s_t_interface_a333bc25c05effd67d0924de117713026}} 
+\index{FASTInterface@{FASTInterface}!GetGeneratorAngularDisp@{GetGeneratorAngularDisp}}
+\index{GetGeneratorAngularDisp@{GetGeneratorAngularDisp}!FASTInterface@{FASTInterface}}
+\doxysubsubsection{\texorpdfstring{GetGeneratorAngularDisp()}{GetGeneratorAngularDisp()}}
+{\footnotesize\ttfamily double F\+A\+S\+T\+Interface\+::\+Get\+Generator\+Angular\+Disp (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption}) const}
+
+Returns the current angular displacement of the generator shaft \mbox{\Hypertarget{class_f_a_s_t_interface_a25f7e95f64e07a9fefcd1501f5ee4566}\label{class_f_a_s_t_interface_a25f7e95f64e07a9fefcd1501f5ee4566}} 
+\index{FASTInterface@{FASTInterface}!GetGeneratorSpeed@{GetGeneratorSpeed}}
+\index{GetGeneratorSpeed@{GetGeneratorSpeed}!FASTInterface@{FASTInterface}}
+\doxysubsubsection{\texorpdfstring{GetGeneratorSpeed()}{GetGeneratorSpeed()}}
+{\footnotesize\ttfamily double F\+A\+S\+T\+Interface\+::\+Get\+Generator\+Speed (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption}) const}
+
+Returns the current generator shaft speed from the drive train \mbox{\Hypertarget{class_f_a_s_t_interface_ac3d771d08e700e9fd5e942ed554e5866}\label{class_f_a_s_t_interface_ac3d771d08e700e9fd5e942ed554e5866}} 
+\index{FASTInterface@{FASTInterface}!GetGeneratorTorque@{GetGeneratorTorque}}
+\index{GetGeneratorTorque@{GetGeneratorTorque}!FASTInterface@{FASTInterface}}
+\doxysubsubsection{\texorpdfstring{GetGeneratorTorque()}{GetGeneratorTorque()}}
+{\footnotesize\ttfamily double F\+A\+S\+T\+Interface\+::\+Get\+Generator\+Torque (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption}) const}
+
+Returns the current generator torque \mbox{\Hypertarget{class_f_a_s_t_interface_a2688dc8ec3029f2b962e03e29a5f6977}\label{class_f_a_s_t_interface_a2688dc8ec3029f2b962e03e29a5f6977}} 
+\index{FASTInterface@{FASTInterface}!GetHubForce@{GetHubForce}}
+\index{GetHubForce@{GetHubForce}!FASTInterface@{FASTInterface}}
+\doxysubsubsection{\texorpdfstring{GetHubForce()}{GetHubForce()}}
+{\footnotesize\ttfamily void F\+A\+S\+T\+Interface\+::\+Get\+Hub\+Force (\begin{DoxyParamCaption}\item[{double}]{out\mbox{[}3\mbox{]} }\end{DoxyParamCaption}) const}
+
+Get reaction force at hub in hub coordinate system \mbox{\Hypertarget{class_f_a_s_t_interface_acb26696422597b139bdfc0641fc2c7e8}\label{class_f_a_s_t_interface_acb26696422597b139bdfc0641fc2c7e8}} 
+\index{FASTInterface@{FASTInterface}!GetHubMoment@{GetHubMoment}}
+\index{GetHubMoment@{GetHubMoment}!FASTInterface@{FASTInterface}}
+\doxysubsubsection{\texorpdfstring{GetHubMoment()}{GetHubMoment()}}
+{\footnotesize\ttfamily void F\+A\+S\+T\+Interface\+::\+Get\+Hub\+Moment (\begin{DoxyParamCaption}\item[{double}]{out\mbox{[}3\mbox{]} }\end{DoxyParamCaption}) const}
+
+Get moment of hub in hub coordinate system \mbox{\Hypertarget{class_f_a_s_t_interface_ad362779debb23a93b23efa33e102800b}\label{class_f_a_s_t_interface_ad362779debb23a93b23efa33e102800b}} 
+\index{FASTInterface@{FASTInterface}!GetNacelleAcc@{GetNacelleAcc}}
+\index{GetNacelleAcc@{GetNacelleAcc}!FASTInterface@{FASTInterface}}
+\doxysubsubsection{\texorpdfstring{GetNacelleAcc()}{GetNacelleAcc()}}
+{\footnotesize\ttfamily void F\+A\+S\+T\+Interface\+::\+Get\+Nacelle\+Acc (\begin{DoxyParamCaption}\item[{double}]{out\mbox{[}3\mbox{]} }\end{DoxyParamCaption}) const}
+
+When using added mass, this returns the solved-\/for nacelle linear acceleration; when not using added mass, this just returns the linear acceleration passed to Set\+Nacelle\+States \mbox{\Hypertarget{class_f_a_s_t_interface_a2ba788983f7f925177fdb212a63ffe90}\label{class_f_a_s_t_interface_a2ba788983f7f925177fdb212a63ffe90}} 
+\index{FASTInterface@{FASTInterface}!GetNacelleAngularAcc@{GetNacelleAngularAcc}}
+\index{GetNacelleAngularAcc@{GetNacelleAngularAcc}!FASTInterface@{FASTInterface}}
+\doxysubsubsection{\texorpdfstring{GetNacelleAngularAcc()}{GetNacelleAngularAcc()}}
+{\footnotesize\ttfamily void F\+A\+S\+T\+Interface\+::\+Get\+Nacelle\+Angular\+Acc (\begin{DoxyParamCaption}\item[{double}]{out\mbox{[}3\mbox{]} }\end{DoxyParamCaption}) const}
+
+When using added mass, this returns the solved-\/for nacelle angular acceleration when not using added mass, this just returns the angular acceleration passed to Set\+Nacelle\+States(...) \mbox{\Hypertarget{class_f_a_s_t_interface_a514268200f79f175c0f0ded121f5a4a8}\label{class_f_a_s_t_interface_a514268200f79f175c0f0ded121f5a4a8}} 
+\index{FASTInterface@{FASTInterface}!GetNacelleForce@{GetNacelleForce}}
+\index{GetNacelleForce@{GetNacelleForce}!FASTInterface@{FASTInterface}}
+\doxysubsubsection{\texorpdfstring{GetNacelleForce()}{GetNacelleForce()}}
+{\footnotesize\ttfamily void F\+A\+S\+T\+Interface\+::\+Get\+Nacelle\+Force (\begin{DoxyParamCaption}\item[{double}]{out\mbox{[}3\mbox{]} }\end{DoxyParamCaption}) const}
+
+Returns the reaction force on the nacelle in the nacelle coordinate system \mbox{\Hypertarget{class_f_a_s_t_interface_a228b9ad65a8c5fc5c32979d02057495c}\label{class_f_a_s_t_interface_a228b9ad65a8c5fc5c32979d02057495c}} 
+\index{FASTInterface@{FASTInterface}!GetNacelleMoment@{GetNacelleMoment}}
+\index{GetNacelleMoment@{GetNacelleMoment}!FASTInterface@{FASTInterface}}
+\doxysubsubsection{\texorpdfstring{GetNacelleMoment()}{GetNacelleMoment()}}
+{\footnotesize\ttfamily void F\+A\+S\+T\+Interface\+::\+Get\+Nacelle\+Moment (\begin{DoxyParamCaption}\item[{double}]{out\mbox{[}3\mbox{]} }\end{DoxyParamCaption}) const}
+
+Returns the moment of the nacelle in the nacelle coordinate system \mbox{\Hypertarget{class_f_a_s_t_interface_aa57b1b30cd03c180ef6c3c56d1712806}\label{class_f_a_s_t_interface_aa57b1b30cd03c180ef6c3c56d1712806}} 
+\index{FASTInterface@{FASTInterface}!GetNumBlades@{GetNumBlades}}
+\index{GetNumBlades@{GetNumBlades}!FASTInterface@{FASTInterface}}
+\doxysubsubsection{\texorpdfstring{GetNumBlades()}{GetNumBlades()}}
+{\footnotesize\ttfamily int F\+A\+S\+T\+Interface\+::\+Get\+Num\+Blades (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption}) const}
+
+Returns the number of blades for the turbine loaded from the Aero\+Dyn input file \mbox{\Hypertarget{class_f_a_s_t_interface_a840d24ddb8d0009d3e5cf934fa96bd09}\label{class_f_a_s_t_interface_a840d24ddb8d0009d3e5cf934fa96bd09}} 
+\index{FASTInterface@{FASTInterface}!GetNumNodes@{GetNumNodes}}
+\index{GetNumNodes@{GetNumNodes}!FASTInterface@{FASTInterface}}
+\doxysubsubsection{\texorpdfstring{GetNumNodes()}{GetNumNodes()}}
+{\footnotesize\ttfamily int F\+A\+S\+T\+Interface\+::\+Get\+Num\+Nodes (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption}) const}
+
+Returns the total number of nodes \mbox{\Hypertarget{class_f_a_s_t_interface_a878f1d61dde94bed78313b2e6344ee08}\label{class_f_a_s_t_interface_a878f1d61dde94bed78313b2e6344ee08}} 
+\index{FASTInterface@{FASTInterface}!GetRotorAngularDisp@{GetRotorAngularDisp}}
+\index{GetRotorAngularDisp@{GetRotorAngularDisp}!FASTInterface@{FASTInterface}}
+\doxysubsubsection{\texorpdfstring{GetRotorAngularDisp()}{GetRotorAngularDisp()}}
+{\footnotesize\ttfamily double F\+A\+S\+T\+Interface\+::\+Get\+Rotor\+Angular\+Disp (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption}) const}
+
+Returns the current angular displacement of the rotor shaft \mbox{\Hypertarget{class_f_a_s_t_interface_ac062cfaa7d29120406ae6aefbbf60b91}\label{class_f_a_s_t_interface_ac062cfaa7d29120406ae6aefbbf60b91}} 
+\index{FASTInterface@{FASTInterface}!GetRotorSpeed@{GetRotorSpeed}}
+\index{GetRotorSpeed@{GetRotorSpeed}!FASTInterface@{FASTInterface}}
+\doxysubsubsection{\texorpdfstring{GetRotorSpeed()}{GetRotorSpeed()}}
+{\footnotesize\ttfamily double F\+A\+S\+T\+Interface\+::\+Get\+Rotor\+Speed (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption}) const}
+
+Returns the current rotor shaft speed from the drive train \mbox{\Hypertarget{class_f_a_s_t_interface_abc31df9481ce9728cafa02ea2b7fd51d}\label{class_f_a_s_t_interface_abc31df9481ce9728cafa02ea2b7fd51d}} 
+\index{FASTInterface@{FASTInterface}!GetTSR@{GetTSR}}
+\index{GetTSR@{GetTSR}!FASTInterface@{FASTInterface}}
+\doxysubsubsection{\texorpdfstring{GetTSR()}{GetTSR()}}
+{\footnotesize\ttfamily double F\+A\+S\+T\+Interface\+::\+Get\+T\+SR (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption}) const}
+
+Returns the tip speed ratio \mbox{\Hypertarget{class_f_a_s_t_interface_aeccc8f45f5d94daefde3587b7a6fd09f}\label{class_f_a_s_t_interface_aeccc8f45f5d94daefde3587b7a6fd09f}} 
+\index{FASTInterface@{FASTInterface}!InitAeroDyn@{InitAeroDyn}}
+\index{InitAeroDyn@{InitAeroDyn}!FASTInterface@{FASTInterface}}
+\doxysubsubsection{\texorpdfstring{InitAeroDyn()}{InitAeroDyn()}}
+{\footnotesize\ttfamily void F\+A\+S\+T\+Interface\+::\+Init\+Aero\+Dyn (\begin{DoxyParamCaption}\item[{const std\+::string \&}]{input\+Filename,  }\item[{const std\+::string \&}]{output\+Filename,  }\item[{bool}]{use\+Added\+Mass,  }\item[{double}]{coeff\+Added\+Mass,  }\item[{double}]{timestep,  }\item[{int}]{num\+Blades,  }\item[{double}]{hub\+Radius,  }\item[{double}]{precone,  }\item[{const double}]{nacelle\+Pos\mbox{[}3\mbox{]},  }\item[{const double}]{nacelle\+Euler\+Angles\mbox{[}3\mbox{]},  }\item[{const double}]{nacelle\+Vel\mbox{[}3\mbox{]},  }\item[{const double}]{nacelle\+Acc\mbox{[}3\mbox{]},  }\item[{const double}]{nacelle\+Angular\+Vel\mbox{[}3\mbox{]},  }\item[{const double}]{nacelle\+Angular\+Acc\mbox{[}3\mbox{]} }\end{DoxyParamCaption})}
+
+Must initialize Aero\+Dyn last. This is because Aero\+Dyn\textquotesingle{}s initialization requires the rotor speed from the drive train and blade pitch command from the controller. 
+\begin{DoxyParams}{Parameters}
+{\em input\+Filename} & the filename of the Aero\+Dyn input file \\
+\hline
+{\em output\+Filename} & the filename where the resulting Aero\+Dyn output file should go \\
+\hline
+{\em fluid\+Density} & density of the surrounding fluid (kg/m$^\wedge$3) \\
+\hline
+{\em kinematic\+Fluid\+Visc} & ~\newline
+ \\
+\hline
+{\em nacelle\+Pos} & the initial position of the nacelle \\
+\hline
+{\em nacelle\+Euler\+Angles} & the initial orientation in Euler angles \\
+\hline
+{\em nacelle\+Vel} & the initial nacelle velocity \\
+\hline
+{\em nacelle\+Angular\+Vel} & the initial nacelle angular velocity of the nacelle represented as axis-\/angle vector \\
+\hline
+\end{DoxyParams}
+\mbox{\Hypertarget{class_f_a_s_t_interface_acbfa2b4d4905d9fbfb7f482ac24c5055}\label{class_f_a_s_t_interface_acbfa2b4d4905d9fbfb7f482ac24c5055}} 
+\index{FASTInterface@{FASTInterface}!InitControllers\_BladedDLL@{InitControllers\_BladedDLL}}
+\index{InitControllers\_BladedDLL@{InitControllers\_BladedDLL}!FASTInterface@{FASTInterface}}
+\doxysubsubsection{\texorpdfstring{InitControllers\_BladedDLL()}{InitControllers\_BladedDLL()}}
+{\footnotesize\ttfamily void F\+A\+S\+T\+Interface\+::\+Init\+Controllers\+\_\+\+Bladed\+D\+LL (\begin{DoxyParamCaption}\item[{int}]{num\+Blades,  }\item[{const std\+::string \&}]{bladed\+\_\+dll\+\_\+fname,  }\item[{double}]{initial\+Blade\+Pitch }\end{DoxyParamCaption})}
+
+Must initialize one of the controller types second (Bladed-\/style D\+LL controller initialization) \textbackslash{}bladed\+\_\+dll\+\_\+fname\+: the filename and path to the bladed-\/style D\+LL \textbackslash{}initial\+Blade\+Pitch\+: The initial blade pitch in radians \mbox{\Hypertarget{class_f_a_s_t_interface_a9e599da7d33733318a39a23586f9c68d}\label{class_f_a_s_t_interface_a9e599da7d33733318a39a23586f9c68d}} 
+\index{FASTInterface@{FASTInterface}!InitDriveTrain@{InitDriveTrain}}
+\index{InitDriveTrain@{InitDriveTrain}!FASTInterface@{FASTInterface}}
+\doxysubsubsection{\texorpdfstring{InitDriveTrain()}{InitDriveTrain()}}
+{\footnotesize\ttfamily void F\+A\+S\+T\+Interface\+::\+Init\+Drive\+Train (\begin{DoxyParamCaption}\item[{double}]{rotor\+M\+OI,  }\item[{double}]{gen\+M\+OI,  }\item[{double}]{stiffness,  }\item[{double}]{damping,  }\item[{double}]{gearbox\+Ratio,  }\item[{double}]{init\+Rotor\+Speed }\end{DoxyParamCaption})}
+
+Must initialize the drivetrain first 
+\begin{DoxyParams}{Parameters}
+{\em rotor\+M\+OI} & rotor mass moment of inertia about the rotor shaft \\
+\hline
+{\em gen\+M\+OI} & generator mass moment of inertia about the generator shaft \\
+\hline
+{\em stiffness} & the stiffness coefficient of the drive train \\
+\hline
+{\em damping} & the damping coefficient of the drive train \\
+\hline
+{\em gearbox\+Ratio} & represented as \char`\"{}1 \+: \textbackslash{}gearbox\+Ratio\char`\"{}, where L\+HS is the rotor shaft speed, and R\+HS is generator shaft speed \\
+\hline
+{\em initial\+Rotor\+Speed} & the initial rotation speed of the rotor shaft in rad/sec \\
+\hline
+\end{DoxyParams}
+\mbox{\Hypertarget{class_f_a_s_t_interface_a0b4439f4b45c121946943a1d22fb00c4}\label{class_f_a_s_t_interface_a0b4439f4b45c121946943a1d22fb00c4}} 
+\index{FASTInterface@{FASTInterface}!InitWithConstantRotorSpeedAndPitch@{InitWithConstantRotorSpeedAndPitch}}
+\index{InitWithConstantRotorSpeedAndPitch@{InitWithConstantRotorSpeedAndPitch}!FASTInterface@{FASTInterface}}
+\doxysubsubsection{\texorpdfstring{InitWithConstantRotorSpeedAndPitch()}{InitWithConstantRotorSpeedAndPitch()}}
+{\footnotesize\ttfamily void F\+A\+S\+T\+Interface\+::\+Init\+With\+Constant\+Rotor\+Speed\+And\+Pitch (\begin{DoxyParamCaption}\item[{double}]{constant\+Rotor\+Speed,  }\item[{double}]{constant\+Blade\+Pitch }\end{DoxyParamCaption})}
+
+This takes the place of initializing the drive train and controllers. 
+\begin{DoxyParams}{Parameters}
+{\em constant\+Rotor\+Speed} & in rad/sec \\
+\hline
+{\em constant\+Blade\+Pitch} & in rads \\
+\hline
+\end{DoxyParams}
+\mbox{\Hypertarget{class_f_a_s_t_interface_ad9463d9d8b10d7dbaabe54d944c2e8ff}\label{class_f_a_s_t_interface_ad9463d9d8b10d7dbaabe54d944c2e8ff}} 
+\index{FASTInterface@{FASTInterface}!SetCalcOutputCallback@{SetCalcOutputCallback}}
+\index{SetCalcOutputCallback@{SetCalcOutputCallback}!FASTInterface@{FASTInterface}}
+\doxysubsubsection{\texorpdfstring{SetCalcOutputCallback()}{SetCalcOutputCallback()}}
+{\footnotesize\ttfamily void F\+A\+S\+T\+Interface\+::\+Set\+Calc\+Output\+Callback (\begin{DoxyParamCaption}\item[{std\+::function$<$ void(const double $\ast$, const double $\ast$, double $\ast$, double $\ast$)$>$}]{Calc\+Accelerations }\end{DoxyParamCaption})}
+
+
+
+Sets the {\bfseries{Calc\+Accelerations}} function that will be called within the direct feed through solver when added mass is enabled. {\bfseries{Note\+:}} this doesn\textquotesingle{}t need to be set if added mass is not enabled. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em Calc\+Accelerations} & A function pointer that takes in the nacelle force and moment (first two params), and returns nacelle linear and angular accelerations (last two parameters). \\
+\hline
+\end{DoxyParams}
+\mbox{\Hypertarget{class_f_a_s_t_interface_a955e96a6dc9ce04c0ea83a3e9350cbc5}\label{class_f_a_s_t_interface_a955e96a6dc9ce04c0ea83a3e9350cbc5}} 
+\index{FASTInterface@{FASTInterface}!SetInflows@{SetInflows}}
+\index{SetInflows@{SetInflows}!FASTInterface@{FASTInterface}}
+\doxysubsubsection{\texorpdfstring{SetInflows()}{SetInflows()}}
+{\footnotesize\ttfamily void F\+A\+S\+T\+Interface\+::\+Set\+Inflows (\begin{DoxyParamCaption}\item[{const std\+::vector$<$ double $>$ \&}]{inflow\+Vel,  }\item[{const std\+::vector$<$ double $>$ \&}]{inflow\+Acc }\end{DoxyParamCaption})}
+
+
+
+Sets the inflow velocities and accelerations at the time passed to Set\+Nacelle\+States. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em inflow\+Vel} & the serialized inflow velocity vectors for each node \\
+\hline
+{\em inflow\+Acc} & the serialized inflow acceleration vectors for each node (not used when added mass effects are disabled) \\
+\hline
+\end{DoxyParams}
+\mbox{\Hypertarget{class_f_a_s_t_interface_a59c8a7a2302178c9704593361cf78595}\label{class_f_a_s_t_interface_a59c8a7a2302178c9704593361cf78595}} 
+\index{FASTInterface@{FASTInterface}!SetNacelleStates@{SetNacelleStates}}
+\index{SetNacelleStates@{SetNacelleStates}!FASTInterface@{FASTInterface}}
+\doxysubsubsection{\texorpdfstring{SetNacelleStates()}{SetNacelleStates()}}
+{\footnotesize\ttfamily void F\+A\+S\+T\+Interface\+::\+Set\+Nacelle\+States (\begin{DoxyParamCaption}\item[{double}]{time,  }\item[{const double}]{nacelle\+Pos\mbox{[}3\mbox{]},  }\item[{const double}]{nacelle\+Euler\+Angles\mbox{[}3\mbox{]},  }\item[{const double}]{nacelle\+Vel\mbox{[}3\mbox{]},  }\item[{const double}]{nacelle\+Acc\mbox{[}3\mbox{]},  }\item[{const double}]{nacelle\+Angular\+Vel\mbox{[}3\mbox{]},  }\item[{const double}]{nacelle\+Angular\+Acc\mbox{[}3\mbox{]},  }\item[{bool}]{is\+Temp\+Update = {\ttfamily false} }\end{DoxyParamCaption})}
+
+
+
+Begin an update to simulation states\+\_\+pred to bring them to time\+\_\+act. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em time} & the time to update to \\
+\hline
+{\em nacelle\+Pos} & the position of the nacelle \\
+\hline
+{\em nacelle\+Euler\+Angles} & the orientation in Euler angles \\
+\hline
+{\em nacelle\+Vel} & the nacelle linear velocity \\
+\hline
+{\em nacelle\+Acc} & the nacelle linear acceleration \\
+\hline
+{\em nacelle\+Angular\+Vel} & the nacelle angular velocity as an axis-\/angle vector \\
+\hline
+{\em nacelle\+Angular\+Acc} & the nacelle angular acceleration as an axis-\/angle vector \\
+\hline
+{\em is\+Temp\+Update} & if false, the turbines states\+\_\+pred will be permanently updated to time\+\_\+act; if true, the turbines states\+\_\+pred will only be temporarily updated to time\+\_\+act. In both cases the reaction forces at time\+\_\+act are reported \\
+\hline
+\end{DoxyParams}
+
+
+The documentation for this class was generated from the following files\+:\begin{DoxyCompactItemize}
+\item 
+F\+A\+S\+T\+Interface/src/F\+A\+S\+T\+Interface.\+h\item 
+F\+A\+S\+T\+Interface/src/F\+A\+S\+T\+Interface.\+cpp\end{DoxyCompactItemize}

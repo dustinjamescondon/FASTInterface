@@ -1,14 +1,14 @@
-/* 
-This coordinates AeroDyn, the drivetrain, and the pitch + generator controller, creating a turbine simulation.*/
-
 #pragma once
 #include "AeroDyn_Interface_Wrapper.h"
 #include "DriveTrain.h"
 #include "MasterController.h"
 #include <Eigen/Dense>
 
-/* This class coordinates AeroDyn, the drivetrain, and the controller. It also implements
-the input-output solver for when added mass is enabled. */
+/*!
+ * @author Dustin Condon
+ * @date Aug 2020
+ * @brief This class coordinates AeroDyn, the drivetrain, and the controller. It also implements
+ * the input-output solver for when added mass is enabled. */
 class AeroDynTurbine
 {
 public:
@@ -21,7 +21,7 @@ public:
 		Vector3d acceleration, angularAcc;
 	};
 
-	// Structure to hold the state of the nacelle
+	/*! Holds the state of the nacelle */
 	struct NacelleMotion {
 		Vector3d position;
 		Vector3d velocity;
@@ -36,7 +36,7 @@ public:
 		Vector3d acceleration, rotation_acceleration;
 	};
 
-	// There are two structures that carry the same information. This on uses Eigen::Vector3d; the other, arrays
+	/*! There are two structures that carry the same information. This on uses Eigen::Vector3d; the other, arrays */
 	struct NacelleReactionLoads_Vec {
 		Vector3d force, moment;
 		double tsr, power;
@@ -80,11 +80,12 @@ public:
 		const Vector3d& nacelleAcc,
 		const Vector3d& nacelleRotationAcc);
 
-	// Sets the inflow velocities at the \time_act passed to SetNacelleMotion(...)
+	/*! Sets the inflow velocities at the time passed to SetNacelleMotion */
 	void SetInputs_Inflow(const std::vector<double>& inflowVel, const std::vector<double>& inflowAcc);
 
-	// This will actually calculate and solve for the correct accelerations/loads and get the outputs
-	// unlike the UpdateStates functions of AeroDyn and the drivetrain
+	/*! 
+	 * @brief When added mass is enabled, this will actually calculate and solve for the correct 
+	 * accelerations/loads and get the outputs unlike the UpdateStates functions of AeroDyn and the drivetrain. */
 	NacelleReactionLoads_Vec AdvanceStates();
 
 	inline void GetBladeNodePositions(std::vector<double>& nodePositions) { aerodyn.GetBladeNodePositions(nodePositions); }
