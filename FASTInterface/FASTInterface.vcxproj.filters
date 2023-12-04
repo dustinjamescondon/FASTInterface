@@ -44,14 +44,6 @@
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <Library Include="..\modules\openfast\build\bin\AeroDyn_Interface_Win32_Double.lib">
-      <Filter>Libraries</Filter>
-    </Library>
-    <Library Include="..\modules\openfast\build\bin\AeroDyn_Interface_Win32_Debug_Double.lib">
-      <Filter>Libraries</Filter>
-    </Library>
-  </ItemGroup>
-  <ItemGroup>
     <Filter Include="DriveTrain">
       <UniqueIdentifier>{7c6deecf-aa64-4d0f-89c9-6611aee2afdb}</UniqueIdentifier>
     </Filter>

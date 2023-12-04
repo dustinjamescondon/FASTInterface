@@ -178,7 +178,7 @@ void PrintHelp()
 SimulationParams ParseCmdLineArgs(int argc, char* argv[])
 {
 	if (argc != 8 + 1) {
-		std::cout << "Only provided " << argc - 1 << " arguments! Need 8";
+		std::cout << "Only provided " << argc - 1 << " arguments! Need 8" << std::endl;
 		PrintHelp();
 		exit(1);
 	}

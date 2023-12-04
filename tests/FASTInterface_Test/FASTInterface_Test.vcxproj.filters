@@ -11,9 +11,6 @@
     <Filter Include="Driver">
       <UniqueIdentifier>{32fd9168-9174-4d0f-bdd2-189c98caa4c8}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Libraries">
-      <UniqueIdentifier>{110cb807-9592-49b3-97b6-638cfb99df3e}</UniqueIdentifier>
-    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\Graphics.cpp">
@@ -39,13 +36,5 @@
     <ClInclude Include="src\TimePlot.h">
       <Filter>Graphics</Filter>
     </ClInclude>
-  </ItemGroup>
-  <ItemGroup>
-    <Library Include="..\..\bin\FASTInterface_Debug.lib">
-      <Filter>Libraries</Filter>
-    </Library>
-    <Library Include="..\..\bin\FASTInterface_Release.lib">
-      <Filter>Libraries</Filter>
-    </Library>
   </ItemGroup>
 </Project>

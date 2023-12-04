@@ -13,9 +13,6 @@
       <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
       <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
     </Filter>
-    <Filter Include="libs">
-      <UniqueIdentifier>{265e95c2-68e3-4d7d-a1b5-fadbfff210e3}</UniqueIdentifier>
-    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\ad_interface_test.cpp">
@@ -29,13 +26,5 @@
     <ClInclude Include="..\..\FASTInterface\src\FASTInterfaceExceptions.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-  </ItemGroup>
-  <ItemGroup>
-    <Library Include="..\..\bin\FASTInterface_Debug.lib">
-      <Filter>libs</Filter>
-    </Library>
-    <Library Include="..\..\bin\FASTInterface_Release.lib">
-      <Filter>libs</Filter>
-    </Library>
   </ItemGroup>
 </Project>
