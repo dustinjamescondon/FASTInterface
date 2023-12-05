@@ -5,7 +5,12 @@
 #+TITLE: FASTInterface
 #+AUTHOR: Dustin Condon
 
-The FASTInterface class includes an instance of an AeroDyn simulation, a two-mass drive train, and a controller for the blade pitch and generator torque. These three modules are coordinated to create a simulation of a nacelle. Note: AeroDyn has been modified to be able to include added mass effects (the option to enable or disable added mass effect is made in the initiliazation parameters).
+The FASTInterface class includes an instance of an AeroDyn simulation,
+a two-mass drive train, and a controller for the blade pitch and
+generator torque. These three modules are coordinated to create a
+simulation of a nacelle. Note: AeroDyn has been modified to be able to
+include added mass effects (the option to enable or disable added mass
+effect is made in the initiliazation parameters).
 
 The inputs to this nacelle simulation are as follows:
 
@@ -32,33 +37,54 @@ The other outputs, which aren't key for ProteusDS to simulate the coupling are:
 * Project structure
 
 ** bin/
-This is where all the .lib, .dll and .exe files are from each project. Having all the .dll files here allows for one to set the working directory of any test executable to bin/, and then be able to load the appropriate DLLs.
+This is where all the .lib, .dll and .exe files are from each
+project. Having all the .dll files here allows for one to set the
+working directory of any test executable to bin/, and then be able to
+load the appropriate DLLs.
 
 ** docs/
 The DOxygen-generated documentation for the FASTInterface project.
 
 ** extern/
-This contains external libraries. The only library here is the graphical library SFML, which is used in one of the tests that renders where the blade nodes are on the screen as colored dots.
+This contains external libraries. The only library here is the
+graphical library SFML, which is used in one of the tests that renders
+where the blade nodes are on the screen as colored dots.
 
 ** FASTInterface/
 This contains the source code for the FASTInterface project.
 
 ** modules/
-contains git submodule repos used for the project. Most importantly, this is where the openfast repository is found. The other module is the linear algebra header library, Eigen.
+contains git submodule repos used for the project. Most importantly,
+this is where the openfast repository is found. The other module is
+the linear algebra header library, Eigen.
 
-A git submodule of the openfast git module is r-tests, which contains a number of test input files and their expected results is found within modules/openfast/reg_tests. These input files are used by tests in the tests/ directory, so this must be populated before the tests will work.
+A git submodule of the openfast git module is r-tests, which contains
+a number of test input files and their expected results is found
+within modules/openfast/reg_tests. These input files are used by tests
+in the tests/ directory, so this must be populated before the tests
+will work.
 
 In order to populate the submodules, one can either:
 1. "git clone --recurse-submodules <repository url>", if the FASTInterface repo hasn't been cloned yet.
 2. "git submodule update --init --recursive", if the FASTInterface has already been cloned.
 
 ** tests/
-Contains all the test projects and test python scripts. Note that all the python script tests require the Release version of the projects to be build, so make sure of that before running the python tests.
+Contains all the test projects and test python scripts. Note that all
+the python script tests require the Release version of the projects to
+be build, so make sure of that before running the python tests.
 
 These are the items in the tests directory:
 
-*** AD_Interface_Test
-This executable reads in simulation parameters for AerDyn from the command line parameters. These parameters are:
+*** resources
+Contains some AeroDyn input files that the test will load from.
+
+*** ADInterfaceTest
+Contains one unit test for succesfully loading the input files found
+in tests/resources
+
+*** DriverTest
+This executable reads in simulation parameters for AerDyn from the
+command line parameters. These parameters are:
 
 1. simulation time
 2. time step
@@ -69,28 +95,63 @@ This executable reads in simulation parameters for AerDyn from the command line 
 7. constant uniform inflow speed
 8. rotor shaft speed
 
-The AeroDyn input file is currently hardcoded to be a version of the OC4 Hywind turbine, which has a fluid density and kinematic fluid viscosity appropriate to water. A TODO could be to make the input file one of the parameters.
+The AeroDyn input file is currently hardcoded to be a version of the
+OC4 Hywind turbine, which has a fluid density and kinematic fluid
+viscosity appropriate to water. A TODO could be to make the input file
+one of the parameters.
 
-This test is useful for comparing with an unmodified AeroDyn driver output file, because the parameters that can be set from the command line arguments and the parameters set in the Aerodyn driver input file are the same.
+This test is useful for comparing with an unmodified AeroDyn driver
+output file, because the parameters that can be set from the command
+line arguments and the parameters set in the Aerodyn driver input file
+are the same.
 
 *** FASTInterface_Test
-C++ proj that simulates a fixed nacelle and renders the blade node positions using the SFML library.
+C++ proj that simulates a fixed nacelle and renders the blade node
+positions using the SFML library.
 *** MassSpringDamper_Test
-C++ proj that reads in command line arguments for simulation parameters and attaches the nacelle to the end of a spring mass damper.
+C++ proj that reads in command line arguments for simulation
+parameters and attaches the nacelle to the end of a spring mass
+damper.
 *** CantileveredBeam_Test
-A Python script that uses MassSpringDamper_Test's executable, and sets the spring coefficient according to a cantilevered beam. It runs two simulations with the same parameters, but one with added mass enabled, and one without added mass enabled. Then the results are plotted against each other.
+A Python script that uses MassSpringDamper_Test's executable, and sets
+the spring coefficient according to a cantilevered beam. It runs two
+simulations with the same parameters, but one with added mass enabled,
+and one without added mass enabled. Then the results are plotted
+against each other.
 * Compilation
-In order to build the projects through Visual Studio, one needs to have the Intel FORTRAN compiler (included in the Parallel Studios software package) linked to Visual Studio. In order to build the interface for ProteusDS, use the x86 build target, as ProteusDS is currently a Win32 application.
+In order to build the projects through Visual Studio, one needs to
+have the Intel FORTRAN compiler (included in the Parallel Studios
+software package) linked to Visual Studio.
 
 * Building the DOxygen-generated documentation
-The comments of the FASTInterface project are written with DOxygen in mind. DOxygen parses the source files, and if the comments are of the correct format, generates an html document outlining the classes and functions of the project. In order to do this generation using Cygwin, change the directory to the root of the project, and enter "doxygen doxygen.conf" This will populate the docs/ directory with the documentation.
+The comments of the FASTInterface project are written with DOxygen in
+mind. DOxygen parses the source files, and if the comments are of the
+correct format, generates an html document outlining the classes and
+functions of the project. In order to do this generation using Cygwin,
+change the directory to the root of the project, and enter "doxygen
+doxygen.conf" This will populate the docs/ directory with the
+documentation.
 * To Do List [0/4] 
-- [ ] Cleanup error checking: right now only the initialization functions can throw an exception caused by an error from the FORTRAN layer of the project. Errors can happen within any of the FORTRAN layer subroutines, but most of them aren't reported to the C++ layer of the project. <2020-08-31 Mon>
+- [ ] Cleanup error checking: right now only the initialization
+  functions can throw an exception caused by an error from the FORTRAN
+  layer of the project. Errors can happen within any of the FORTRAN
+  layer subroutines, but most of them aren't reported to the C++ layer
+  of the project. <2020-08-31 Mon>
 
-- [ ] The drive currently integrates its states using Heun's method. Currently not sure if this is accurate enough. If it isn't, switch to using RK4. <2020-08-31 Mon>
+- [ ] The drive currently integrates its states using Heun's
+  method. Currently not sure if this is accurate enough. If it isn't,
+  switch to using RK4. <2020-08-31 Mon>
 
-- [ ] Investigate the initial spike in force shown during the CantileveredBeam_Test results. Is this related to the initialization code? <2020-08-31 Mon> 
+- [ ] Investigate the initial spike in force shown during the
+  CantileveredBeam_Test results. Is this related to the initialization
+  code? <2020-08-31 Mon>
 
-  + [ ] Look over the initialization code for AeroDyn and the drive train. <2020-08-31 Mon>
+  + [ ] Look over the initialization code for AeroDyn and the drive
+    train. <2020-08-31 Mon>
 
-- [ ] Test the interpolation/extrapolation code in AeroDynTurbine. The current tests don't cause any interpolation or extrapolation, becaues the driver program (taking the place of ProteusDS) use the same timestep as the FASTInterface. Once timesteps are different, then values will need to be interpolated and extrapolated, and the code that does this hasn't really been tested yet. <2020-08-31 Mon>
+- [ ] Test the interpolation/extrapolation code in AeroDynTurbine. The
+  current tests don't cause any interpolation or extrapolation,
+  becaues the driver program (taking the place of ProteusDS) use the
+  same timestep as the FASTInterface. Once timesteps are different,
+  then values will need to be interpolated and extrapolated, and the
+  code that does this hasn't really been tested yet. <2020-08-31 Mon>
