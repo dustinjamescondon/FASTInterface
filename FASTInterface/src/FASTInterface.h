@@ -5,12 +5,12 @@
 #include <string>
 
 // Note, this is defined in the project preprocessor section
-#ifdef FASTINTERFACE_EXPORTS  
-#define DECLDIR __declspec(dllexport)   
-#else  
-#define DECLDIR __declspec(dllimport)   
-#endif  
-
+//#ifdef FASTINTERFACE_EXPORTS  
+//#define DECLDIR __declspec(dllexport)   
+//#else  
+//#define DECLDIR __declspec(dllimport)   
+//#endif  
+#define DECLDIR 
 
 /*!
  * @author Dustin Condon
