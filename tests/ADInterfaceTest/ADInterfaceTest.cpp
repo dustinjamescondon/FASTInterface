@@ -13,10 +13,15 @@ namespace ADInterfaceTest
 	{
 	public:
 		
-		TEST_METHOD(TestMethod1)
+		TEST_METHOD(Initializes)
 		{
 			AeroDyn_Interface_Wrapper ad_interface;
 			double dt = 0.05;
+			int numBlades = 3;
+			double hubRadius = 1;
+			double preconeAngle = 0;
+			bool useAddedMass = false;
+			double coeffOfAddedMass = 0;
 			auto hubPos = Vector3d::Zero();
 			auto hubOri = Matrix3d::Identity();
 			auto hubVel = Vector3d::Zero();
@@ -25,9 +30,12 @@ namespace ADInterfaceTest
 			auto hubRotAcc = Vector3d::Zero();
 			double bladePitch = 0.0;
 
-			ad_interface.InitAerodyn("../resources/5MW_OC4Semi_WSt_WavesWN/NRELOffshrBsline5MW_OC3Hywind_AeroDyn15.dat",
+			ad_interface.InitAerodyn("../../../tests/resources/5MW_OC4Semi_WSt_WavesWN/NRELOffshrBsline5MW_OC3Hywind_AeroDyn15.dat",
 				"output",
-				dt, 3, 1, 0, false, 0.0,
+				dt, numBlades, hubRadius,
+				preconeAngle, 
+				useAddedMass,
+				coeffOfAddedMass,
 				hubPos,
 				hubOri,
 				hubVel,
@@ -36,6 +44,8 @@ namespace ADInterfaceTest
 				hubRotAcc,
 				bladePitch
 			);
+
+			Assert::AreNotEqual(0, ad_interface.GetNumNodes());
 		}
 	};
 }
