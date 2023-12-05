@@ -67,11 +67,11 @@ int main(int argc, char* argv[])
 	nacelleAngularAcc[2] = 0.0;
 
 	nacelleEulerAngles[0] = 0.0;
-	nacelleEulerAngles[1] = M_PI;
-	nacelleEulerAngles[2] = M_PI;
+	nacelleEulerAngles[1] = 0.0;
+	nacelleEulerAngles[2] = 0.0;
 
-	nacellePosition[0] = -15.0;
-	nacellePosition[1] = nacellePosition[2] = 75.0;
+	nacellePosition[0] = 0.0;
+	nacellePosition[1] = nacellePosition[2] = 0.0;
 
 	nacelleVel[0] = 0.0;
 	nacelleVel[1] = 0.0;
@@ -85,7 +85,7 @@ int main(int argc, char* argv[])
 		// Use this to intialize the turbine with constant rotor speed and blade pitch
 		turb.InitWithConstantRotorSpeedAndPitch(params.rotorSpeed, params.pitch);
 
-		turb.InitAeroDyn("../modules/openfast/reg_tests/r-test/glue-codes/openfast/5MW_OC4Semi_WSt_WavesWN/NRELOffshrBsline5MW_OC3Hywind_AeroDyn15_Water.dat",
+		turb.InitAeroDyn("C:/5MW_OC4Semi_WSt_WavesWN/NRELOffshrBsline5MW_OC3Hywind_AeroDyn15.dat",
 			"output",
 			false,
 			0.0,

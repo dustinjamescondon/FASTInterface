@@ -153,6 +153,7 @@
     <OutDir>../bin</OutDir>
     <TargetName>$(ProjectName)_$(Configuration)</TargetName>
     <CustomBuildAfterTargets />
+    <LibraryPath>$(VC_LibraryPath_x86);$(WindowsSDK_LibraryPath_x86);$(ProjectDir)..\modules\openfast\build\bin\</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug_Double|Win32'">
     <LinkIncremental>true</LinkIncremental>
@@ -160,34 +161,41 @@
     <OutDir>../bin</OutDir>
     <TargetName>$(ProjectName)_$(Configuration)</TargetName>
     <CustomBuildAfterTargets />
+    <LibraryPath>$(VC_LibraryPath_x86);$(WindowsSDK_LibraryPath_x86);$(ProjectDir)..\modules\openfast\build\bin\</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <LinkIncremental>true</LinkIncremental>
     <EmbedManifest>false</EmbedManifest>
     <OutDir>../bin</OutDir>
+    <LibraryPath>$(VC_LibraryPath_x64);$(WindowsSDK_LibraryPath_x64);$(ProjectDir)..\modules\openfast\build\bin\</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug_Double|x64'">
     <LinkIncremental>true</LinkIncremental>
     <EmbedManifest>false</EmbedManifest>
     <OutDir>../bin</OutDir>
+    <LibraryPath>$(VC_LibraryPath_x64);$(WindowsSDK_LibraryPath_x64);$(ProjectDir)..\modules\openfast\build\bin\</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <LinkIncremental>true</LinkIncremental>
     <TargetName>$(ProjectName)_$(Configuration)</TargetName>
     <OutDir>../bin</OutDir>
+    <LibraryPath>$(VC_LibraryPath_x86);$(WindowsSDK_LibraryPath_x86);$(ProjectDir)..\modules\openfast\build\bin\</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release_Double|Win32'">
     <LinkIncremental>true</LinkIncremental>
     <TargetName>$(ProjectName)_$(Configuration)</TargetName>
     <OutDir>../bin</OutDir>
+    <LibraryPath>$(VC_LibraryPath_x86);$(WindowsSDK_LibraryPath_x86);$(ProjectDir)..\modules\openfast\build\bin\</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <LinkIncremental>false</LinkIncremental>
     <OutDir>../bin</OutDir>
+    <LibraryPath>$(VC_LibraryPath_x64);$(WindowsSDK_LibraryPath_x64);$(ProjectDir)..\modules\openfast\build\bin\</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release_Double|x64'">
     <LinkIncremental>false</LinkIncremental>
     <OutDir>../bin</OutDir>
+    <LibraryPath>$(VC_LibraryPath_x64);$(WindowsSDK_LibraryPath_x64);$(ProjectDir)..\modules\openfast\build\bin\</LibraryPath>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
@@ -206,7 +214,7 @@
       <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <EnableUAC>false</EnableUAC>
-      <AdditionalDependencies>$(ProjectDir)..\modules\openfast\build\bin\AeroDyn_Interface_$(Platform)_$(Configuration).lib</AdditionalDependencies>
+      <AdditionalDependencies>AeroDyn_Interface_$(Platform)_$(Configuration).lib</AdditionalDependencies>
     </Link>
     <PostBuildEvent>
       <Command>FetchDLLs.bat</Command>
@@ -238,7 +246,7 @@
       <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <EnableUAC>false</EnableUAC>
-      <AdditionalDependencies>$(ProjectDir)..\modules\openfast\build\bin\AeroDyn_Interface_$(Platform)_$(Configuration).lib</AdditionalDependencies>
+      <AdditionalDependencies>AeroDyn_Interface_$(Platform)_$(Configuration).lib</AdditionalDependencies>
     </Link>
     <PostBuildEvent>
       <Command>FetchDLLs.bat</Command>
@@ -270,7 +278,7 @@
       <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <EnableUAC>false</EnableUAC>
-      <AdditionalDependencies>$(ProjectDir)..\modules\openfast\build\bin\AeroDyn_Interface_$(Platform)_$(Configuration).lib</AdditionalDependencies>
+      <AdditionalDependencies>AeroDyn_Interface_$(Platform)_$(Configuration).lib</AdditionalDependencies>
     </Link>
     <PostBuildEvent>
       <Command>FetchDLLs.bat</Command>
@@ -289,14 +297,14 @@
       <ConformanceMode>true</ConformanceMode>
       <PrecompiledHeaderFile>
       </PrecompiledHeaderFile>
-      <LanguageStandard>stdcpp17</LanguageStandard>
+      <LanguageStandard>stdcpp14</LanguageStandard>
       <AdditionalIncludeDirectories>..\modules\eigen</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <EnableUAC>false</EnableUAC>
-      <AdditionalDependencies>$(ProjectDir)..\modules\openfast\build\bin\AeroDyn_Interface_$(Platform)_$(Configuration).lib</AdditionalDependencies>
+      <AdditionalDependencies>AeroDyn_Interface_$(Platform)_$(Configuration).lib</AdditionalDependencies>
     </Link>
     <PostBuildEvent>
       <Command>FetchDLLs.bat</Command>
@@ -330,7 +338,7 @@
       <LinkStatus>
       </LinkStatus>
       <LinkTimeCodeGeneration>Default</LinkTimeCodeGeneration>
-      <AdditionalDependencies>$(ProjectDir)..\modules\openfast\build\bin\AeroDyn_Interface_$(Platform)_$(Configuration).lib</AdditionalDependencies>
+      <AdditionalDependencies>AeroDyn_Interface_$(Platform)_$(Configuration).lib</AdditionalDependencies>
     </Link>
     <PostBuildEvent>
       <Command>FetchDLLs.bat</Command>
@@ -370,7 +378,7 @@
       <LinkStatus>
       </LinkStatus>
       <LinkTimeCodeGeneration>Default</LinkTimeCodeGeneration>
-      <AdditionalDependencies>$(ProjectDir)..\modules\openfast\build\bin\AeroDyn_Interface_$(Platform)_$(Configuration).lib</AdditionalDependencies>
+      <AdditionalDependencies>AeroDyn_Interface_$(Platform)_$(Configuration).lib</AdditionalDependencies>
     </Link>
     <PostBuildEvent>
       <Command>FetchDLLs.bat</Command>
@@ -407,7 +415,7 @@
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <EnableUAC>false</EnableUAC>
-      <AdditionalDependencies>$(ProjectDir)..\modules\openfast\build\bin\AeroDyn_Interface_$(Platform)_$(Configuration).lib</AdditionalDependencies>
+      <AdditionalDependencies>AeroDyn_Interface_$(Platform)_$(Configuration).lib</AdditionalDependencies>
     </Link>
     <PostBuildEvent>
       <Command>FetchDLLs.bat</Command>
@@ -438,7 +446,7 @@
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <EnableUAC>false</EnableUAC>
-      <AdditionalDependencies>$(ProjectDir)..\modules\openfast\build\bin\AeroDyn_Interface_$(Platform)_$(Configuration).lib</AdditionalDependencies>
+      <AdditionalDependencies>AeroDyn_Interface_$(Platform)_$(Configuration).lib</AdditionalDependencies>
     </Link>
     <PostBuildEvent>
       <Command>FetchDLLs.bat</Command>
