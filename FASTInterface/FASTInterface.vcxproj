@@ -36,7 +36,6 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\AeroDynTurbine.cpp" />
-    <ClCompile Include="src\AeroDyn_Interface_Wrapper.cpp" />
     <ClCompile Include="src\BladedInterface.cpp" />
     <ClCompile Include="src\DriveTrain.cpp" />
     <ClCompile Include="src\FASTInterface.cpp" />
@@ -44,7 +43,6 @@
     <ClCompile Include="src\Utilities.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="src\AeroDyn_Interface_Wrapper.h" />
     <ClInclude Include="src\BladedInterface.h" />
     <ClInclude Include="src\DriveTrain.h" />
     <ClInclude Include="src\FASTInterfaceExceptions.h" />
@@ -55,6 +53,11 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="FetchDLLs.bat" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\AeroDynCppInterface\AeroDynCppInterface.vcxproj">
+      <Project>{ee7dcc02-422d-48f1-809a-dc8a826758a6}</Project>
+    </ProjectReference>
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>16.0</VCProjectVersion>
@@ -211,8 +214,6 @@
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release_Double|x64'">
     <LinkIncremental>false</LinkIncremental>
-    <OutDir>
-    </OutDir>
     <LibraryPath>$(VC_LibraryPath_x64);$(WindowsSDK_LibraryPath_x64);</LibraryPath>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
@@ -235,8 +236,7 @@
       <AdditionalDependencies>AeroDyn_Interface_$(Platform)_$(Configuration).lib</AdditionalDependencies>
     </Link>
     <PostBuildEvent>
-      <Command>xcopy /Y "$(SolutionDir)modules\openfast\build\bin\AeroDyn_Interface_$(Platform)_$(Configuration).dll" "$(SolutionDir)bin\$(Platform)\$(Configuration)"
-xcopy /Y "$(SolutionDir)modules\openfast\build\bin\AeroDyn_Interface_$(Platform)_$(Configuration).pdb" "$(SolutionDir)bin\$(Platform)\$(Configuration)"</Command>
+      <Command>xcopy /Y "$(SolutionDir)modules\openfast\build\bin\AeroDyn_Interface_$(Platform)_$(Configuration).*" "$(SolutionDir)bin\$(Platform)\$(Configuration)"</Command>
       <Message>Fetching DLLs from OpenFAST</Message>
     </PostBuildEvent>
     <PreBuildEvent>
@@ -268,8 +268,7 @@ xcopy /Y "$(SolutionDir)modules\openfast\build\bin\AeroDyn_Interface_$(Platform)
       <AdditionalDependencies>AeroDyn_Interface_$(Platform)_$(Configuration).lib</AdditionalDependencies>
     </Link>
     <PostBuildEvent>
-      <Command>xcopy /Y "$(SolutionDir)modules\openfast\build\bin\AeroDyn_Interface_$(Platform)_$(Configuration).dll" "$(SolutionDir)bin\$(Platform)\$(Configuration)"
-xcopy /Y "$(SolutionDir)modules\openfast\build\bin\AeroDyn_Interface_$(Platform)_$(Configuration).pdb" "$(SolutionDir)bin\$(Platform)\$(Configuration)"</Command>
+      <Command>xcopy /Y "$(SolutionDir)modules\openfast\build\bin\AeroDyn_Interface_$(Platform)_$(Configuration).*" "$(SolutionDir)bin\$(Platform)\$(Configuration)"</Command>
       <Message>Fetching DLLs from OpenFAST</Message>
     </PostBuildEvent>
     <PreBuildEvent>
@@ -301,8 +300,7 @@ xcopy /Y "$(SolutionDir)modules\openfast\build\bin\AeroDyn_Interface_$(Platform)
       <AdditionalDependencies>AeroDyn_Interface_$(Platform)_$(Configuration).lib</AdditionalDependencies>
     </Link>
     <PostBuildEvent>
-      <Command>xcopy /Y "$(SolutionDir)modules\openfast\build\bin\AeroDyn_Interface_$(Platform)_$(Configuration).dll" "$(SolutionDir)bin\$(Platform)\$(Configuration)"
-xcopy /Y "$(SolutionDir)modules\openfast\build\bin\AeroDyn_Interface_$(Platform)_$(Configuration).pdb" "$(SolutionDir)bin\$(Platform)\$(Configuration)"</Command>
+      <Command>xcopy /Y "$(SolutionDir)modules\openfast\build\bin\AeroDyn_Interface_$(Platform)_$(Configuration).*" "$(SolutionDir)bin\$(Platform)\$(Configuration)"</Command>
     </PostBuildEvent>
     <PostBuildEvent>
       <Message>Fetching DLLs from OpenFAST</Message>
@@ -328,8 +326,7 @@ xcopy /Y "$(SolutionDir)modules\openfast\build\bin\AeroDyn_Interface_$(Platform)
       <AdditionalDependencies>AeroDyn_Interface_$(Platform)_$(Configuration).lib</AdditionalDependencies>
     </Link>
     <PostBuildEvent>
-      <Command>xcopy /Y "$(SolutionDir)modules\openfast\build\bin\AeroDyn_Interface_$(Platform)_$(Configuration).dll" "$(SolutionDir)bin\$(Platform)\$(Configuration)"
-xcopy /Y "$(SolutionDir)modules\openfast\build\bin\AeroDyn_Interface_$(Platform)_$(Configuration).pdb" "$(SolutionDir)bin\$(Platform)\$(Configuration)"</Command>
+      <Command>xcopy /Y "$(SolutionDir)modules\openfast\build\bin\AeroDyn_Interface_$(Platform)_$(Configuration).*" "$(SolutionDir)bin\$(Platform)\$(Configuration)"</Command>
     </PostBuildEvent>
     <PostBuildEvent>
       <Message>Fetching DLLs from OpenFAST</Message>
@@ -363,8 +360,7 @@ xcopy /Y "$(SolutionDir)modules\openfast\build\bin\AeroDyn_Interface_$(Platform)
       <AdditionalDependencies>AeroDyn_Interface_$(Platform)_$(Configuration).lib</AdditionalDependencies>
     </Link>
     <PostBuildEvent>
-      <Command>xcopy /Y "$(SolutionDir)modules\openfast\build\bin\AeroDyn_Interface_$(Platform)_$(Configuration).dll" "$(SolutionDir)bin\$(Platform)\$(Configuration)"
-xcopy /Y "$(SolutionDir)modules\openfast\build\bin\AeroDyn_Interface_$(Platform)_$(Configuration).pdb" "$(SolutionDir)bin\$(Platform)\$(Configuration)"</Command>
+      <Command>xcopy /Y "$(SolutionDir)modules\openfast\build\bin\AeroDyn_Interface_$(Platform)_$(Configuration).*" "$(SolutionDir)bin\$(Platform)\$(Configuration)"</Command>
       <Message>Fetching DLLs from OpenFAST</Message>
     </PostBuildEvent>
     <PreBuildEvent>
@@ -404,8 +400,7 @@ xcopy /Y "$(SolutionDir)modules\openfast\build\bin\AeroDyn_Interface_$(Platform)
       <AdditionalDependencies>AeroDyn_Interface_$(Platform)_$(Configuration).lib</AdditionalDependencies>
     </Link>
     <PostBuildEvent>
-      <Command>xcopy /Y "$(SolutionDir)modules\openfast\build\bin\AeroDyn_Interface_$(Platform)_$(Configuration).dll" "$(SolutionDir)bin\$(Platform)\$(Configuration)"
-xcopy /Y "$(SolutionDir)modules\openfast\build\bin\AeroDyn_Interface_$(Platform)_$(Configuration).pdb" "$(SolutionDir)bin\$(Platform)\$(Configuration)"</Command>
+      <Command>xcopy /Y "$(SolutionDir)modules\openfast\build\bin\AeroDyn_Interface_$(Platform)_$(Configuration).*" "$(SolutionDir)bin\$(Platform)\$(Configuration)"</Command>
       <Message>Fetching DLLs from OpenFAST</Message>
     </PostBuildEvent>
     <PreBuildEvent>
@@ -442,8 +437,7 @@ xcopy /Y "$(SolutionDir)modules\openfast\build\bin\AeroDyn_Interface_$(Platform)
       <AdditionalDependencies>AeroDyn_Interface_$(Platform)_$(Configuration).lib</AdditionalDependencies>
     </Link>
     <PostBuildEvent>
-      <Command>xcopy /Y "$(SolutionDir)modules\openfast\build\bin\AeroDyn_Interface_$(Platform)_$(Configuration).dll" "$(SolutionDir)bin\$(Platform)\$(Configuration)"
-xcopy /Y "$(SolutionDir)modules\openfast\build\bin\AeroDyn_Interface_$(Platform)_$(Configuration).pdb" "$(SolutionDir)bin\$(Platform)\$(Configuration)"</Command>
+      <Command>xcopy /Y "$(SolutionDir)modules\openfast\build\bin\AeroDyn_Interface_$(Platform)_$(Configuration).*" "$(SolutionDir)bin\$(Platform)\$(Configuration)"</Command>
     </PostBuildEvent>
     <PostBuildEvent>
       <Message>Fetching DLLs from OpenFAST</Message>
@@ -474,8 +468,7 @@ xcopy /Y "$(SolutionDir)modules\openfast\build\bin\AeroDyn_Interface_$(Platform)
       <AdditionalDependencies>AeroDyn_Interface_$(Platform)_$(Configuration).lib</AdditionalDependencies>
     </Link>
     <PostBuildEvent>
-      <Command>xcopy /Y "$(SolutionDir)modules\openfast\build\bin\AeroDyn_Interface_$(Platform)_$(Configuration).dll" "$(SolutionDir)bin\$(Platform)\$(Configuration)"
-xcopy /Y "$(SolutionDir)modules\openfast\build\bin\AeroDyn_Interface_$(Platform)_$(Configuration).pdb" "$(SolutionDir)bin\$(Platform)\$(Configuration)"</Command>
+      <Command>xcopy /Y "$(SolutionDir)modules\openfast\build\bin\AeroDyn_Interface_$(Platform)_$(Configuration).*" "$(SolutionDir)bin\$(Platform)\$(Configuration)"</Command>
     </PostBuildEvent>
     <PostBuildEvent>
       <Message>Fetching DLLs from OpenFAST</Message>

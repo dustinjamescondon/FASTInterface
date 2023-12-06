@@ -4,9 +4,6 @@
     <ClCompile Include="src\DriveTrain.cpp">
       <Filter>DriveTrain</Filter>
     </ClCompile>
-    <ClCompile Include="src\AeroDyn_Interface_Wrapper.cpp">
-      <Filter>AeroDyn_Interface</Filter>
-    </ClCompile>
     <ClCompile Include="src\BladedInterface.cpp">
       <Filter>MasterController\BladedInterface</Filter>
     </ClCompile>
@@ -24,9 +21,6 @@
   <ItemGroup>
     <ClInclude Include="src\DriveTrain.h">
       <Filter>DriveTrain</Filter>
-    </ClInclude>
-    <ClInclude Include="src\AeroDyn_Interface_Wrapper.h">
-      <Filter>AeroDyn_Interface</Filter>
     </ClInclude>
     <ClInclude Include="src\BladedInterface.h">
       <Filter>MasterController\BladedInterface</Filter>
@@ -46,12 +40,6 @@
   <ItemGroup>
     <Filter Include="DriveTrain">
       <UniqueIdentifier>{7c6deecf-aa64-4d0f-89c9-6611aee2afdb}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="AeroDyn_Interface">
-      <UniqueIdentifier>{dd412287-60f2-4747-9de7-96bb6e6b4f0a}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="AeroDyn_Interface\AeroDyn_Interface_Libs">
-      <UniqueIdentifier>{8e01cec1-f7e6-4eff-9c0e-8a68fc1fd5bb}</UniqueIdentifier>
     </Filter>
     <Filter Include="MasterController">
       <UniqueIdentifier>{ba390f5a-b6e6-4a92-90e8-007ee3a88bfd}</UniqueIdentifier>

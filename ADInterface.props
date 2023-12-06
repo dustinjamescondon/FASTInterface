@@ -7,11 +7,11 @@
     <LibraryPath>$(VC_LibraryPath_x86);$(WindowsSDK_LibraryPath_x86);$(SolutionDir)modules\openfast\build\bin\;$(SolutionDir)bin\$(Platform)\$(Configuration)\</LibraryPath>
     <PublicIncludeDirectories>$(SolutionDir)modules\eigen;$(SolutionDir)FASTInterface\src</PublicIncludeDirectories>
     <OutDir>$(SolutionDir)bin\$(Platform)\$(Configuration)\</OutDir>
-    <IncludePath>$(VC_IncludePath);$(WindowsSDK_IncludePath);$(MSBuildThisFileDirectory)modules\eigen</IncludePath>
+    <IncludePath>$(VC_IncludePath);$(WindowsSDK_IncludePath);$(MSBuildThisFileDirectory)modules\eigen;$(MSBuildThisFileDirectory)AeroDynCppInterface\include\</IncludePath>
   </PropertyGroup>
   <ItemDefinitionGroup>
     <ClCompile>
-      <AdditionalIncludeDirectories>$(MSBuildThisFileDirectory)modules\eigen</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(MSBuildThisFileDirectory)modules\eigen;$(MSBuildThisFileDirectory)AeroDynCppInterface\include;</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <AdditionalDependencies>%(AdditionalDependencies);AeroDyn_Interface_$(Platform)_$(Configuration).lib;</AdditionalDependencies>
