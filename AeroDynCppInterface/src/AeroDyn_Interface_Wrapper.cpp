@@ -40,42 +40,21 @@ extern "C" {
     void INTERFACE_END(void* simulationInstance);
 }
 
-Vector3d AeroDyn_Interface_Wrapper::Transform_PDStoAD(const Vector3d& v) const
-{
-    return Vector3d(v.x(), -v.y(), -v.z());
-}
-
-Vector3d AeroDyn_Interface_Wrapper::Transform_ADtoPDS(const Vector3d& v) const
-{
-    return Vector3d(v.x(), -v.y(), -v.z());
-}
-
-Matrix3d AeroDyn_Interface_Wrapper::TransformOrientation(const Matrix3d& orientation) const
-{
-    Matrix3d trans;
-    trans.row(0) = orientation.row(0);
-    trans.row(1) = -1.0 * orientation.row(1);
-    trans.row(2) = -1.0 * orientation.row(2);
-
-    return trans;
-}
-
-/*!
- * The transformation from ProteusDS's coordinate system and that of AeroDyn is done by negating the y and z components. 
- * This is because one is positive-z-up, while the other is positive-z-down.
+/*! 
+ * 
  */
-void AeroDyn_Interface_Wrapper::TransformInflows_PDStoAD(const std::vector<double>& pdsInflowVel, 
-														 const std::vector<double>& pdsInflowAcc)
+void AeroDyn_Interface_Wrapper::SaveInflows(const std::vector<double>& inflowVel, 
+														 const std::vector<double>& inflowAcc)
 {
     // iterate through all the x, y, z components of the inflows, negating the y and z components
     for (int i = 0; i < totalNodes; ++i) {
-	aerodynInflowVel[(i * 3) + 0] = pdsInflowVel[(i * 3) + 0];
-	aerodynInflowVel[(i * 3) + 1] = -pdsInflowVel[(i * 3) + 1];
-	aerodynInflowVel[(i * 3) + 2] = -pdsInflowVel[(i * 3) + 2];
+	aerodynInflowVel[(i * 3) + 0] = inflowVel[(i * 3) + 0];
+	aerodynInflowVel[(i * 3) + 1] = inflowVel[(i * 3) + 1];
+	aerodynInflowVel[(i * 3) + 2] = inflowVel[(i * 3) + 2];
 
-	aerodynInflowAcc[(i * 3) + 0] =  pdsInflowAcc[(i * 3) + 0];
-	aerodynInflowAcc[(i * 3) + 1] = -pdsInflowAcc[(i * 3) + 1];
-	aerodynInflowAcc[(i * 3) + 2] = -pdsInflowAcc[(i * 3) + 2];
+	aerodynInflowAcc[(i * 3) + 0] = inflowAcc[(i * 3) + 0];
+	aerodynInflowAcc[(i * 3) + 1] = inflowAcc[(i * 3) + 1];
+	aerodynInflowAcc[(i * 3) + 2] = inflowAcc[(i * 3) + 2];
     }
 }
 
@@ -157,12 +136,11 @@ void AeroDyn_Interface_Wrapper::InitAerodyn(
     pitch = bladePitch;
 }
 
-// Transform each inflow from PDS' coordinate system (positive-down) to AD's (positive-up), and send them 
-// to AD for its initialization.
-void AeroDyn_Interface_Wrapper::InitInflows(const std::vector<double>& pdsInflowVel, const std::vector<double>& pdsInflowAcc)
+// send the inflows to AD for its initialization.
+void AeroDyn_Interface_Wrapper::InitInflows(const std::vector<double>& inflowVel, const std::vector<double>& inflowAcc)
 {
     // update member variable aerodynInflow with transformed inflows passed to this function
-    TransformInflows_PDStoAD(pdsInflowVel, pdsInflowAcc);
+    SaveInflows(inflowVel, inflowAcc);
     
     // call inflow initialization subroutine in FORTRAN DLL with these transformed inflows
     INTERFACE_INITINPUTS_INFLOW(simulationInstance, &nBlades, &nNodes, &aerodynInflowVel[0], &aerodynInflowAcc[0]);
@@ -214,12 +192,12 @@ void AeroDyn_Interface_Wrapper::Set_Inputs_Hub(double time,
 	input.bladePitch = bladePitch;
 
     // transform them to Aerodyn's global coordinate system 
-    Vector3d hubPos_trans = Transform_PDStoAD(hubPosition);
-    Vector3d hubVel_trans = Transform_PDStoAD(hubVel);
-    Vector3d hubAcc_trans = Transform_PDStoAD(hubAcc);
-    Vector3d hubAngVel_trans = Transform_PDStoAD(hubAngularVel);
-    Vector3d hubAngAcc_trans = Transform_PDStoAD(hubAngularAcc);
-    Matrix3d hubOri_trans = TransformOrientation(hubOrientation);
+    Vector3d hubPos_trans = hubPosition;
+    Vector3d hubVel_trans = hubVel;
+    Vector3d hubAcc_trans = hubAcc;
+    Vector3d hubAngVel_trans = hubAngularVel;
+    Vector3d hubAngAcc_trans = hubAngularAcc;
+    Matrix3d hubOri_trans = hubOrientation;
 
 	INTERFACE_SETINPUTS_HUB(simulationInstance, &time, hubPos_trans.data(), hubOri_trans.data(), hubVel_trans.data(),
 				    hubAcc_trans.data(), hubAngVel_trans.data(), hubAngAcc_trans.data(), &bladePitch);
@@ -232,9 +210,6 @@ void AeroDyn_Interface_Wrapper::Set_Inputs_Hub(double time,
 // The expected use of this function is to use to calculate the partial derivatives of AeroDyn's CalcSpringForce function
 void AeroDyn_Interface_Wrapper::Set_Inputs_HubAcceleration(const Vector3d& hubAcc, const Vector3d& hubAngularAcc)
 {
-	Vector3d hubAcc_trans = Transform_PDStoAD(hubAcc);
-	Vector3d hubAngAcc_trans = Transform_PDStoAD(hubAngularAcc);
-	
 	// Save the inputs so they can be retrieved by the get routine
 	input.hubAcc = hubAcc;
 	input.hubRotAcc = hubAngularAcc;
@@ -244,8 +219,8 @@ void AeroDyn_Interface_Wrapper::Set_Inputs_HubAcceleration(const Vector3d& hubAc
 
 void AeroDyn_Interface_Wrapper::Set_Inputs_Inflow(const std::vector<double>& inflowVel, const std::vector<double>& inflowAcc)
 {
-    // Assigns the transformed inflows to aeroDynInflows
-    TransformInflows_PDStoAD(inflowVel, inflowAcc);
+    // Assigns the inflows to aeroDynInflows
+    SaveInflows(inflowVel, inflowAcc);
 
 	// Note we're passing in the transformed inflows and not the ones passed directly as parameters
 	INTERFACE_SETINPUTS_INFLOW(simulationInstance, &nBlades, &nNodes, aerodynInflowVel.data(), aerodynInflowAcc.data());
@@ -264,8 +239,8 @@ AeroDyn_Interface_Wrapper::HubReactionLoads AeroDyn_Interface_Wrapper::CalcOutpu
 	Vector3d moment_AD;
 	INTERFACE_CALCOUTPUT(simulationInstance, force_AD.data(), moment_AD.data(), &r.power, &r.tsr);
 
-	r.force = Transform_ADtoPDS(force_AD);
-	r.moment = Transform_ADtoPDS(moment_AD);
+	r.force = force_AD;
+	r.moment = moment_AD;
 
 	// Save the results locally
 	hubReactionLoads = r;
@@ -298,11 +273,11 @@ void AeroDyn_Interface_Wrapper::GetBladeNodePositions(std::vector<double>& nodeP
 	// fills nodePos with node positions. Note! It assumes enough elements have been allocated
 	INTERFACE_GETBLADENODEPOS(simulationInstance, nodePos.data());
 
-    // copy node positions into the vector<double> for ProteusDS, including coordinate system conversion
+    // copy node positions into the vector<double>
     for (int i = 0; i < totalNodes; ++i) {
-	nodePos[(i * 3) + 0] =  nodePos[(i * 3) + 0]; // x position of node (m)
-	nodePos[(i * 3) + 1] = -nodePos[(i * 3) + 1]; // y position of node (m) flipped coordinates
-	nodePos[(i * 3) + 2] = -nodePos[(i * 3) + 2]; // z position of node (m) flipped coordinates
+	nodePos[(i * 3) + 0] = nodePos[(i * 3) + 0]; // x position of node (m)
+	nodePos[(i * 3) + 1] = nodePos[(i * 3) + 1]; // y position of node (m)
+	nodePos[(i * 3) + 2] = nodePos[(i * 3) + 2]; // z position of node (m)
     }
 }
 

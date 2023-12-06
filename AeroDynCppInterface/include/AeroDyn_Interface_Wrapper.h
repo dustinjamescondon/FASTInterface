@@ -274,7 +274,7 @@ private:
 	Matrix3d TransformOrientation(const Matrix3d& orientation) const;
 
 	/*! updates aerodynInflows with transformed pdsInflows */
-	void TransformInflows_PDStoAD(const std::vector<double>& pdsInflowVel, const std::vector<double>& pdsInflowAcc);
+	void SaveInflows(const std::vector<double>& pdsInflowVel, const std::vector<double>& pdsInflowAcc);
 
 	/*! the turbine instance pointer for the current instance of the class (points to a memory location allocated by the
 	 * layer of the project; the data pointed to is a FORTRAN type) 

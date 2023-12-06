@@ -38,7 +38,8 @@
     <ClCompile Include="src\AeroDyn_Interface_Wrapper.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="headers\AeroDyn_Interface_Wrapper.h" />
+    <ClInclude Include="include\AeroDyn_Interface_Wrapper.h" />
+    <ClInclude Include="include\FASTInterfaceExceptions.h" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>17.0</VCProjectVersion>

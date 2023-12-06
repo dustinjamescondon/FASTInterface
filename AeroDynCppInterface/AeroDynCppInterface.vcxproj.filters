@@ -20,7 +20,10 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="headers\AeroDyn_Interface_Wrapper.h">
+    <ClInclude Include="include\AeroDyn_Interface_Wrapper.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="include\FASTInterfaceExceptions.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
