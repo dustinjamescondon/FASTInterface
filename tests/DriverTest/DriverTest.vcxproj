@@ -101,8 +101,8 @@
   </ImportGroup>
   <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
-    <Import Project="..\..\FASTInterface.props" />
     <Import Project="..\..\ADInterface.props" />
+    <Import Project="..\..\FASTInterface.props" />
   </ImportGroup>
   <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Debug_Double|Win32'" Label="PropertySheets">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
@@ -296,6 +296,9 @@
     <ClCompile Include="src\main.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\..\AeroDynCppInterface\AeroDynCppInterface.vcxproj">
+      <Project>{ee7dcc02-422d-48f1-809a-dc8a826758a6}</Project>
+    </ProjectReference>
     <ProjectReference Include="..\..\FASTInterface\FASTInterface.vcxproj">
       <Project>{df95312e-6b08-47ca-a5ef-7e083f33d97c}</Project>
       <CopyLocalSatelliteAssemblies>true</CopyLocalSatelliteAssemblies>

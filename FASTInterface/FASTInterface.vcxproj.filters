@@ -1,68 +1,51 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
-    <ClCompile Include="src\DriveTrain.cpp">
-      <Filter>DriveTrain</Filter>
+    <ClCompile Include="src\FASTInterface.cpp">
+      <Filter>src</Filter>
     </ClCompile>
     <ClCompile Include="src\BladedInterface.cpp">
-      <Filter>MasterController\BladedInterface</Filter>
+      <Filter>src</Filter>
     </ClCompile>
     <ClCompile Include="src\MasterController.cpp">
-      <Filter>MasterController</Filter>
+      <Filter>src</Filter>
     </ClCompile>
-    <ClCompile Include="src\FASTInterface.cpp" />
+    <ClCompile Include="src\DriveTrain.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
     <ClCompile Include="src\AeroDynTurbine.cpp">
-      <Filter>AeroDynTurbine</Filter>
+      <Filter>src</Filter>
     </ClCompile>
     <ClCompile Include="src\Utilities.cpp">
-      <Filter>Utilities</Filter>
+      <Filter>src</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="src\DriveTrain.h">
-      <Filter>DriveTrain</Filter>
+    <ClInclude Include="include\AeroDynTurbine.h">
+      <Filter>include</Filter>
     </ClInclude>
-    <ClInclude Include="src\BladedInterface.h">
-      <Filter>MasterController\BladedInterface</Filter>
+    <ClInclude Include="include\BladedInterface.h">
+      <Filter>include</Filter>
     </ClInclude>
-    <ClInclude Include="src\MasterController.h">
-      <Filter>MasterController</Filter>
+    <ClInclude Include="include\DriveTrain.h">
+      <Filter>include</Filter>
     </ClInclude>
-    <ClInclude Include="src\FASTInterface.h" />
-    <ClInclude Include="src\FASTInterfaceExceptions.h" />
-    <ClInclude Include="src\AeroDynTurbine.h">
-      <Filter>AeroDynTurbine</Filter>
+    <ClInclude Include="include\FASTInterface.h">
+      <Filter>include</Filter>
     </ClInclude>
-    <ClInclude Include="src\Utilities.h">
-      <Filter>Utilities</Filter>
+    <ClInclude Include="include\MasterController.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="include\Utilities.h">
+      <Filter>include</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <Filter Include="DriveTrain">
-      <UniqueIdentifier>{7c6deecf-aa64-4d0f-89c9-6611aee2afdb}</UniqueIdentifier>
+    <Filter Include="include">
+      <UniqueIdentifier>{aee8d6ef-71e6-4995-8bff-3e4e3d1f44dd}</UniqueIdentifier>
     </Filter>
-    <Filter Include="MasterController">
-      <UniqueIdentifier>{ba390f5a-b6e6-4a92-90e8-007ee3a88bfd}</UniqueIdentifier>
+    <Filter Include="src">
+      <UniqueIdentifier>{58d3f9cb-6879-4443-b931-9570081c4080}</UniqueIdentifier>
     </Filter>
-    <Filter Include="MasterController\BladedInterface">
-      <UniqueIdentifier>{24e1056d-8773-4535-a0a4-a98e73011299}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Libraries">
-      <UniqueIdentifier>{bd3d23e7-5bc8-43b2-a2a5-558ccbd75968}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Batch Scripts">
-      <UniqueIdentifier>{46d778e7-4122-41da-b4dd-fc66e929c8a7}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="AeroDynTurbine">
-      <UniqueIdentifier>{65df7edf-d8db-4b21-be48-eea11793f0a1}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Utilities">
-      <UniqueIdentifier>{c4962f2f-4da0-4d00-b7b2-c21b2aabbb00}</UniqueIdentifier>
-    </Filter>
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="FetchDLLs.bat">
-      <Filter>Batch Scripts</Filter>
-    </None>
   </ItemGroup>
 </Project>
