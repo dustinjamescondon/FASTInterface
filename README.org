@@ -5,6 +5,7 @@
 #+TITLE: FASTInterface
 #+AUTHOR: Dustin Condon
 
+* Overview
 The FASTInterface class includes an instance of an AeroDyn simulation,
 a two-mass drive train, and a controller for the blade pitch and
 generator torque. These three modules are coordinated to create a
@@ -27,20 +28,29 @@ The main outputs to ProteusDS are as follows:
    - moment
 2. Aerodynamic torque
 
-The other outputs, which aren't key for ProteusDS to simulate the coupling are:
+* Compilation
+In order to build the projects through Visual Studio, one needs to
+have the Intel FORTRAN compiler from Intel. The current package
+provided by Intel is called OneAPI. There are two parts that need to
+be installed and linked to Visual Studio:
+1. [[https://www.intel.com/content/www/us/en/developer/tools/oneapi/toolkits.html#base-kit][oneAPI Base Toolkit]]
+2. [[https://www.intel.com/content/www/us/en/developer/tools/oneapi/toolkits.html#hpc-kit][HPC Toolkit]]
 
-1. Tip speed ratio
-2. Drive train shaft speeds
-3. Generator torque command
-4. Blade pitch command
+(Note there is a separate installer for the 32-bit version of the Base
+Toolkit, if you would like to build the for that target)
+
+Then to build, open the solution file, and build the FASTRegistry
+project first. This builds a code generation .exe that is used while
+building AeroDyn. One this has been built, just hit build on the
+entire solution.
+
+The .libs and DLLs will be place in /bin/<Platform>/<Configuration>.
 
 * Project structure
 
 ** bin/
 This is where all the .lib, .dll and .exe files are from each
-project. Having all the .dll files here allows for one to set the
-working directory of any test executable to bin/, and then be able to
-load the appropriate DLLs.
+project.
 
 ** docs/
 The DOxygen-generated documentation for the FASTInterface project.
@@ -79,8 +89,8 @@ These are the items in the tests directory:
 Contains some AeroDyn input files that the test will load from.
 
 *** ADInterfaceTest
-Contains one unit test for succesfully loading the input files found
-in tests/resources
+Contains unit tests for succesfully loading the input files found
+in tests/resources and initializing things.
 
 *** DriverTest
 This executable reads in simulation parameters for AerDyn from the
@@ -105,24 +115,19 @@ output file, because the parameters that can be set from the command
 line arguments and the parameters set in the Aerodyn driver input file
 are the same.
 
-*** FASTInterface_Test
+*** FASTInterface_Test [depricated]
 C++ proj that simulates a fixed nacelle and renders the blade node
 positions using the SFML library.
-*** MassSpringDamper_Test
+*** MassSpringDamper_Test [depricated]
 C++ proj that reads in command line arguments for simulation
 parameters and attaches the nacelle to the end of a spring mass
 damper.
-*** CantileveredBeam_Test
+*** CantileveredBeam_Test [depricated]
 A Python script that uses MassSpringDamper_Test's executable, and sets
 the spring coefficient according to a cantilevered beam. It runs two
 simulations with the same parameters, but one with added mass enabled,
 and one without added mass enabled. Then the results are plotted
 against each other.
-* Compilation
-In order to build the projects through Visual Studio, one needs to
-have the Intel FORTRAN compiler (included in the Parallel Studios
-software package) linked to Visual Studio.
-
 * Building the DOxygen-generated documentation
 The comments of the FASTInterface project are written with DOxygen in
 mind. DOxygen parses the source files, and if the comments are of the
