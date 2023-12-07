@@ -6,27 +6,20 @@
 #+AUTHOR: Dustin Condon
 
 * Overview
-The FASTInterface class includes an instance of an AeroDyn simulation,
-a two-mass drive train, and a controller for the blade pitch and
-generator torque. These three modules are coordinated to create a
-simulation of a nacelle. Note: AeroDyn has been modified to be able to
-include added mass effects (the option to enable or disable added mass
-effect is made in the initiliazation parameters).
+This defineds a C++ interface for the AeroDyn modules of
+openFAST. This interface is in the project *AeroDynCppInterface*.
 
-The inputs to this nacelle simulation are as follows:
+Its main inputs are the hub kinematics and inflow velocity. Its main
+outputs are the hub reaction loads and the blade node positions.
 
-1. Nacelle motion
- - Position and orientation
- - Linear and angular velocity
- - Linear and angular acceleration
-2. The flow velocities and accelerations along each blade.
+Additionally, there is the project *FASTInterface* which combines the
+interface to AeroDyn with a simple two-mass drivetrain model, generator
+controller, and pitch controller.
 
-The main outputs to ProteusDS are as follows:
-
-1. Nacelle loads
-   - force
-   - moment
-2. Aerodynamic torque
+Note: AeroDyn has been modified to be able to include added mass
+effects (the option to enable or disable added mass effect is made in
+the initiliazation parameters). The version of AeroDyn that has been
+modified is a bit old now (version 2.3.0).
 
 * Compilation
 In order to build the projects through Visual Studio, one needs to
@@ -37,11 +30,11 @@ be installed and linked to Visual Studio:
 2. [[https://www.intel.com/content/www/us/en/developer/tools/oneapi/toolkits.html#hpc-kit][HPC Toolkit]]
 
 (Note there is a separate installer for the 32-bit version of the Base
-Toolkit, if you would like to build the for that target)
+Toolkit, if you would like to build for that target)
 
 Then to build, open the solution file, and build the FASTRegistry
 project first. This builds a code generation .exe that is used while
-building AeroDyn. One this has been built, just hit build on the
+building AeroDyn. Once this has been built, just hit build on the
 entire solution.
 
 The .libs and DLLs will be place in /bin/<Platform>/<Configuration>.
