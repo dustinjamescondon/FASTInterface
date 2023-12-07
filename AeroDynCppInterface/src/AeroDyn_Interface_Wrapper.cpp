@@ -105,12 +105,12 @@ void AeroDyn_Interface_Wrapper::InitAerodyn(
 	int outputFile_len = strlen(outputFilename);
 
     // transform them to Aerodyn's global coordinate system
-    Vector3d hubPosition_trans = Transform_PDStoAD(hubPosition);
-    Vector3d hubVel_trans = Transform_PDStoAD(hubVel);
-    Vector3d hubAcc_trans = Transform_PDStoAD(hubAcc);
-    Vector3d hubAngVel_trans = Transform_PDStoAD(hubAngVel);
-    Vector3d hubAngAcc_trans = Transform_PDStoAD(hubAngAcc);  
-    Matrix3d hubOrientation_trans = TransformOrientation(hubOrientation);
+    Vector3d hubPosition_trans = hubPosition;
+    Vector3d hubVel_trans = hubVel;
+    Vector3d hubAcc_trans = hubAcc;
+    Vector3d hubAngVel_trans = hubAngVel;
+    Vector3d hubAngAcc_trans = hubAngAcc;  
+    Matrix3d hubOrientation_trans = hubOrientation;
 
 	nBlades = numBlades;
 

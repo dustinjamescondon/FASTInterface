@@ -6,7 +6,6 @@
     <TargetExt>$(TargetExt)</TargetExt>
     <LibraryPath>$(VC_LibraryPath_x86);$(WindowsSDK_LibraryPath_x86);$(SolutionDir)bin\$(Platform)\$(Configuration)\;$(LibraryPath)</LibraryPath>
     <PublicIncludeDirectories>$(MSBuildThisFileDirectory)modules\eigen;$(SolutionDir)FASTInterface\src</PublicIncludeDirectories>
-    <OutDir>$(SolutionDir)bin\$(Platform)\$(Configuration)\</OutDir>
     <IncludePath>$(VC_IncludePath);$(WindowsSDK_IncludePath);$(MSBuildThisFileDirectory)modules\eigen;$(MSBuildThisFileDirectory)FASTInterface\include;$(IncludePath)</IncludePath>
   </PropertyGroup>
   <ItemDefinitionGroup>
