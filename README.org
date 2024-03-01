@@ -29,14 +29,14 @@ dependencies.
 2. Eigen https://gitlab.com/libeigen/eigen.git
 
 For (1), the fork of openfast, this contains a branch called
-"added-mass" which adds code for an openfast module called
+"added-mass" which adds code for a fortran module called
 "AeroDynInterface". "AeroDynInterface" exports key functions for
 interacting with AeroDyn to be callable by C++. AeroDynInterface was
 written by using AeroDynDriver as a starting point, because that
 existing aerodyn module shows how to interact with AeroDyn's data
 structures.
 
-So before you build the project you'll need to populate these
+So before you build the project you'll need to populate these git
 submodules.  This can be done with the following git command:
 
 git submodule update --init --recursive
