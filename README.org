@@ -6,7 +6,7 @@
 #+AUTHOR: Dustin Condon
 
 * Overview
-This defineds a C++ interface for the AeroDyn modules of
+This defines a C++ interface for the AeroDyn modules of
 openFAST. This interface is in the project *AeroDynCppInterface*.
 
 Its main inputs are the hub kinematics and inflow velocity. Its main
