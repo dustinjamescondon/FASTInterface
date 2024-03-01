@@ -21,7 +21,27 @@ effects (the option to enable or disable added mass effect is made in
 the initiliazation parameters). The version of AeroDyn that has been
 modified is a bit old now (version 2.3.0).
 
-* Compilation
+* Populating the git submodules
+There are two external git repositories that this project uses as
+dependencies.
+
+1. My own fork of openfast https://github.com/dustinjamescondon/openfast.git
+2. Eigen https://gitlab.com/libeigen/eigen.git
+
+For (1), the fork of openfast, this contains a branch called
+"added-mass" which adds code for a module called
+"AeroDynInterface". "AeroDynInterface" exports key functions for
+interacting with AeroDyn to be callable by C++.  So this external git
+repository is another key part of this project.
+
+Before you build the project you'll need to populate these submodules.
+This can be done with the following git command:
+
+git submodule update --init --recursive
+
+Once the submodules have been populated, you can continue to building
+the project.
+* Building the project
 In order to build the projects through Visual Studio, one needs to
 have the Intel FORTRAN compiler from Intel. The current package
 provided by Intel is called OneAPI. There are two parts that need to
