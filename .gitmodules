@@ -1,3 +1,6 @@
 [submodule "modules/eigen"]
 	path = modules/eigen
 	url = https://gitlab.com/libeigen/eigen.git
+[submodule "modules/openfast"]
+	path = modules/openfast
+	url = https://github.com/dustinjamescondon/openfast.git
