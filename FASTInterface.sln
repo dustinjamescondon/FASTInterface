@@ -22,6 +22,9 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "DriverTest", "tests\DriverT
 	EndProjectSection
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "AeroDynCppInterface", "AeroDynCppInterface\AeroDynCppInterface.vcxproj", "{EE7DCC02-422D-48F1-809A-DC8A826758A6}"
+	ProjectSection(ProjectDependencies) = postProject
+		{97CEFEB9-1DCB-470E-A231-E1DA2F21A9CE} = {97CEFEB9-1DCB-470E-A231-E1DA2F21A9CE}
+	EndProjectSection
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
